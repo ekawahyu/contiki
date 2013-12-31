@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Loughborough University - Computer Science
+ * Copyright (c) 2011, George Oikonomou - <oikonomou@users.sourceforge.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,26 +31,27 @@
 
 /**
  * \file
- *         Project specific configuration defines for the sniffer example.
+ *         Data structures for SmartRF05EB sensing elements
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "dev/button-sensor.h"
+#include "dev/adc-sensor.h"
+#include "sys/energest.h"
 
-#define CC2530_RF_CONF_HEXDUMP 1
-#define CC2530_RF_CONF_AUTOACK 0
-#define NETSTACK_CONF_RDC      stub_rdc_driver
-#define ADC_SENSOR_CONF_ON     0
-#define LPM_CONF_MODE          0
-#define UART0_CONF_HIGH_SPEED  0
+const struct sensors_sensor *sensors[] = {
+#if ADC_SENSOR_ON
+  &adc_sensor,
+#endif
+#if BUTTON_SENSOR_ON
+  &button_1_sensor,
+#if MODELS_CONF_CC2531_USB_STICK
+  &button_2_sensor,
+#endif
+#endif
+  0
+};
 
-/* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 0
-
-/* Used by cc2531 USB dongle builds, has no effect on SmartRF builds */
-#define USB_SERIAL_CONF_BUFFERED 0
-
-#endif /* PROJECT_CONF_H_ */
+unsigned char sensors_flags[(sizeof(sensors) / sizeof(struct sensors_sensor *))];

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Loughborough University - Computer Science
+ * Copyright (c) 2011, George Oikonomou - <oikonomou@users.sourceforge.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,26 +31,23 @@
 
 /**
  * \file
- *         Project specific configuration defines for the sniffer example.
+ *         Header file for platform-specific led functionality
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
 
-#define CC2530_RF_CONF_HEXDUMP 1
-#define CC2530_RF_CONF_AUTOACK 0
-#define NETSTACK_CONF_RDC      stub_rdc_driver
-#define ADC_SENSOR_CONF_ON     0
-#define LPM_CONF_MODE          0
-#define UART0_CONF_HIGH_SPEED  0
+#ifndef __LEDS_ARCH_H__
+#define __LEDS_ARCH_H__
 
-/* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 0
+#include "dev/port.h"
 
-/* Used by cc2531 USB dongle builds, has no effect on SmartRF builds */
-#define USB_SERIAL_CONF_BUFFERED 0
+/* Led 4 on the SmartRF05EB is multiplexed with Button 1 on P0_1 */
+#define LED4_READ()           PORT_READ(LED4_PORT, LED4_PIN)
+#define LED4_WRITE(v)         PORT_WRITE(LED4_PORT, LED4_PIN, v)
+#define LED4_FUNC_GPIO()      PORT_FUNC_GPIO(LED4_PORT, LED4_PIN)
+#define LED4_DIR_INPUT()      PORT_DIR_INPUT(LED4_PORT, LED4_PIN)
+#define LED4_DIR_OUTPUT()     PORT_DIR_OUTPUT(LED4_PORT, LED4_PIN)
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* __LEDS_ARCH_H__ */
