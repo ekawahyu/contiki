@@ -75,7 +75,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    packetbuf_copyfrom("Hello from D", 13);
+    packetbuf_copyfrom("Hello from Z", 13);
     abc_send(&abc);
     printf("abc message sent\n");
   }
