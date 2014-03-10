@@ -6,6 +6,7 @@
 #include "dev/serial-line.h"
 #include "dev/slip.h"
 #include "dev/leds.h"
+#include "dev/spi.h"
 #include "dev/io-arch.h"
 #include "dev/dma.h"
 #include "dev/cc2530-rf.h"
@@ -154,6 +155,9 @@ main(void) CC_NON_BANKED
   leds_init();
   leds_off(LEDS_ALL);
   fade(LEDS_GREEN);
+
+  /* Init SPI here */
+  spi_init();
 
   /* initialize process manager. */
   process_init();

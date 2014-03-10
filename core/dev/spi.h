@@ -39,6 +39,13 @@
 #ifndef __SPI_H__
 #define __SPI_H__
 
+void spi_init(void);
+
+/**
+ * SPI implementation
+ */
+void spi_arch_init(void);
+
 /* Define macros to use for checking SPI transmission status depending
    on if it is possible to wait for TX buffer ready. This is possible
    on for example MSP430 but not on AVR. */
@@ -53,8 +60,6 @@
 #endif /* SPI_WAITFORTxREADY */
 
 extern unsigned char spi_busy;
-
-void spi_init(void);
 
 /* Write one character to SPI */
 #define SPI_WRITE(data)                         \

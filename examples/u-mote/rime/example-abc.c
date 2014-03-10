@@ -44,6 +44,9 @@
 #include "dev/button-sensor.h"
 
 #include "dev/leds.h"
+#include "dev/spi-arch.h"
+#include "dev/spi.h"
+#include "dev/lsm330dlc.h"
 
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
@@ -61,6 +64,7 @@ static struct abc_conn abc;
 PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
+  static unsigned char read_byte = 0xD1;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -75,9 +79,38 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    packetbuf_copyfrom("Hello from Z", 13);
+    packetbuf_copyfrom("Hello from EKA:B", 17);
     abc_send(&abc);
     printf("abc message sent\n");
+
+    leds_toggle(LEDS_RED);
+
+	P1_0 = 0;
+	//SPI_WRITE(CTRL_REG1_G);
+	spi_arch_write(CTRL_REG1_G);
+	P1_0 = 1;
+
+	P1_0 = 0;
+	//SPI_WRITE((DRBW_1000 | LPen_G | xyz_en_G));
+	spi_arch_write((DRBW_1000 | LPen_G | xyz_en_G));
+	P1_0 = 1;
+
+	P1_0 = 0;
+	//SPI_WRITE(CTRL_REG4_G);
+	spi_arch_write(CTRL_REG4_G);
+	P1_0 = 1;
+
+	P1_0 = 0;
+	//SPI_WRITE(WHO_AM_I_G);
+	spi_arch_write(WHO_AM_I_G);
+	P1_0 = 1;
+
+	P1_0 = 0;
+	//SPI_READ(read_byte);
+	read_byte = spi_arch_read();
+	P1_0 = 1;
+
+	printf("read_byte 0x%X\n", read_byte);
   }
 
   PROCESS_END();
