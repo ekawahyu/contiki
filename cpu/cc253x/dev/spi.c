@@ -34,10 +34,11 @@
  * 
  */
 
+#include "dev/spi1.h"
 #include "dev/spi.h"
 
 void
 spi_init(void)
 {
-	spi_arch_init();
+	spi1_init(SPI_MODE0, SPI_CS0, SPI_ONE_MHZ, SPI_MSB_FIRST);
 }

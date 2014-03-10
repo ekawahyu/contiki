@@ -39,7 +39,7 @@
 
 /* Verbose Startup? Turning this off saves plenty of bytes of CODE in HOME */
 #ifndef STARTUP_CONF_VERBOSE
-#define STARTUP_CONF_VERBOSE  0
+#define STARTUP_CONF_VERBOSE  1
 #endif
 
 /* More CODE space savings by turning off process names */
@@ -47,12 +47,10 @@
 
 /*
  * USARTs:
- *   SmartRF RS232 -> USART0 / Alternative 1 (UART)
- *   SmartRF LCD   -> USART1 / Alternative 2 (SPI)
+ *   u-mote RS232 -> USART0 / Alternative 1 (UART)
+ *   u-mote SPI   -> USART1 / Alternative 2 (SPI)
  */
 #define UART_ON_USART     0
-
-#define UART1_CONF_ENABLE 0
 
 #ifndef UART0_CONF_ENABLE
 #define UART0_CONF_ENABLE  1
@@ -63,6 +61,26 @@
 
 #ifndef UART0_CONF_HIGH_SPEED
 #define UART0_CONF_HIGH_SPEED 0
+#endif
+
+#ifndef UART1_CONF_ENABLE
+#define UART1_CONF_ENABLE  0
+#endif
+
+#ifndef SPI0_CONF_ENABLE
+#define SPI0_CONF_ENABLE	0
+#endif
+
+#ifndef SPI1_CONF_ENABLE
+#define SPI1_CONF_ENABLE	1
+#endif
+
+#if (UART0_CONF_ENABLE & SPI0_CONF_ENABLE)
+#error cannot define both UART0 and SPI0 enabled!
+#endif
+
+#if (UART1_CONF_ENABLE & SPI1_CONF_ENABLE)
+#error cannot define both UART1 and SPI1 enabled!
 #endif
 
 /* USB output buffering enabled by default (relevant to cc2531 builds only) */

@@ -1,7 +1,7 @@
 /*
- * spi-arch.c
+ * spi1.h
  *
- * Created on: Mar 7, 2014
+ * Created on: Mar 10, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,66 +34,45 @@
  * 
  */
 
-#include "dev/spi-arch.h"
-#include "cc253x.h"
-#include "sfr-bits.h"
+#ifndef SPI1_H_
+#define SPI1_H_
 
-#include <stdio.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void
-spi_arch_init(void)
-{
-	// Master Mode
-	PERCFG |= 0x02; // PERCFG.U1CFG = 1
-	P1SEL |= 0xE0; // P1_7, P1_6, and P1_5 are peripherals
-	P1SEL &= ~0x18; // P1_0 is GPIO (SSN)
-	P1DIR |= 0x3F; // SSN is set as output P1_0 to P1_0
-	// Set baud rate to max (system clock frequency / 8)
-	// Assuming a 32 MHz crystal (CC1110Fx/CC2510Fx),
-	// max baud rate = 32 MHz / 8 = 4 MHz.
-	U1BAUD = 0x57; // BAUD_M = 216
-	U1GCR |= 0x10; // BAUD_E = 15
-	// SPI Master Mode
-	U1CSR &= ~0xA0;
-	// Configure phase, polarity, and bit order
-	U1GCR &= ~0xC0; // CPOL = CPHA = 0
-	U1GCR |= 0x20; // ORDER = 1
+#include "contiki-conf.h"
+
+/*---------------------------------------------------------------------------*/
+/* SPI1 Enable - Disable */
+#ifdef SPI1_CONF_ENABLE
+#define SPI1_ENABLE SPI1_CONF_ENABLE
+#else
+#define SPI1_ENABLE 0
+#endif
+/*---------------------------------------------------------------------------*/
+/* SPI1 Function Declarations */
+#if SPI1_ENABLE
+void spi1_init(unsigned char mode,
+		unsigned char cs,
+		unsigned char freq,
+		unsigned char endianess);
+void spi1_select(unsigned char cs);
+void spi1_deselect(unsigned char cs);
+void spi1_write(unsigned char data);
+unsigned char spi1_read(void);
+unsigned char spi1_read_write(unsigned char data);
+#else
+#define spi1_init(...)
+#define spi1_select(...)
+#define spi1_deselect(...)
+#define spi1_write(...)
+#define spi1_read(...)
+#define spi1_read_write(...)
+#endif /* SPI1_ENABLE */
+
+#ifdef __cplusplus
 }
+#endif
 
-unsigned char
-spi_arch_read(void)
-{
-	unsigned char data_read;
-
-	RX_BYTE = 0;
-	U1DBUF = 0;
-	printf("spi_arch_read .(%i)\n", RX_BYTE);
-	while(!(RX_BYTE));
-	printf("spi_arch_read ..(%i)\n", RX_BYTE);
-	data_read = U1DBUF;
-
-	return data_read;
-}
-
-void
-spi_arch_write(unsigned char data)
-{
-	TX_BYTE = 0;
-	U1DBUF = data;
-	printf("spi_arch_write 0x%X .(%i)\n", data, TX_BYTE);
-	while(!(TX_BYTE));
-	printf("spi_arch_write 0x%X ..(%i)\n", data, TX_BYTE);
-}
-
-unsigned char
-spi_write_read(unsigned char data)
-{
-	unsigned char data_read;
-
-	U1DBUF = data;
-	while(!(TX_BYTE));
-	while(!(RX_BYTE));
-	data_read = U1DBUF;
-
-	return data_read;
-}
+#endif /* SPI1_H_ */
