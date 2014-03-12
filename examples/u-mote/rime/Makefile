@@ -1,3 +1,4 @@
+DEFINES+=PROJECT_CONF_H
 CONTIKI = ../../..
 
 all: example-abc example-mesh example-collect example-trickle example-polite \

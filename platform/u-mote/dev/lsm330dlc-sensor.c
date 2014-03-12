@@ -1,7 +1,7 @@
 /*
- * spi1.h
+ * lsm330dlc-sensor.c
  *
- * Created on: Mar 10, 2014
+ * Created on: Mar 11, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,45 +34,55 @@
  *
  */
 
-#ifndef SPI1_H_
-#define SPI1_H_
+#include "dev/lsm330dlc-sensor.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "contiki-conf.h"
-
-/*---------------------------------------------------------------------------*/
-/* SPI1 Enable - Disable */
-#ifdef SPI1_CONF_ENABLE
-#define SPI1_ENABLE SPI1_CONF_ENABLE
-#else
-#define SPI1_ENABLE 0
-#endif
-/*---------------------------------------------------------------------------*/
-/* SPI1 Function Declarations */
-#if SPI1_ENABLE
-void spi1_init(unsigned char mode,
-  unsigned char cs,
-  unsigned char freq,
-  unsigned char endianess);
-void spi1_select(unsigned char cs);
-void spi1_deselect(unsigned char cs);
-void spi1_write(unsigned char data);
-unsigned char spi1_read(void);
-unsigned char spi1_read_write(unsigned char data);
-#else
-#define spi1_init(...)
-#define spi1_select(...)
-#define spi1_deselect(...)
-#define spi1_write(...)
-#define spi1_read(...)
-#define spi1_read_write(...)
-#endif /* SPI1_ENABLE */
-
-#ifdef __cplusplus
+static int
+value(int type)
+{
+  switch(type) {
+  case LSM330DLC_SENSOR_TYPE_ACCL_X:
+    return 1;
+  case LSM330DLC_SENSOR_TYPE_ACCL_Y:
+    return 1;
+  case LSM330DLC_SENSOR_TYPE_ACCL_Z:
+    return 1;
+  case LSM330DLC_SENSOR_TYPE_GYRO_X:
+    return 1;
+  case LSM330DLC_SENSOR_TYPE_GYRO_Y:
+    return 1;
+  case LSM330DLC_SENSOR_TYPE_GYRO_Z:
+    return 1;
+  }
+  return 0;
 }
-#endif
 
-#endif /* SPI1_H_ */
+static int
+configure(int type, int value)
+{
+  switch(type) {
+  case SENSORS_HW_INIT:
+    /* init sensor here */
+    return 1;
+  case SENSORS_ACTIVE:
+    if(value) {
+      /* active sensor */
+    }
+    else {
+      /* disable/put into sleep */
+    }
+    return 1;
+  }
+  return 0;
+}
+
+static int
+status(int type)
+{
+  switch(type) {
+  case SENSORS_ACTIVE:
+    return 1 /* return sensor active flag */;
+  }
+  return 0;
+}
+
+SENSORS_SENSOR(lsm330dlc_sensor, LSM330DLC_SENSOR, value, configure, status);

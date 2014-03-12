@@ -15,7 +15,7 @@
  * This define needs to have its final value before inclusion of models.h
  */
 #ifndef MODELS_CONF_CC2531_USB_STICK
-#define MODELS_CONF_CC2531_USB_STICK 0
+#define MODELS_CONF_CC2531_USB_STICK 1
 #endif
 
 #include "models.h"
@@ -39,7 +39,7 @@
 
 /* Verbose Startup? Turning this off saves plenty of bytes of CODE in HOME */
 #ifndef STARTUP_CONF_VERBOSE
-#define STARTUP_CONF_VERBOSE  1
+#define STARTUP_CONF_VERBOSE  0
 #endif
 
 /* More CODE space savings by turning off process names */
@@ -68,11 +68,11 @@
 #endif
 
 #ifndef SPI0_CONF_ENABLE
-#define SPI0_CONF_ENABLE	0
+#define SPI0_CONF_ENABLE  0
 #endif
 
 #ifndef SPI1_CONF_ENABLE
-#define SPI1_CONF_ENABLE	1
+#define SPI1_CONF_ENABLE  1
 #endif
 
 #if (UART0_CONF_ENABLE & SPI0_CONF_ENABLE)

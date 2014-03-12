@@ -1,5 +1,5 @@
 /*
- * lsm330dlc.h
+ * lsm330dlc-sensor.h
  *
  * Created on : Sept 26, 2013
  *     Author : Marco Beccani
@@ -9,16 +9,16 @@
  *
  * Copyright (c) 2014, STORM Lab Vanderbilt University.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
- * 
+ * modification, are permitted provided that the following conditions are met:
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer. 
+ *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution. 
- * 
+ *    and/or other materials provided with the distribution.
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -30,22 +30,24 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * The views and conclusions contained in the software and documentation are
  * those of the authors and should not be interpreted as representing official
  * policies, either expressed or implied, of the copyright holder.
- * 
+ *
  */
 
-#ifndef LSM330DLC_H_
-#define LSM330DLC_H_
+#ifndef LSM330DLC_SENSOR_H_
+#define LSM330DLC_SENSOR_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#//define GYRO_CS					CS
-#//define ACCELEROMETER_CS		GPIO0
+#include "cc253x.h"
+#include "contiki-conf.h"
+#include "lib/sensors.h"
+
 
 #ifndef DUMMY
 #define DUMMY     0x00;
@@ -163,25 +165,29 @@ GYROSCOPE
 
 #define XYZ_G  (0x28 | 0xC0)   // Read All Axis
 
-struct gyro_context {
-	int16_t	x;
-	int16_t	y;
-	int16_t	z;
-};
+/* Sensor types */
+#define LSM330DLC_SENSOR "LSM330DLC"
 
-struct accelerometer_context {
-	int16_t	x;
-	int16_t	y;
-	int16_t	z;
-};
+#define LSM330DLC_SENSOR_TYPE_ACCL_X  0
+#define LSM330DLC_SENSOR_TYPE_ACCL_Y  1
+#define LSM330DLC_SENSOR_TYPE_ACCL_Z  3
+#define LSM330DLC_SENSOR_TYPE_GYRO_X  4
+#define LSM330DLC_SENSOR_TYPE_GYRO_Y  5
+#define LSM330DLC_SENSOR_TYPE_GYRO_Z  6
 
-int lsm330dlc_gyro_init(struct mpsse_context * mpsse);
-struct gyro_context lsm330dlc_gyro_acquire(struct mpsse_context * mpsse);
-int lsm330dlc_accelerometer_init(struct mpsse_context * mpsse);
-struct accelerometer_context lsm330dlc_accelerometer_acquire(struct mpsse_context * mpsse);
+#ifdef LSM330DLC_SENSOR_CONF_ON
+#define LSM330DLC_SENSOR_ON LSM330DLC_SENSOR_CONF_ON
+#endif
+
+#if LSM330DLC_SENSOR_ON
+extern const struct sensors_sensor lsm330dlc_sensor;
+#define   LSM330DLC_SENSOR_ACTIVATE() lsm330dlc_sensor.configure(SENSORS_ACTIVE, 1)
+#else
+#define   LSM330DLC_SENSOR_ACTIVATE()
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LSM330DLC_H_ */
+#endif /* LSM330DLC_SENSOR_H_ */

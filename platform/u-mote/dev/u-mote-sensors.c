@@ -39,6 +39,7 @@
 
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
+#include "dev/lsm330dlc-sensor.h"
 #include "sys/energest.h"
 
 const struct sensors_sensor *sensors[] = {
@@ -49,6 +50,9 @@ const struct sensors_sensor *sensors[] = {
   &button_1_sensor,
 #if MODELS_CONF_CC2531_USB_STICK
   &button_2_sensor,
+#endif
+#if LSM330DLC_SENSOR_ON
+  &lsm330dlc_sensor,
 #endif
 #endif
   0

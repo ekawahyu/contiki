@@ -72,13 +72,13 @@
 #define PORT_2_ISR_ENABLED 1
 
 #ifndef USB_CONF_CLASS
-#define DMA_CONF_ON	1
-#define DMA_USB_CHANNEL	0
-#define CTRL_EP_SIZE	8
-#define USB_EP1_SIZE	32
-#define USB_EP2_SIZE	64
-#define USB_EP3_SIZE	64
-#define USB_CONF_CLASS	1 /* CDC-ACM */
+#define DMA_CONF_ON     1
+#define DMA_USB_CHANNEL 0
+#define CTRL_EP_SIZE    8
+#define USB_EP1_SIZE    32
+#define USB_EP2_SIZE    64
+#define USB_EP3_SIZE    64
+#define USB_CONF_CLASS  1 /* CDC-ACM */
 #endif
 
 #define CDC_ACM_CONF_VID 0x0451 /* Vendor: TI */
