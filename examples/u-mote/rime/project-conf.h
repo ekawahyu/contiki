@@ -43,6 +43,10 @@ extern "C" {
 
 #define MODELS_CONF_CC2531_USB_STICK    0
 
+#define SPI1_CONF_ENABLE                1
+
+#define UMOTE_SENSORS_ON_SPI            1
+
 #define LSM330DLC_SENSOR_CONF_ON        1
 
 #ifdef __cplusplus

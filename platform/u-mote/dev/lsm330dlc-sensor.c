@@ -34,24 +34,52 @@
  *
  */
 
+#include "dev/spi.h"
 #include "dev/lsm330dlc-sensor.h"
+
+static int lsm330dlc_sensor_status;
 
 static int
 value(int type)
 {
+  unsigned char read_byte_high;
+  unsigned char read_byte_low;
+
   switch(type) {
   case LSM330DLC_SENSOR_TYPE_ACCL_X:
-    return 1;
+    spi_select(SPI_CS0);
+    spi_write(ACC_REG_OUT_X_L);
+    read_byte_low = spi_read();
+    spi_deselect(SPI_CS0);
+    spi_select(SPI_CS0);
+    spi_write(ACC_REG_OUT_X_H);
+    read_byte_high = spi_read();
+    spi_deselect(SPI_CS0);
+    return read_byte_low;
   case LSM330DLC_SENSOR_TYPE_ACCL_Y:
     return 1;
   case LSM330DLC_SENSOR_TYPE_ACCL_Z:
     return 1;
   case LSM330DLC_SENSOR_TYPE_GYRO_X:
-    return 1;
+    spi_select(SPI_CS0);
+    spi_write(GYR_REG_OUT_X_L);
+    read_byte_low = spi_read();
+    spi_deselect(SPI_CS0);
+    spi_select(SPI_CS0);
+    spi_write(GYR_REG_OUT_X_H);
+    read_byte_high = spi_read();
+    spi_deselect(SPI_CS0);
+    return read_byte_low;
   case LSM330DLC_SENSOR_TYPE_GYRO_Y:
     return 1;
   case LSM330DLC_SENSOR_TYPE_GYRO_Z:
     return 1;
+  case LSM330DLC_SENSOR_TYPE_ID:
+    spi_select(SPI_CS0);
+    spi_write(WHO_AM_I_G);
+    read_byte_low = spi_read();
+    spi_deselect(SPI_CS0);
+    return read_byte_low;
   }
   return 0;
 }
@@ -61,14 +89,39 @@ configure(int type, int value)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    /* init sensor here */
+    /* sensor status init */
+    lsm330dlc_sensor_status = 0;
     return 1;
   case SENSORS_ACTIVE:
     if(value) {
-      /* active sensor */
+      /* initialize gyro */
+      spi_select(SPI_CS0);
+      spi_write(CTRL_REG1_G);
+      spi_write((DRBW_1000 | LPen_G | xyz_en_G));
+      spi_deselect(SPI_CS0);
+
+      spi_select(SPI_CS0);
+      spi_write(CTRL_REG4_G);
+      spi_write(DUMMY);
+      spi_deselect(SPI_CS0);
+
+      /* initialize accelerometer */
+      spi_select(SPI_CS0);
+      spi_write(CTRL_REG1_A);
+      spi_write(ACC_400_Hz_A | xyz_en_A);
+      spi_deselect(SPI_CS0);
+
+      spi_select(SPI_CS0);
+      spi_write(CTRL_REG4_G);
+      spi_write(ACC_2G_A | HR_A);
+      spi_deselect(SPI_CS0);
+
+      lsm330dlc_sensor_status = 1;
     }
     else {
       /* disable/put into sleep */
+      /* TODO: how to put LSM330DLC into sleep? */
+      lsm330dlc_sensor_status = 0;
     }
     return 1;
   }
@@ -80,7 +133,8 @@ status(int type)
 {
   switch(type) {
   case SENSORS_ACTIVE:
-    return 1 /* return sensor active flag */;
+    /* return sensor status */;
+    return lsm330dlc_sensor_status;
   }
   return 0;
 }

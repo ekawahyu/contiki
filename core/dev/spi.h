@@ -87,6 +87,11 @@
 extern unsigned char spi_busy;
 
 void spi_init(void);
+void spi_select(unsigned char cs);
+void spi_deselect(unsigned char cs);
+void spi_write(unsigned char data);
+unsigned char spi_read(void);
+unsigned char spi_read_write(unsigned char data);
 
 /* Write one character to SPI */
 #define SPI_WRITE(data)                         \

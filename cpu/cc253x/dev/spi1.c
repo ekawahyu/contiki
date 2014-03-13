@@ -39,6 +39,9 @@
 #include "cc253x.h"
 #include "sfr-bits.h"
 
+#if SPI1_ENABLE
+static char spi1_locked = 0;
+
 void
 spi1_init(unsigned char	mode,
     unsigned char	cs,
@@ -115,64 +118,22 @@ spi1_init(unsigned char	mode,
   else
     U1GCR &= ~0x20;
 
-  spi1_deselect(SPI_CS0);
-  spi1_deselect(SPI_CS1);
-  spi1_deselect(SPI_CS2);
-  spi1_deselect(SPI_CS3);
-  spi1_deselect(SPI_CS4);
+  spi_deselect(SPI_CS0);
+  spi_deselect(SPI_CS1);
+  spi_deselect(SPI_CS2);
+  spi_deselect(SPI_CS3);
+  spi_deselect(SPI_CS4);
 
   /* optional, just to remove compile warning */
-  spi1_deselect(cs);
+  spi_deselect(cs);
 }
 
 void
-spi1_select(unsigned char cs)
+spi1_write(unsigned char data)
 {
-  switch (cs) {
-  case SPI_CS0:
-    P1_0 = 0;
-    break;
-  case SPI_CS1:
-    P1_1 = 0;
-    break;
-  case SPI_CS2:
-    P1_2 = 0;
-    break;
-  case SPI_CS3:
-    P1_3 = 0;
-    break;
-  case SPI_CS4:
-    P1_4 = 0;
-    break;
-  default:
-    /* TODO: invalid chip select */
-    break;
-  }
-}
-
-void
-spi1_deselect(unsigned char cs)
-{
-  switch (cs) {
-  case SPI_CS0:
-    P1_0 = 1;
-    break;
-  case SPI_CS1:
-    P1_1 = 1;
-    break;
-  case SPI_CS2:
-    P1_2 = 1;
-    break;
-  case SPI_CS3:
-    P1_3 = 1;
-    break;
-  case SPI_CS4:
-    P1_4 = 1;
-    break;
-  default:
-    /* TODO: invalid chip select */
-    break;
-  }
+  TX_BYTE = 0;
+  U1DBUF = data;
+  while(!(TX_BYTE));
 }
 
 unsigned char
@@ -188,14 +149,6 @@ spi1_read(void)
   return data_read;
 }
 
-void
-spi1_write(unsigned char data)
-{
-  TX_BYTE = 0;
-  U1DBUF = data;
-  while(!(TX_BYTE));
-}
-
 unsigned char
 spi1_read_write(unsigned char data)
 {
@@ -208,3 +161,4 @@ spi1_read_write(unsigned char data)
 
   return data_read;
 }
+#endif

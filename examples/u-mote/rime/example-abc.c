@@ -41,12 +41,7 @@
 #include "net/rime.h"
 #include "random.h"
 
-#include "dev/button-sensor.h"
 #include "dev/lsm330dlc-sensor.h"
-
-#include "dev/leds.h"
-#include "dev/spi1.h"
-#include "dev/spi.h"
 
 #include <stdio.h>
 
@@ -66,13 +61,11 @@ PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
   static int counter;
-  static unsigned char read_byte = 0xD1;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
 
-  BUTTON_SENSOR_ACTIVATE();
   LSM330DLC_SENSOR_ACTIVATE();
 
   abc_open(&abc, 128, &abc_call);
@@ -88,25 +81,13 @@ PROCESS_THREAD(example_abc_process, ev, data)
     abc_send(&abc);
     printf("abc message sent (%i)\n", counter++);
 
-    /*spi1_select(SPI_CS0);
-    spi1_write(CTRL_REG1_G);
-    spi1_write((DRBW_1000 | LPen_G | xyz_en_G));
-    spi1_deselect(SPI_CS0);
+    printf("LSM330DLC ID: 0x%X\n",
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ID));
+    printf("LSM330DLC GX: 0x%X\n",
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_X));
+    printf("LSM330DLC AX: 0x%X\n",
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_X));
 
-    spi1_select(SPI_CS0);
-    spi1_write(CTRL_REG4_G);
-    spi1_write(0);
-    spi1_deselect(SPI_CS0);
-
-    spi1_select(SPI_CS0);
-    spi1_write(WHO_AM_I_G);
-    read_byte = spi1_read();
-    spi1_deselect(SPI_CS0);
-
-    printf("read_byte 0x%X\n", read_byte);*/
-
-    if (button_1_sensor.value(NULL) == 1) leds_on(LEDS_RED);
-    if (button_1_sensor.value(NULL) == 0) leds_off(LEDS_RED);
   }
 
   PROCESS_END();

@@ -35,17 +35,83 @@
  */
 
 #include "contiki-conf.h"
-#include "dev/spi1.h"
 #include "dev/spi.h"
+#include "dev/spi-arch.h"
+#include "cc253x.h"
+#include "sfr-bits.h"
 
 void
 spi_init(void)
 {
-/* TODO: implementation for SPI0 is not yet available */
-#if SPI0_CONF_ENABLE
-  spi0_init(SPI_MODE0, SPI_CS0, SPI_ONE_MHZ, SPI_MSB_FIRST);
+  spi_arch_init(SPI_MODE0, SPI_CS0, SPI_ONE_MHZ, SPI_MSB_FIRST);
+}
+
+void
+spi_write(unsigned char data)
+{
+  spi_arch_write(data);
+}
+
+unsigned char
+spi_read(void)
+{
+  return spi_arch_read();
+}
+
+unsigned char
+spi_read_write(unsigned char data)
+{
+  return spi_arch_read_write(data);
+}
+
+void spi_select(unsigned char cs)
+{
+#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
+  switch (cs) {
+  case SPI_CS0:
+    P1_0 = 0;
+    break;
+  case SPI_CS1:
+    P1_1 = 0;
+    break;
+  case SPI_CS2:
+    P1_2 = 0;
+    break;
+  case SPI_CS3:
+    P1_3 = 0;
+    break;
+  case SPI_CS4:
+    P1_4 = 0;
+    break;
+  default:
+    /* TODO: invalid chip select */
+    break;
+  }
 #endif
-#if SPI1_CONF_ENABLE
-  spi1_init(SPI_MODE0, SPI_CS0, SPI_ONE_MHZ, SPI_MSB_FIRST);
+}
+
+void spi_deselect(unsigned char cs)
+{
+#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
+  switch (cs) {
+  case SPI_CS0:
+    P1_0 = 1;
+    break;
+  case SPI_CS1:
+    P1_1 = 1;
+    break;
+  case SPI_CS2:
+    P1_2 = 1;
+    break;
+  case SPI_CS3:
+    P1_3 = 1;
+    break;
+  case SPI_CS4:
+    P1_4 = 1;
+    break;
+  default:
+    /* TODO: invalid chip select */
+    break;
+  }
 #endif
 }

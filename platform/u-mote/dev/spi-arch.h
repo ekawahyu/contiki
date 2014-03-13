@@ -1,7 +1,7 @@
 /*
- * spi1.h
+ * spi-arch.h
  *
- * Created on: Mar 10, 2014
+ * Created on: Mar 12, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,8 +34,8 @@
  *
  */
 
-#ifndef SPI1_H_
-#define SPI1_H_
+#ifndef SPI_ARCH_H_
+#define SPI_ARCH_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,32 +43,35 @@ extern "C" {
 
 #include "contiki-conf.h"
 
-/*---------------------------------------------------------------------------*/
-/* SPI1 Enable - Disable */
-#ifdef SPI1_CONF_ENABLE
-#define SPI1_ENABLE SPI1_CONF_ENABLE
-#else
-#define SPI1_ENABLE 0
+#if (UMOTE_SENSORS_ON_SPI == 0)
+#include "dev/spi0.h"
+#define IO_ARCH_PREFIX spi0
+#elif (UMOTE_SENSORS_ON_SPI == 1)
+#include "dev/spi1.h"
+#define IO_ARCH_PREFIX spi1
 #endif
+
 /*---------------------------------------------------------------------------*/
-/* SPI1 Function Declarations */
-#if SPI1_ENABLE
-void spi1_init(unsigned char mode,
-  unsigned char cs,
-  unsigned char freq,
-  unsigned char endianess);
-void spi1_write(unsigned char data);
-unsigned char spi1_read(void);
-unsigned char spi1_read_write(unsigned char data);
-#else
-#define spi1_init(...)
-#define spi1_write(...)
-#define spi1_read(...) (0)
-#define spi1_read_write(...) (0)
-#endif /* SPI1_ENABLE */
+/* Expands to spi0_functions(), spi1_functions() */
+#define spi_arch_init(...) spi_arch_init_x(IO_ARCH_PREFIX, __VA_ARGS__)
+#define spi_arch_write(...) spi_arch_write_x(IO_ARCH_PREFIX, __VA_ARGS__)
+#define spi_arch_read(...) spi_arch_read_x(IO_ARCH_PREFIX, __VA_ARGS__)
+#define spi_arch_read_write(...) spi_arch_read_write_x(IO_ARCH_PREFIX, __VA_ARGS__)
+/*---------------------------------------------------------------------------*/
+/* Second round of macro substitutions. You can stop reading here */
+#define spi_arch_init_x(prefix, ...) spi_arch_init_x_x(prefix, __VA_ARGS__)
+#define spi_arch_write_x(prefix, ...) spi_arch_write_x_x(prefix, __VA_ARGS__)
+#define spi_arch_read_x(prefix, ...) spi_arch_read_x_x(prefix, __VA_ARGS__)
+#define spi_arch_read_write_x(prefix, ...) spi_arch_read_write_x_x(prefix, __VA_ARGS__)
+/*---------------------------------------------------------------------------*/
+#define spi_arch_init_x_x(prefix, ...) prefix##_init(__VA_ARGS__)
+#define spi_arch_write_x_x(prefix, ...) prefix##_write(__VA_ARGS__)
+#define spi_arch_read_x_x(prefix, ...) prefix##_read(__VA_ARGS__)
+#define spi_arch_read_write_x_x(prefix, ...) prefix##_read_write(__VA_ARGS__)
+/*---------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SPI1_H_ */
+#endif /* SPI_ARCH_H_ */
