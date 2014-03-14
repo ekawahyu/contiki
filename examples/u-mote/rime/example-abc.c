@@ -81,13 +81,27 @@ PROCESS_THREAD(example_abc_process, ev, data)
     abc_send(&abc);
     printf("abc message sent (%i)\n", counter++);
 
+    /* temporary workaround to make it work */
+    LSM330DLC_SENSOR_ACTIVATE();
+
+    printf("LSM330DLC Status: 0x%X\n",
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_STATUS));
+
     printf("LSM330DLC ID: 0x%X\n",
         lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ID));
-    printf("LSM330DLC GX: 0x%X\n",
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_X));
-    printf("LSM330DLC AX: 0x%X\n",
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_X));
 
+    printf("LSM330DLC temp: 0x%X\n",
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_TEMP));
+
+    printf("LSM330DLC GX: %i GY: %i GZ: %i\n",
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_X),
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_Y),
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_Z));
+
+    printf("LSM330DLC AX: %i AY: %i AZ: %i\n",
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_X),
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_Y),
+        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_Z));
   }
 
   PROCESS_END();

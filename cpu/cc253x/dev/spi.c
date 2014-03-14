@@ -43,7 +43,7 @@
 void
 spi_init(void)
 {
-  spi_arch_init(SPI_MODE0, SPI_CS0, SPI_ONE_MHZ, SPI_MSB_FIRST);
+  spi_arch_init(SPI_MODE3, SPI_CS0, SPI_FOUR_HUNDRED_HZ, SPI_MSB_FIRST);
 }
 
 void
