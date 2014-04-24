@@ -53,6 +53,7 @@ static void
 abc_recv(struct abc_conn *c)
 {
   printf("abc message received '%s'\n", (char *)packetbuf_dataptr());
+  //process_post_synch(&example_abc_process, PROCESS_EVENT_CONTINUE, "wakeup");
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -61,47 +62,49 @@ PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
   static int counter;
+  static const struct sensors_sensor *sensor;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
-
-  LSM330DLC_SENSOR_ACTIVATE();
 
   abc_open(&abc, 128, &abc_call);
 
   while(1) {
 
     /* Delay 2-4 seconds */
-    etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
+    //etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
+    etimer_set(&et, 4);
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    //PROCESS_WAIT_EVENT_UNTIL(data=="wakeup");
 
-    packetbuf_copyfrom("Hello from EKA:B", 17);
+    packetbuf_copyfrom("Hello from EKA:A", 17);
     abc_send(&abc);
     printf("abc message sent (%i)\n", counter++);
 
-    /* temporary workaround to make it work */
-    LSM330DLC_SENSOR_ACTIVATE();
+    sensor = sensors_find(LSM330DLC_SENSOR);
 
-    printf("LSM330DLC Status: 0x%X\n",
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_STATUS));
+    if (sensor) {
+      printf("LSM330DLC Status: 0x%X\n",
+          sensor->value(LSM330DLC_SENSOR_TYPE_GYRO_STATUS));
 
-    printf("LSM330DLC ID: 0x%X\n",
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ID));
+      printf("LSM330DLC ID: 0x%X\n",
+          sensor->value(LSM330DLC_SENSOR_TYPE_ID));
 
-    printf("LSM330DLC temp: 0x%X\n",
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_TEMP));
+      printf("LSM330DLC temp: 0x%X\n",
+          sensor->value(LSM330DLC_SENSOR_TYPE_GYRO_TEMP));
 
-    printf("LSM330DLC GX: %i GY: %i GZ: %i\n",
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_X),
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_Y),
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_GYRO_Z));
+      printf("LSM330DLC GX: %i GY: %i GZ: %i\n",
+          sensor->value(LSM330DLC_SENSOR_TYPE_GYRO_X),
+          sensor->value(LSM330DLC_SENSOR_TYPE_GYRO_Y),
+          sensor->value(LSM330DLC_SENSOR_TYPE_GYRO_Z));
 
-    printf("LSM330DLC AX: %i AY: %i AZ: %i\n",
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_X),
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_Y),
-        lsm330dlc_sensor.value(LSM330DLC_SENSOR_TYPE_ACCL_Z));
+      printf("LSM330DLC AX: %i AY: %i AZ: %i\n",
+          sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_X),
+          sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Y),
+          sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Z));
+    }
   }
 
   PROCESS_END();

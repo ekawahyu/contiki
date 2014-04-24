@@ -70,6 +70,10 @@ extern "C" {
 #define spi_arch_read_write_x_x(prefix, ...) prefix##_read_write(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
 
+void spi_arch_deselect_all(void);
+void spi_arch_deselect(unsigned char cs);
+void spi_arch_select(unsigned char cs);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * spi-arch.c
  *
- * Created on: Mar 3, 2014
+ * Created on: Apr 24, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,28 +34,69 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "contiki.h"
+#include "dev/spi.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define STARTUP_CONF_VERBOSE  1
-
-#define MODELS_CONF_CC2531_USB_STICK    0
-#define MODELS_CONF_RC2400HP_MODULE     0
-
-#if (MODELS_CONF_CC2531_USB_STICK)
-#define CC2530_CONF_MAC_FROM_PRIMARY    0
-#define LPM_CONF_MODE                   0 /* USB Stick may not sleep as a router */
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#endif
-
-#ifdef __cplusplus
+void
+spi_arch_deselect_all(void)
+{
+  spi_deselect(SPI_CS0);
+  spi_deselect(SPI_CS1);
+  spi_deselect(SPI_CS2);
+  spi_deselect(SPI_CS3);
+  spi_deselect(SPI_CS4);
 }
-#endif
 
-#endif /* PROJECT_CONF_H_ */
+void
+spi_arch_select(unsigned char cs)
+{
+#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
+  switch (cs) {
+  case SPI_CS0:
+    P1_0 = 0;
+    break;
+  case SPI_CS1:
+    P1_1 = 0;
+    break;
+  case SPI_CS2:
+    P1_2 = 0;
+    break;
+  case SPI_CS3:
+    P1_3 = 0;
+    break;
+  case SPI_CS4:
+    P1_4 = 0;
+    break;
+  default:
+    /* TODO: invalid chip select */
+    break;
+  }
+#endif
+}
+
+void
+spi_arch_deselect(unsigned char cs)
+{
+#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
+  switch (cs) {
+  case SPI_CS0:
+    P1_0 = 1;
+    break;
+  case SPI_CS1:
+    P1_1 = 1;
+    break;
+  case SPI_CS2:
+    P1_2 = 1;
+    break;
+  case SPI_CS3:
+    P1_3 = 1;
+    break;
+  case SPI_CS4:
+    P1_4 = 1;
+    break;
+  default:
+    /* TODO: invalid chip select */
+    break;
+  }
+#endif
+}

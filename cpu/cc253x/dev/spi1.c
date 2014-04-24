@@ -36,6 +36,7 @@
 
 #include "dev/spi.h"
 #include "dev/spi1.h"
+#include "dev/spi-arch.h"
 #include "cc253x.h"
 #include "sfr-bits.h"
 
@@ -118,11 +119,8 @@ spi1_init(unsigned char	mode,
   else
     U1GCR &= ~0x20;
 
-  spi_deselect(SPI_CS0);
-  spi_deselect(SPI_CS1);
-  spi_deselect(SPI_CS2);
-  spi_deselect(SPI_CS3);
-  spi_deselect(SPI_CS4);
+  /* configure architecture chip selects */
+  spi_arch_deselect_all();
 
   /* optional, just to remove compile warning */
   spi_deselect(cs);

@@ -1,4 +1,4 @@
-# cc2530dk platform makefile
+# u-mote platform makefile
 
 ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
@@ -9,7 +9,7 @@ CONTIKI_TARGET_MAIN = $(addprefix $(OBJECTDIR)/,contiki-main.rel)
 
 CONTIKI_TARGET_SOURCEFILES = contiki-main.c
 CONTIKI_TARGET_SOURCEFILES += leds.c leds-arch.c
-CONTIKI_TARGET_SOURCEFILES += spi.c spi1.c
+CONTIKI_TARGET_SOURCEFILES += spi.c spi1.c spi-arch.c
 CONTIKI_TARGET_SOURCEFILES += sensors.c u-mote-sensors.c
 CONTIKI_TARGET_SOURCEFILES += button-sensor.c adc-sensor.c
 CONTIKI_TARGET_SOURCEFILES += lsm330dlc-sensor.c
@@ -19,7 +19,7 @@ CONTIKI_TARGET_SOURCEFILES += usb-serial.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
-CLEAN += *.cc2530dk
+CLEAN += *.u-mote
 
 ifeq ($(UIP_CONF_IPV6),1)
   CFLAGS += -DUIP_CONF_IPV6=1

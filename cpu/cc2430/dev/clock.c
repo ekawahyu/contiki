@@ -151,7 +151,7 @@ clock_ISR(void) __interrupt(ST_VECTOR)
   if(count % CLOCK_CONF_SECOND == 0) {
     ++seconds;
   }
-  
+
 #if CLOCK_CONF_STACK_FRIENDLY
   sleep_flag = 1;
 #else

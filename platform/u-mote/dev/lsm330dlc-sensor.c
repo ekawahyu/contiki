@@ -49,45 +49,45 @@ value(int type)
   switch(type) {
   case LSM330DLC_SENSOR_TYPE_ACCL_X:
 
-    spi_select(SPI_CS1);
+    spi_select(SPI_CS4);
     spi_write(ACC_REG_OUT_X_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS1);
+    spi_deselect(SPI_CS4);
 
-    spi_select(SPI_CS1);
+    spi_select(SPI_CS4);
     spi_write(ACC_REG_OUT_X_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS1);
+    spi_deselect(SPI_CS4);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_ACCL_Y:
 
-    spi_select(SPI_CS1);
+    spi_select(SPI_CS4);
     spi_write(ACC_REG_OUT_Y_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(SPI_CS4);
 
-    spi_select(SPI_CS1);
+    spi_select(SPI_CS4);
     spi_write(ACC_REG_OUT_Y_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS1);
+    spi_deselect(SPI_CS4);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_ACCL_Z:
 
-    spi_select(SPI_CS1);
+    spi_select(SPI_CS4);
     spi_write(ACC_REG_OUT_Z_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(SPI_CS4);
 
-    spi_select(SPI_CS1);
+    spi_select(SPI_CS4);
     spi_write(ACC_REG_OUT_Z_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS1);
+    spi_deselect(SPI_CS4);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
@@ -187,15 +187,15 @@ configure(int type, int value)
       spi_deselect(SPI_CS0);
 
       /* initialize accelerometer */
-      spi_select(SPI_CS0);
+      spi_select(SPI_CS4);
       spi_write(CTRL_REG1_A);
       spi_write(ACC_400_Hz_A | xyz_en_A);
-      spi_deselect(SPI_CS0);
+      spi_deselect(SPI_CS4);
 
-      spi_select(SPI_CS0);
+      spi_select(SPI_CS4);
       spi_write(CTRL_REG4_G);
       spi_write(ACC_2G_A | HR_A);
-      spi_deselect(SPI_CS0);
+      spi_deselect(SPI_CS4);
 
       lsm330dlc_sensor_status = 1;
     }

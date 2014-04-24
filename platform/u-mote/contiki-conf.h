@@ -7,7 +7,7 @@
 
 /* Include Project Specific conf */
 #ifdef PROJECT_CONF_H
-#include "project-conf.h"
+#include PROJECT_CONF_H
 #endif /* PROJECT_CONF_H */
 
 /*
@@ -74,6 +74,8 @@
 #ifndef SPI1_CONF_ENABLE
 #define SPI1_CONF_ENABLE  1
 #endif
+
+#define UMOTE_SENSORS_ON_SPI        1
 
 #if (UART0_CONF_ENABLE & SPI0_CONF_ENABLE)
 #error cannot define both UART0 and SPI0 enabled!
@@ -147,6 +149,10 @@
  * It is harmless to #define XYZ 1
  * even if the sensor is not present on our device
  */
+#ifndef LSM330DLC_SENSOR_CONF_ON
+#define LSM330DLC_SENSOR_CONF_ON    1
+#endif
+
 #ifndef BUTTON_SENSOR_CONF_ON
 #define BUTTON_SENSOR_CONF_ON   1  /* Buttons */
 #endif
@@ -166,7 +172,7 @@
 
 /* Low Power Modes - We only support PM0/Idle and PM1 */
 #ifndef LPM_CONF_MODE
-#define LPM_CONF_MODE         0 /* 0: no LPM, 1: MCU IDLE, 2: Drop to PM1 */
+#define LPM_CONF_MODE           2 /* 0: no LPM, 1: PM1, 2: PM2 */
 #endif
 
 /* DMA Configuration */
@@ -195,6 +201,7 @@
 #endif
 
 #ifndef NETSTACK_CONF_RDC
+//#define NETSTACK_CONF_RDC     lpp_driver
 #define NETSTACK_CONF_RDC     nullrdc_driver
 #define NULLRDC_802154_AUTOACK 1
 #define NULLRDC_802154_AUTOACK_HW 1

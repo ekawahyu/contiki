@@ -43,7 +43,7 @@
 void
 spi_init(void)
 {
-  spi_arch_init(SPI_MODE3, SPI_CS0, SPI_FOUR_HUNDRED_HZ, SPI_MSB_FIRST);
+  spi_arch_init(SPI_MODE3, SPI_CS0, SPI_ONE_MHZ, SPI_MSB_FIRST);
 }
 
 void
@@ -64,54 +64,14 @@ spi_read_write(unsigned char data)
   return spi_arch_read_write(data);
 }
 
-void spi_select(unsigned char cs)
+void
+spi_select(unsigned char cs)
 {
-#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
-  switch (cs) {
-  case SPI_CS0:
-    P1_0 = 0;
-    break;
-  case SPI_CS1:
-    P1_1 = 0;
-    break;
-  case SPI_CS2:
-    P1_2 = 0;
-    break;
-  case SPI_CS3:
-    P1_3 = 0;
-    break;
-  case SPI_CS4:
-    P1_4 = 0;
-    break;
-  default:
-    /* TODO: invalid chip select */
-    break;
-  }
-#endif
+  spi_arch_select(cs);
 }
 
-void spi_deselect(unsigned char cs)
+void
+spi_deselect(unsigned char cs)
 {
-#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
-  switch (cs) {
-  case SPI_CS0:
-    P1_0 = 1;
-    break;
-  case SPI_CS1:
-    P1_1 = 1;
-    break;
-  case SPI_CS2:
-    P1_2 = 1;
-    break;
-  case SPI_CS3:
-    P1_3 = 1;
-    break;
-  case SPI_CS4:
-    P1_4 = 1;
-    break;
-  default:
-    /* TODO: invalid chip select */
-    break;
-  }
-#endif
+  spi_arch_deselect(cs);
 }
