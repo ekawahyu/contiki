@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Loughborough University - Computer Science
+ * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,30 +27,54 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
+ *
  */
 
 /**
  * \file
- *         Project specific configuration defines for the sniffer example.
- *
+ *         Example for using the trickle code in Rime
  * \author
- *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         Adam Dunkels <adam@sics.se>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "contiki.h"
+#include "net/rime/trickle.h"
 
-#define CC2530_RF_CONF_HEXDUMP 1
-#define CC2530_RF_CONF_AUTOACK 0
-#define NETSTACK_CONF_RDC      stub_rdc_driver
-#define ADC_SENSOR_CONF_ON     0
-#define LPM_CONF_MODE          0
-#define UART0_CONF_HIGH_SPEED  0
+#include "dev/button-sensor.h"
 
-/* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 0
+#include "dev/leds.h"
 
-/* Used by cc2531 USB dongle builds, has no effect on SmartRF builds */
-#define USB_SERIAL_CONF_BUFFERED 0
+#include <stdio.h>
+/*---------------------------------------------------------------------------*/
+PROCESS(example_trickle_process, "Trickle example");
+AUTOSTART_PROCESSES(&example_trickle_process);
+/*---------------------------------------------------------------------------*/
+static void
+trickle_recv(struct trickle_conn *c)
+{
+  printf("%d.%d: trickle message received '%s'\n",
+	 rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1],
+	 (char *)packetbuf_dataptr());
+}
+const static struct trickle_callbacks trickle_call = {trickle_recv};
+static struct trickle_conn trickle;
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(example_trickle_process, ev, data)
+{
+  PROCESS_EXITHANDLER(trickle_close(&trickle);)
+  PROCESS_BEGIN();
 
-#endif /* PROJECT_CONF_H_ */
+  trickle_open(&trickle, CLOCK_SECOND, 145, &trickle_call);
+  SENSORS_ACTIVATE(button_sensor);
+
+  while(1) {
+    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event &&
+			     data == &button_sensor);
+
+    packetbuf_copyfrom("Hello, world", 13);
+    trickle_send(&trickle);
+
+  }
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Loughborough University - Computer Science
+ * Copyright (c) 2011, George Oikonomou - <oikonomou@users.sourceforge.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,26 +31,49 @@
 
 /**
  * \file
- *         Project specific configuration defines for the sniffer example.
+ *         Platform-specific led driver for the TI SmartRF05 Eval. Board.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
-
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-
-#define CC2530_RF_CONF_HEXDUMP 1
-#define CC2530_RF_CONF_AUTOACK 0
-#define NETSTACK_CONF_RDC      stub_rdc_driver
-#define ADC_SENSOR_CONF_ON     0
-#define LPM_CONF_MODE          0
-#define UART0_CONF_HIGH_SPEED  0
-
-/* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 0
-
-/* Used by cc2531 USB dongle builds, has no effect on SmartRF builds */
-#define USB_SERIAL_CONF_BUFFERED 0
-
-#endif /* PROJECT_CONF_H_ */
+#include "contiki-conf.h"
+#include "dev/leds.h"
+#include "dev/leds-arch.h"
+#include "cc253x.h"
+/*---------------------------------------------------------------------------*/
+void
+leds_arch_init(void)
+{
+#if MODELS_CONF_CC2531_USB_STICK
+  P1SEL &= ~LED1_MASK;
+  P1DIR |= LED1_MASK;
+  P0SEL &= ~LED2_MASK;
+  P0DIR |= LED2_MASK;
+#else
+  P1SEL &= ~(LED1_MASK | LED2_MASK | LED3_MASK);
+  P1DIR |= (LED1_MASK | LED2_MASK | LED3_MASK);
+#endif
+}
+/*---------------------------------------------------------------------------*/
+unsigned char
+leds_arch_get(void)
+{
+#if MODELS_CONF_CC2531_USB_STICK
+  return (unsigned char)(LED1_PIN | ((LED2_PIN ^ 0x01) << 1));
+#else
+  return (unsigned char)(LED1_PIN | (LED2_PIN << 1) | (LED3_PIN << 2));
+#endif
+}
+/*---------------------------------------------------------------------------*/
+void
+leds_arch_set(unsigned char leds)
+{
+  LED1_PIN = leds & 0x01;
+#if MODELS_CONF_CC2531_USB_STICK
+  LED2_PIN = ((leds & 0x02) >> 1) ^ 0x01;
+#else
+  LED2_PIN = (leds & 0x02) >> 1;
+  LED3_PIN = (leds & 0x04) >> 2;
+#endif
+}
+/*---------------------------------------------------------------------------*/

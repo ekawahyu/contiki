@@ -31,26 +31,70 @@
 
 /**
  * \file
- *         Project specific configuration defines for the sniffer example.
+ *         Definition of a fake RDC driver to be used with passive
+ *         examples. The sniffer will never send packets and it will never
+ *         push incoming packets up the stack. We do this by defining this
+ *         driver as our RDC. We then drop everything
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-
-#define CC2530_RF_CONF_HEXDUMP 1
-#define CC2530_RF_CONF_AUTOACK 0
-#define NETSTACK_CONF_RDC      stub_rdc_driver
-#define ADC_SENSOR_CONF_ON     0
-#define LPM_CONF_MODE          0
-#define UART0_CONF_HIGH_SPEED  0
-
-/* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 0
-
-/* Used by cc2531 USB dongle builds, has no effect on SmartRF builds */
-#define USB_SERIAL_CONF_BUFFERED 0
-
-#endif /* PROJECT_CONF_H_ */
+#include "net/mac/mac.h"
+#include "net/mac/rdc.h"
+/*---------------------------------------------------------------------------*/
+static void
+send(mac_callback_t sent, void *ptr)
+{
+  if(sent) {
+    sent(ptr, MAC_TX_OK, 1);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *list)
+{
+  if(sent) {
+    sent(ptr, MAC_TX_OK, 1);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+input(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+static int
+on(void)
+{
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static int
+off(int keep_radio_on)
+{
+  return keep_radio_on;
+}
+/*---------------------------------------------------------------------------*/
+static unsigned short
+cca(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+static void
+init(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+const struct rdc_driver stub_rdc_driver = {
+  "stub-rdc",
+  init,
+  send,
+  send_list,
+  input,
+  on,
+  off,
+  cca,
+};
+/*---------------------------------------------------------------------------*/

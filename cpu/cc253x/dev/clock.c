@@ -45,7 +45,7 @@
 
 /* Sleep timer runs on the 32k RC osc. */
 /* One clock tick is 7.8 ms */
-#define TICK_VAL (32768/128)  /* 256 */
+#define TICK_VAL (32768/2)  /* 256 */
 /*---------------------------------------------------------------------------*/
 #if CLOCK_CONF_STACK_FRIENDLY
 volatile uint8_t sleep_flag;

@@ -27,11 +27,13 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
+ *
  */
 
 /**
  * \file
- *         Project specific configuration defines for the sniffer example.
+ *         Project specific configuration defines for the UDP client/server
+ *         example.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
@@ -40,17 +42,8 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-#define CC2530_RF_CONF_HEXDUMP 1
-#define CC2530_RF_CONF_AUTOACK 0
-#define NETSTACK_CONF_RDC      stub_rdc_driver
-#define ADC_SENSOR_CONF_ON     0
-#define LPM_CONF_MODE          0
-#define UART0_CONF_HIGH_SPEED  0
-
-/* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 0
-
-/* Used by cc2531 USB dongle builds, has no effect on SmartRF builds */
-#define USB_SERIAL_CONF_BUFFERED 0
+#define BUTTON_SENSOR_CONF_ON 1
+#define UIP_CONF_ICMP6        1
+#define RIMESTATS_CONF_ENABLED 1
 
 #endif /* PROJECT_CONF_H_ */

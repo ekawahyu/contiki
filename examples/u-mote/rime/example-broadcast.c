@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Loughborough University - Computer Science
+ * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,30 +27,61 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
+ *
  */
 
 /**
  * \file
- *         Project specific configuration defines for the sniffer example.
- *
+ *         Testing the broadcast layer in Rime
  * \author
- *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         Adam Dunkels <adam@sics.se>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "contiki.h"
+#include "net/rime.h"
+#include "random.h"
 
-#define CC2530_RF_CONF_HEXDUMP 1
-#define CC2530_RF_CONF_AUTOACK 0
-#define NETSTACK_CONF_RDC      stub_rdc_driver
-#define ADC_SENSOR_CONF_ON     0
-#define LPM_CONF_MODE          0
-#define UART0_CONF_HIGH_SPEED  0
+#include "dev/button-sensor.h"
 
-/* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 0
+#include "dev/leds.h"
 
-/* Used by cc2531 USB dongle builds, has no effect on SmartRF builds */
-#define USB_SERIAL_CONF_BUFFERED 0
+#include <stdio.h>
+/*---------------------------------------------------------------------------*/
+PROCESS(example_broadcast_process, "Broadcast example");
+AUTOSTART_PROCESSES(&example_broadcast_process);
+/*---------------------------------------------------------------------------*/
+static void
+broadcast_recv(struct broadcast_conn *c, const rimeaddr_t *from)
+{
+  printf("broadcast message received from %d.%d: '%s'\n",
+         from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
+}
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(example_broadcast_process, ev, data)
+{
+  static struct etimer et;
 
-#endif /* PROJECT_CONF_H_ */
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
+
+  PROCESS_BEGIN();
+
+  broadcast_open(&broadcast, 129, &broadcast_call);
+
+  while(1) {
+
+    /* Delay 2-4 seconds */
+    //etimer_set(&et, CLOCK_SECOND * 4 + random_rand() % (CLOCK_SECOND * 4));
+    etimer_set(&et, 8);
+
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    packetbuf_copyfrom("Hello", 6);
+    broadcast_send(&broadcast);
+    printf("broadcast message sent\n");
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
