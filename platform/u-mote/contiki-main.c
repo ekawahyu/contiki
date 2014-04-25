@@ -18,7 +18,7 @@
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
 #include "dev/leds-arch.h"
-#include "net/rime.h"
+#include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
 #include "debug.h"
@@ -26,7 +26,6 @@
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
 PROCESS_NAME(viztool_process);
@@ -48,7 +47,7 @@ PROCESS_NAME(viztool_process);
 extern volatile uint8_t sleep_flag;
 #endif
 /*---------------------------------------------------------------------------*/
-extern rimeaddr_t rimeaddr_node_addr;
+extern linkaddr_t linkaddr_node_addr;
 static CC_AT_DATA uint16_t len;
 /*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
@@ -93,7 +92,7 @@ set_rime_addr(void) CC_NON_BANKED
 #endif
 
   PUTSTRING("Rime is 0x");
-  PUTHEX(sizeof(rimeaddr_t));
+  PUTHEX(sizeof(linkaddr_t));
   PUTSTRING(" bytes long\n");
 
 #if CC2530_CONF_MAC_FROM_PRIMARY
@@ -117,8 +116,8 @@ set_rime_addr(void) CC_NON_BANKED
   FMAP = CC2530_LAST_FLASH_BANK;
 #endif
 
-  for(i = (RIMEADDR_SIZE - 1); i >= 0; --i) {
-    rimeaddr_node_addr.u8[i] = *macp;
+  for(i = (LINKADDR_SIZE - 1); i >= 0; --i) {
+    linkaddr_node_addr.u8[i] = *macp;
     macp++;
   }
 
@@ -131,11 +130,11 @@ set_rime_addr(void) CC_NON_BANKED
   /* Now the address is stored MSB first */
 #if STARTUP_CONF_VERBOSE
   PUTSTRING("Rime configured with address ");
-  for(i = 0; i < RIMEADDR_SIZE - 1; i++) {
-    PUTHEX(rimeaddr_node_addr.u8[i]);
+  for(i = 0; i < LINKADDR_SIZE - 1; i++) {
+    PUTHEX(linkaddr_node_addr.u8[i]);
     PUTCHAR(':');
   }
-  PUTHEX(rimeaddr_node_addr.u8[i]);
+  PUTHEX(linkaddr_node_addr.u8[i]);
   PUTCHAR('\n');
 #endif
 
@@ -251,7 +250,7 @@ main(void) CC_NON_BANKED
 #endif
 
 #if UIP_CONF_IPV6
-  memcpy(&uip_lladdr.addr, &rimeaddr_node_addr, sizeof(uip_lladdr.addr));
+  memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
   queuebuf_init();
   process_start(&tcpip_process, NULL);
 #endif /* UIP_CONF_IPV6 */
