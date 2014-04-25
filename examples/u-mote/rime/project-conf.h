@@ -51,7 +51,7 @@ extern "C" {
 #define LPM_CONF_MODE                   0 /* USB Stick may not sleep as a router */
 #else
 #define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
+#define LPM_CONF_MODE                   2
 #endif
 
 #ifdef __cplusplus

@@ -201,7 +201,7 @@
 #endif
 
 #ifndef NETSTACK_CONF_RDC
-//#define NETSTACK_CONF_RDC     lpp_driver
+//#define NETSTACK_CONF_RDC     contikimac_driver
 #define NETSTACK_CONF_RDC     nullrdc_driver
 #define NULLRDC_802154_AUTOACK 1
 #define NULLRDC_802154_AUTOACK_HW 1
