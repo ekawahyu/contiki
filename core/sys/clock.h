@@ -132,6 +132,13 @@ void clock_wait(clock_time_t t);
 void clock_delay_usec(uint16_t dt);
 
 /**
+ * Adjust and skip the next tick timer by n tick ahead.
+ *
+ * \param tick   The tick to skip.
+ */
+void clock_adjust_systick_ahead_by(unsigned int tick);
+
+/**
  * Deprecated platform-specific routines.
  *
  */

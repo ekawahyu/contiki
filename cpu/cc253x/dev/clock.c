@@ -42,10 +42,11 @@
 #include "sys/etimer.h"
 #include "cc253x.h"
 #include "sys/energest.h"
+#include <stdio.h>
 
 /* Sleep timer runs on the 32k RC osc. */
 /* One clock tick is 7.8 ms */
-#define TICK_VAL (32768/2)  /* 256 */
+#define TICK_VAL (32768/128)  /* 256 */
 /*---------------------------------------------------------------------------*/
 #if CLOCK_CONF_STACK_FRIENDLY
 volatile uint8_t sleep_flag;
@@ -92,6 +93,29 @@ CCIF unsigned long
 clock_seconds(void)
 {
   return seconds;
+}
+/*---------------------------------------------------------------------------*/
+void
+clock_adjust_systick_ahead_by(unsigned int tick)
+{
+  unsigned long timer_value_now;
+  unsigned long timer_value_diff;
+  unsigned char ret = 0;
+  DISABLE_INTERRUPTS();
+
+  timer_value = ST0;
+  timer_value += ((unsigned long int)ST1) << 8;
+  timer_value += ((unsigned long int)ST2) << 16;
+  while (tick) {
+    timer_value += TICK_VAL;
+    ++count;
+    --tick;
+  }
+  ST2 = (unsigned char)(timer_value >> 16);
+  ST1 = (unsigned char)(timer_value >> 8);
+  ST0 = (unsigned char)timer_value;
+
+  ENABLE_INTERRUPTS();
 }
 /*---------------------------------------------------------------------------*/
 /*

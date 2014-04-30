@@ -62,6 +62,7 @@ static struct broadcast_conn broadcast;
 PROCESS_THREAD(example_broadcast_process, ev, data)
 {
   static struct etimer et;
+  static int counter;
 
   PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
 
@@ -73,13 +74,13 @@ PROCESS_THREAD(example_broadcast_process, ev, data)
 
     /* Delay 2-4 seconds */
     //etimer_set(&et, CLOCK_SECOND * 4 + random_rand() % (CLOCK_SECOND * 4));
-    etimer_set(&et, 8);
+    etimer_set(&et, 1);
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     packetbuf_copyfrom("Hello", 6);
     broadcast_send(&broadcast);
-    printf("broadcast message sent\n");
+    printf("broadcast message sent (%i)\n", counter++);
   }
 
   PROCESS_END();

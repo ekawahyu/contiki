@@ -26,6 +26,8 @@
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+
+#include <stdio.h>
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
 PROCESS_NAME(viztool_process);
@@ -46,6 +48,7 @@ PROCESS_NAME(viztool_process);
 #if CLOCK_CONF_STACK_FRIENDLY
 extern volatile uint8_t sleep_flag;
 #endif
+long int ret;
 /*---------------------------------------------------------------------------*/
 extern linkaddr_t linkaddr_node_addr;
 static CC_AT_DATA uint16_t len;
@@ -158,7 +161,7 @@ main(void) CC_NON_BANKED
   //fade(LEDS_GREEN);
 
   /* Init SPI here */
-  spi_init();
+  //spi_init();
 
   /* initialize process manager. */
   process_init();
@@ -244,7 +247,7 @@ main(void) CC_NON_BANKED
 
 #if BUTTON_SENSOR_ON || ADC_SENSOR_ON
   process_start(&sensors_process, NULL);
-  LSM330DLC_SENSOR_ACTIVATE();
+  //LSM330DLC_SENSOR_ACTIVATE();
   BUTTON_SENSOR_ACTIVATE();
   ADC_SENSOR_ACTIVATE();
 #endif
@@ -303,6 +306,20 @@ main(void) CC_NON_BANKED
       }
     }
 #if LPM_MODE
+    /* Making sure that the next sleep timer interrupt happens at least 3ms
+     * after sleep command is issued. Otherwise, the system will go to sleep
+     * and never wake up again.
+     *
+     * If the system runs on 32kHz --> 96 counts ~3ms
+     * If the system runs on 32.768kHz ---> 98 counts ~3ms
+     *
+     * The sleep timer is being used as a systick, therefore, adding a new
+     * value to it may affect every thread running with etimer. The workaround
+     * for the moment is to skip ahead one ISR and manually adjust the systick
+     * ahead of time. One tick adjustment is equivalent to adding 7.8ms
+     */
+    clock_adjust_systick_ahead_by(1);
+
     /*
      * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
      * Sleep Timer will wake us up in no more than 7.8ms (max idle interval)
@@ -318,7 +335,10 @@ main(void) CC_NON_BANKED
     /* Go IDLE or Enter PM1 */
     PCON |= PCON_IDLE;
 
-    /* First instruction upon exiting PM1 must be a NOP */
+    /* First instruction upon exiting PM1 must be a NOP
+     * There is no harm in adding more NOP and it seems that
+     * lock up does not occur anymore in PM1 with two additional NOP
+     */
     __asm
       nop
       nop
@@ -330,6 +350,7 @@ main(void) CC_NON_BANKED
 
     ENERGEST_ON(ENERGEST_TYPE_CPU);
     ENERGEST_OFF(ENERGEST_TYPE_LPM);
+    //}
 #endif /* LPM_MODE */
   }
 }

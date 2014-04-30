@@ -40,28 +40,42 @@
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "random.h"
-
+#include "sys/clock.h"
 #include "dev/lsm330dlc-sensor.h"
 
 #include <stdio.h>
+
+#define MESSAGE_LEN   21
+
+static char message[MESSAGE_LEN];
 
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ABC example");
 AUTOSTART_PROCESSES(&example_abc_process);
 /*---------------------------------------------------------------------------*/
 static void
-abc_recv(struct abc_conn *c)
+abc_recv_cb(struct abc_conn *c)
 {
-  printf("abc message received '%s'\n", (char *)packetbuf_dataptr());
+  memset(message, 0, MESSAGE_LEN);
+  memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
+  printf("abc message received '%s'\n", message);
+  printf("clock_seconds = %u\n", clock_time());
   //process_post_synch(&example_abc_process, PROCESS_EVENT_CONTINUE, "wakeup");
 }
-static const struct abc_callbacks abc_call = {abc_recv};
+static void
+abc_sent_cb(struct abc_conn *c, int status, int num_tx)
+{
+  static unsigned int counter;
+  printf("abc message sent (%u)\n", counter++);
+  printf("clock_seconds = %u\n", clock_time());
+}
+static const struct abc_callbacks abc_call = {abc_recv_cb, abc_sent_cb};
 static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
-  static int counter;
+  static int counter, num;
   static const struct sensors_sensor *sensor;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
@@ -73,17 +87,19 @@ PROCESS_THREAD(example_abc_process, ev, data)
   while(1) {
 
     /* Delay 2-4 seconds */
-    //etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
-    etimer_set(&et, 4);
+    etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
+    //etimer_set(&et, 1);
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     //PROCESS_WAIT_EVENT_UNTIL(data=="wakeup");
 
-    packetbuf_copyfrom("Hello from EKA:A", 17);
+    counter++;
+    memset(message, 0, MESSAGE_LEN);
+    sprintf(message, "Hello from EKA:%i", counter);
+    packetbuf_copyfrom(message, strlen(message));
     abc_send(&abc);
-    printf("abc message sent (%i)\n", counter++);
 
-    sensor = sensors_find(LSM330DLC_SENSOR);
+    /*sensor = sensors_find(LSM330DLC_SENSOR);
 
     if (sensor) {
       printf("LSM330DLC Status: 0x%X\n",
@@ -104,7 +120,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_X),
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Y),
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Z));
-    }
+    }*/
   }
 
   PROCESS_END();

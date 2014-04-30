@@ -318,7 +318,7 @@ send_packet(mac_callback_t sent, void *ptr)
   }
 
   if(seqno == 0) {
-    /* PACKETBUF_ATTR_MAC_SEQNO cannot be zero, due to a pecuilarity
+    /* PACKETBUF_ATTR_MAC_SEQNO cannot be zero, due to a peculiarity
        in framer-802154.c. */
     seqno++;
   }

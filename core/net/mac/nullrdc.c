@@ -282,7 +282,7 @@ packet_input(void)
 #if NULLRDC_802154_AUTOACK
   if(packetbuf_datalen() == ACK_LEN) {
     /* Ignore ack packets */
-    PRINTF("nullrdc: ignored ack\n"); 
+    PRINTF("nullrdc: ignored ack\n");
   } else
 #endif /* NULLRDC_802154_AUTOACK */
   if(NETSTACK_FRAMER.parse() < 0) {

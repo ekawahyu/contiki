@@ -74,7 +74,7 @@ PROCESS_THREAD(example_unicast_process, ev, data)
     linkaddr_t addr;
 
     //etimer_set(&et, CLOCK_SECOND);
-    etimer_set(&et, 4);
+    etimer_set(&et, 1);
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
