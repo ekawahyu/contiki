@@ -98,9 +98,6 @@ clock_seconds(void)
 void
 clock_adjust_systick_ahead_by(unsigned int tick)
 {
-  unsigned long timer_value_now;
-  unsigned long timer_value_diff;
-  unsigned char ret = 0;
   DISABLE_INTERRUPTS();
 
   timer_value = ST0;

@@ -48,7 +48,6 @@ PROCESS_NAME(viztool_process);
 #if CLOCK_CONF_STACK_FRIENDLY
 extern volatile uint8_t sleep_flag;
 #endif
-long int ret;
 /*---------------------------------------------------------------------------*/
 extern linkaddr_t linkaddr_node_addr;
 static CC_AT_DATA uint16_t len;
@@ -318,7 +317,7 @@ main(void) CC_NON_BANKED
      * for the moment is to skip ahead one ISR and manually adjust the systick
      * ahead of time. One tick adjustment is equivalent to adding 7.8ms
      */
-    clock_adjust_systick_ahead_by(1);
+    clock_adjust_systick_ahead_by(10);
 
     /*
      * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
