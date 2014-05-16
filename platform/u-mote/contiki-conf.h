@@ -56,7 +56,7 @@
 #define UART0_CONF_ENABLE  1
 #endif
 #ifndef UART0_CONF_WITH_INPUT
-#define UART0_CONF_WITH_INPUT 0
+#define UART0_CONF_WITH_INPUT 1
 #endif
 
 #ifndef UART0_CONF_HIGH_SPEED
@@ -76,14 +76,6 @@
 #endif
 
 #define UMOTE_SENSORS_ON_SPI        1
-
-#if (UART0_CONF_ENABLE & SPI0_CONF_ENABLE)
-#error cannot define both UART0 and SPI0 enabled!
-#endif
-
-#if (UART1_CONF_ENABLE & SPI1_CONF_ENABLE)
-#error cannot define both UART1 and SPI1 enabled!
-#endif
 
 /* USB output buffering enabled by default (relevant to cc2531 builds only) */
 #ifndef USB_SERIAL_CONF_BUFFERED
@@ -112,8 +104,17 @@
 
 #if CC2530_RF_CONF_HEXDUMP
 /* We need UART1 output */
-#undef UART_ZERO_CONF_ENABLE
-#define UART_ZERO_CONF_ENABLE   1
+#undef UART0_CONF_ENABLE
+#define UART0_CONF_ENABLE   1
+#endif
+
+/* It is not possible to have UARTx and SPIx configured at the same pins */
+#if (UART0_CONF_ENABLE & SPI0_CONF_ENABLE)
+#error cannot define both UART0 and SPI0 enabled!
+#endif
+
+#if (UART1_CONF_ENABLE & SPI1_CONF_ENABLE)
+#error cannot define both UART1 and SPI1 enabled!
 #endif
 
 /* Code Shortcuts */

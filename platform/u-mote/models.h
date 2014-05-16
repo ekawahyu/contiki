@@ -93,7 +93,7 @@
 #define LED2_PIN   P0_0
 #define LED1_PIN   P1_1
 
-/* P0DIR and P0SEL masks */
+/* PxDIR and PxSEL masks */
 #define LED2_MASK  0x01
 #define LED1_MASK  0x02
 #else
@@ -106,12 +106,27 @@
 #define LED2_PIN   P1_1
 #define LED3_PIN   P1_4
 
-/* P0DIR and P0SEL masks */
+/* PxDIR and PxSEL masks */
 #define LED1_MASK  0x01
 #define LED2_MASK  0x02
 #define LED3_MASK  0x10
 #define LED4_MASK  0x02
-#endif
+#endif /* MODELS_CONF_CC2531_USB_STICK */
+
+/* H/W Connections */
+#define GPIO1_PIN   P0_4
+#define GPIO2_PIN   P0_5
+#define GPIO3_PIN   P0_6
+#define GPIO4_PIN   P0_7
+#define GPIO5_PIN   P2_0
+
+/* PxDIR and PxSEL masks */
+#define GPIO1_MASK   0x10
+#define GPIO2_MASK   0x20
+#define GPIO3_MASK   0x40
+#define GPIO4_MASK   0x80
+#define GPIO5_MASK   0x01
+
 /*---------------------------------------------------------------------------*/
 /* Buttons */
 /*---------------------------------------------------------------------------*/

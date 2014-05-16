@@ -58,7 +58,7 @@ uart1_set_input(int (* input)(unsigned char c))
   uart1_input_handler = input;
 }
 /*---------------------------------------------------------------------------*/
-#if UART_ONE_CONF_WITH_INPUT
+#if UART1_CONF_WITH_INPUT
 /* avoid referencing bits since we're not using them */
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE

@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * gpio-arch.h
  *
- * Created on: Mar 3, 2014
+ * Created on: May 13, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,41 +34,20 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef GPIO_ARCH_H_
+#define GPIO_ARCH_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE  1
-
-#define MODELS_CONF_CC2531_USB_STICK    0
-#define MODELS_CONF_RC2400HP_MODULE     0
-
-#if (MODELS_CONF_CC2531_USB_STICK)
-#define CC2530_CONF_MAC_FROM_PRIMARY    0
-#define LPM_CONF_MODE                   0 /* USB Stick may not sleep as a router */
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   2
-#endif
-
-/* TODO This is a temporary workaround to disable ADC Sensor while building for
- * dongle with button S1 is activated. With ADC Sensor disabled, all related
- * sensors such as temperature, VDD and battery sensor are disabled as well
- *
- * The u-mote sleepy node needs to read from temperature sensor, while dongle
- * can be disabled for now (until there is a fix for this issue)
- */
-#if LPM_CONF_MODE
-#define ADC_SENSOR_CONF_ON              1
-#else
-#define ADC_SENSOR_CONF_ON              0
-#endif
+void
+gpio_arch_init(void);
+unsigned char gpio_arch_get(void);
+void gpio_arch_set(unsigned char gpio);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* GPIO_ARCH_H_ */

@@ -1,0 +1,25 @@
+
+Building SDCC on Mac OS X using macports:
+=========================================
+sudo port install gcc46
+sudo port select --list gcc
+sudo port select gcc mp-gcc46
+cp sdcc-3.1.0-model-stack-auto.patch sdcc-3.1.0
+cd sdcc-3.1.0
+patch -p1 < sdcc-3.1.0-model-stack-auto.patch
+./configure --disable-z80-port --disable-z180-port --disable-r2k-port --disable-r3ka-port --disable-gbz80-port --disable-ds390-port --disable-ds400-port --disable-pic14-port --disable-pic16-port --disable-hc08-port --disable-s08-port
+make
+sudo make install
+sudo port select gcc none
+
+
+Building cc-tool:
+=================
+./configure
+make
+sudo make install
+
+
+Flashing a binary into CC2530 using SmartRF05:
+==============================================
+cc-tool -e -w <filename.hex>

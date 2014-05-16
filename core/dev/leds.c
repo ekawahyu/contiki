@@ -115,7 +115,8 @@ leds_toggle(unsigned char ledv)
 /*---------------------------------------------------------------------------*/
 /*   invert the invert register using the leds parameter */
 void
-leds_invert(unsigned char ledv) {
+leds_invert(unsigned char ledv)
+{
   invert = invert ^ ledv;
   show_leds(ledv);
 }

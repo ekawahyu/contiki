@@ -5,6 +5,7 @@
 #include "sys/autostart.h"
 #include "dev/serial-line.h"
 #include "dev/slip.h"
+#include "dev/gpio.h"
 #include "dev/leds.h"
 #include "dev/spi.h"
 #include "dev/io-arch.h"
@@ -83,6 +84,25 @@ fade(int l) CC_NON_BANKED
 }
 /*---------------------------------------------------------------------------*/
 static void
+fade_fast(int l) CC_NON_BANKED
+{
+  volatile int i, a;
+  int k, j;
+  for(k = 0; k < 200; ++k) {
+    j = k > 100 ? 200 - k : k;
+
+    leds_on(l);
+    for(i = 0; i < j; ++i) {
+      a = i;
+    }
+    leds_off(l);
+    for(i = 0; i < 100 - j; ++i) {
+      a = i;
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
 set_rime_addr(void) CC_NON_BANKED
 {
   char i;
@@ -154,12 +174,11 @@ main(void) CC_NON_BANKED
 
   stack_poison();
 
-  /* Init LEDs here */
+  gpio_init();
   leds_init();
   leds_off(LEDS_ALL);
   //fade(LEDS_GREEN);
 
-  /* Init SPI here */
   //spi_init();
 
   /* initialize process manager. */
@@ -244,11 +263,17 @@ main(void) CC_NON_BANKED
   netstack_init();
   set_rime_addr();
 
-#if BUTTON_SENSOR_ON || ADC_SENSOR_ON
+#if BUTTON_SENSOR_ON || ADC_SENSOR_ON || LSM330DLC_SENSOR_ON
   process_start(&sensors_process, NULL);
-  //LSM330DLC_SENSOR_ACTIVATE();
+#endif
+#if BUTTON_SENSOR_ON
   BUTTON_SENSOR_ACTIVATE();
+#endif
+#if ADC_SENSOR_ON
   ADC_SENSOR_ACTIVATE();
+#endif
+#if LSM330DLC_SENSOR_ON
+  //LSM330DLC_SENSOR_ACTIVATE();
 #endif
 
 #if UIP_CONF_IPV6
@@ -317,7 +342,7 @@ main(void) CC_NON_BANKED
      * for the moment is to skip ahead one ISR and manually adjust the systick
      * ahead of time. One tick adjustment is equivalent to adding 7.8ms
      */
-    clock_adjust_systick_ahead_by(10);
+    clock_adjust_systick_ahead_by(100);
 
     /*
      * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
@@ -343,6 +368,8 @@ main(void) CC_NON_BANKED
       nop
       nop
     __endasm;
+
+    fade_fast(LEDS_GREEN);
 
     /* Remember energest IRQ for next pass */
     ENERGEST_IRQ_SAVE(irq_energest);

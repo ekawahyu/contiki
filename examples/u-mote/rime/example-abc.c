@@ -41,40 +41,99 @@
 #include "net/rime/rime.h"
 #include "random.h"
 #include "sys/clock.h"
+#include "dev/serial-line.h"
 #include "dev/lsm330dlc-sensor.h"
+#include "dev/button-sensor.h"
+#include "dev/gpio.h"
+#include "dev/leds.h"
 #include "dev/lpm.h"
 
 #include <stdio.h>
 
-#define MESSAGE_LEN   21
+#define DEBUG 1
 
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else /* DEBUG */
+#define PRINTF(...)
+#endif /* DEBUG */
+
+#define MESSAGE_LEN   30
 static char message[MESSAGE_LEN];
+static char button_pressed = 0;
+static char command_received = 0;
+
+#define FIRE_COILS    1
+#define RELOAD_COILS  2
 
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ABC example");
-AUTOSTART_PROCESSES(&example_abc_process);
+PROCESS(serial_in_process, "ABC example");
+/*---------------------------------------------------------------------------*/
+#if BUTTON_SENSOR_ON
+PROCESS(buttons_process, "Button Process");
+AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process, &buttons_process);
+#else
+AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process);
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv_cb(struct abc_conn *c)
 {
   static clock_time_t curr_time;
   static clock_time_t time_diff;
+  static unsigned int repeat;
 
   memset(message, 0, MESSAGE_LEN);
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  printf("abc message received '%s'\n", message);
-
+  PRINTF("abc message received '%s'\n", message);
 #if (LPM_MODE == 0)
-  time_diff = clock_time() - curr_time;
-  curr_time = clock_time();
-  process_post_synch(&example_abc_process, PROCESS_EVENT_CONTINUE, &time_diff);
+  if (memcmp(message,"I am awake", 10) == 0) {
+    time_diff = clock_time() - curr_time;
+    curr_time = clock_time();
+    process_post_synch(&example_abc_process, PROCESS_EVENT_CONTINUE, &time_diff);
+  }
+#else
+  if (memcmp(message,"fire coils", 10) == 0) {
+    PRINTF("Firing now...\n");
+    P0_4 = 1;
+    P0_5 = 0;
+    P0_6 = 1;
+    P0_7 = 0;
+    P2_0 = 1;
+    repeat = 13;
+    while (repeat--) clock_delay_usec(65000);
+    P0_4 = 0;
+    P0_5 = 0;
+    P0_6 = 0;
+    P0_7 = 0;
+    P2_0 = 0;
+    PRINTF("Firing done!\n");
+  }
+  if (memcmp(message,"reload coils", 12) == 0) {
+    PRINTF("Reloading now...\n");
+    P0_4 = 0;
+    P0_5 = 1;
+    P0_6 = 0;
+    P0_7 = 1;
+    P2_0 = 1;
+    repeat = 13;
+    while (repeat--) clock_delay_usec(65000);
+    P0_4 = 0;
+    P0_5 = 0;
+    P0_6 = 0;
+    P0_7 = 0;
+    P2_0 = 0;
+    PRINTF("Reloading done!\n");
+  }
 #endif /* (LPM_MODE == 0) */
 }
 static void
 abc_sent_cb(struct abc_conn *c, int status, int num_tx)
 {
-  printf("abc message sent\n");
+  PRINTF("abc message sent\n");
 #if LPM_MODE
+  /* Listening delay for any incoming message */
   clock_delay_usec(10000);
 #endif /* LPM_MODE */
 }
@@ -91,17 +150,24 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
   PROCESS_BEGIN();
 
+#if LPM_MODE
+  P0_4 = 0;
+  P0_5 = 0;
+  P0_6 = 0;
+  P0_7 = 0;
+  P2_0 = 0;
+#endif
+
   abc_open(&abc, 128, &abc_call);
 
   while(1) {
 #if LPM_MODE
-    /* Delay 2-4 seconds */
-    //etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
+    /* Delay 1 second */
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     memset(message, 0, MESSAGE_LEN);
-    sprintf(message, "Hello from JIN:%i", counter++);
+    sprintf(message, "I am awake:%i", counter++);
     packetbuf_copyfrom(message, strlen(message));
     abc_send(&abc);
 #else
@@ -122,10 +188,19 @@ PROCESS_THREAD(example_abc_process, ev, data)
     }*/
     /* example of direct reply to sleepy u-mote */
     PROCESS_WAIT_EVENT_UNTIL(ev==PROCESS_EVENT_CONTINUE);
+
     memset(message, 0, MESSAGE_LEN);
-    sprintf(message, "Hello from EKA:%i", 1);
+
+    if (button_pressed || command_received == FIRE_COILS) sprintf(message, "fire coils:%i", 1);
+    if (command_received == RELOAD_COILS) sprintf(message, "reload coils:%i", 1);
+
     packetbuf_copyfrom(message, strlen(message));
-    abc_send(&abc);
+
+    if (button_pressed || command_received) {
+      button_pressed = 0;
+      command_received = 0;
+      abc_send(&abc);
+    }
 #endif /* LPM_MODE */
 
     /*sensor = sensors_find(LSM330DLC_SENSOR);
@@ -155,3 +230,42 @@ PROCESS_THREAD(example_abc_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+#if BUTTON_SENSOR_ON
+PROCESS_THREAD(buttons_process, ev, data)
+{
+  struct sensors_sensor *sensor;
+  static struct etimer et;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
+
+    /* If we woke up after a sensor event, inform what happened */
+    sensor = (struct sensors_sensor *)data;
+    if(sensor == &button_sensor) {
+      PRINTF("Button Press\n");
+      leds_toggle(LEDS_GREEN);
+      button_pressed = 1;
+    }
+  }
+
+  PROCESS_END();
+}
+#endif
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_in_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    PRINTF("Serial_RX: %s\n", (char*)data);
+    if (memcmp(data,"fire coils", 10) == 0) command_received = FIRE_COILS;
+    if (memcmp(data,"reload coils", 12) == 0) command_received = RELOAD_COILS;
+  }
+
+  PROCESS_END();
+}
