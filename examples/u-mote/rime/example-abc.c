@@ -96,34 +96,22 @@ abc_recv_cb(struct abc_conn *c)
 #else
   if (memcmp(message,"fire coils", 10) == 0) {
     PRINTF("Firing now...\n");
-    P0_4 = 1;
-    P0_5 = 0;
-    P0_6 = 1;
-    P0_7 = 0;
-    P2_0 = 1;
+    gpio_clear(GPIO2 | GPIO4);
+    gpio_set(GPIO1 | GPIO3 | GPIO5);
     repeat = 13;
     while (repeat--) clock_delay_usec(65000);
-    P0_4 = 0;
-    P0_5 = 0;
-    P0_6 = 0;
-    P0_7 = 0;
-    P2_0 = 0;
+    gpio_clear(GPIO2 | GPIO4);
+    gpio_clear(GPIO1 | GPIO3 | GPIO5);
     PRINTF("Firing done!\n");
   }
   if (memcmp(message,"reload coils", 12) == 0) {
     PRINTF("Reloading now...\n");
-    P0_4 = 0;
-    P0_5 = 1;
-    P0_6 = 0;
-    P0_7 = 1;
-    P2_0 = 1;
+    gpio_clear(GPIO1 | GPIO3);
+    gpio_set(GPIO2 | GPIO4 | GPIO5);
     repeat = 13;
     while (repeat--) clock_delay_usec(65000);
-    P0_4 = 0;
-    P0_5 = 0;
-    P0_6 = 0;
-    P0_7 = 0;
-    P2_0 = 0;
+    gpio_clear(GPIO2 | GPIO4);
+    gpio_clear(GPIO1 | GPIO3 | GPIO5);
     PRINTF("Reloading done!\n");
   }
 #endif /* (LPM_MODE == 0) */
@@ -149,14 +137,6 @@ PROCESS_THREAD(example_abc_process, ev, data)
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
-
-#if LPM_MODE
-  P0_4 = 0;
-  P0_5 = 0;
-  P0_6 = 0;
-  P0_7 = 0;
-  P2_0 = 0;
-#endif
 
   abc_open(&abc, 128, &abc_call);
 

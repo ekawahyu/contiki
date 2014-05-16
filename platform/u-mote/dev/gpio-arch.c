@@ -48,22 +48,27 @@ gpio_arch_init(void)
   P0DIR |= (GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK);
   P2SEL &= ~GPIO5_MASK;
   P2DIR |= GPIO5_MASK;
+  GPIO1_PIN = 0;
+  GPIO2_PIN = 0;
+  GPIO3_PIN = 0;
+  GPIO4_PIN = 0;
+  GPIO5_PIN = 0;
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
 gpio_arch_get(void)
 {
-  return (unsigned char)((GPIO1_PIN << 4) | (GPIO2_PIN << 5) |
-      (GPIO3_PIN << 6) | (GPIO4_PIN << 7));
+  return (unsigned char)((GPIO1_PIN) | (GPIO2_PIN << 1) |
+      (GPIO3_PIN << 2) | (GPIO4_PIN << 3) | GPIO5_PIN << 4);
 }
 /*---------------------------------------------------------------------------*/
 void
 gpio_arch_set(unsigned char gpio)
 {
-  //if (gpio & GPIO5_MASK) GPIO5_PIN = (gpio & GPIO5_MASK) >> ;
-  GPIO1_PIN = (gpio & GPIO1_MASK) >> 4;
-  GPIO2_PIN = (gpio & GPIO2_MASK) >> 5;
-  GPIO3_PIN = (gpio & GPIO3_MASK) >> 6;
-  GPIO4_PIN = (gpio & GPIO4_MASK) >> 7;
+  GPIO1_PIN = (gpio & 0x01);
+  GPIO2_PIN = (gpio & 0x02) >> 1;
+  GPIO3_PIN = (gpio & 0x04) >> 2;
+  GPIO4_PIN = (gpio & 0x08) >> 3;
+  GPIO5_PIN = (gpio & 0x10) >> 4;
 }
 /*---------------------------------------------------------------------------*/
