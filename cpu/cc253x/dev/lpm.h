@@ -46,7 +46,16 @@
 
 #define LPM_MODE_NONE 0 /* No LPM - Always on */
 #define LPM_MODE_IDLE 1 /* Set MCU Idle as part of the main loop */
-#define LPM_MODE_PM2  2 /* Drop to PM1 - causes radio packet losses for now */
+
+/* System sleeps most of the time on PM2, it wakes up when the sleep timer is
+  * expired or any interrupt occurs
+  */
+#define LPM_MODE_PM2  2
+
+/* System going into deep sleep, everything are powered off, it wakes up only
+ * by triggering a reset
+ */
+#define LPM_MODE_PM3  3
 
 #ifdef LPM_CONF_MODE
 #define LPM_MODE LPM_CONF_MODE

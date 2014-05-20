@@ -44,6 +44,7 @@
 #include "dev/serial-line.h"
 #include "dev/lsm330dlc-sensor.h"
 #include "dev/button-sensor.h"
+#include "dev/adc-sensor.h"
 #include "dev/gpio.h"
 #include "dev/leds.h"
 #include "dev/lpm.h"
@@ -63,8 +64,11 @@ static char message[MESSAGE_LEN];
 static char button_pressed = 0;
 static char command_received = 0;
 
-#define FIRE_COILS    1
-#define RELOAD_COILS  2
+#define NO_COMMAND          0
+#define FIRE_COILS          1
+#define RELOAD_COILS        2
+#define GET_TEMPERATURE     3
+#define GET_BATTERY_LEVEL   4
 
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ABC example");
@@ -114,6 +118,12 @@ abc_recv_cb(struct abc_conn *c)
     gpio_clear(GPIO1 | GPIO3 | GPIO5);
     PRINTF("Reloading done!\n");
   }
+  if (memcmp(message,"get temperature", 15) == 0) {
+    command_received = GET_TEMPERATURE;
+  }
+  if (memcmp(message,"get battery level", 17) == 0) {
+    command_received = GET_BATTERY_LEVEL;
+  }
 #endif /* (LPM_MODE == 0) */
 }
 static void
@@ -132,7 +142,11 @@ PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
   static int counter = 0;
+  static rv;
   static const struct sensors_sensor *sensor;
+  static float sane = 0;
+  static int dec;
+  static float frac;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -146,33 +160,45 @@ PROCESS_THREAD(example_abc_process, ev, data)
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
+    sensor = sensors_find(ADC_SENSOR);
+
     memset(message, 0, MESSAGE_LEN);
-    sprintf(message, "I am awake:%i", counter++);
+    if (sensor) {
+      if (command_received == GET_TEMPERATURE) {
+      rv = sensor->value(ADC_SENSOR_TYPE_TEMP);
+        if(rv != -1) {
+          sane = 25 + ((rv - 1480) / 4.5) + 1;
+          dec = sane;
+          frac = sane - dec;
+          sprintf(message, "I am awake:%d.%02u C (%d)", dec, (unsigned int)(frac*100), rv);
+        }
+      }
+      else if (command_received == GET_BATTERY_LEVEL) {
+        rv = sensor->value(ADC_SENSOR_TYPE_VDD);
+        if(rv != -1) {
+          sane = rv * 3 * 1.15 / 2047;
+          dec = sane;
+          frac = sane - dec;
+          sprintf(message, "I am awake:%d.%02u V (%d)", dec, (unsigned int)(frac*100), rv);
+        }
+      }
+      else if (command_received == NO_COMMAND) {
+        sprintf(message, "I am awake:%i", counter++);
+      }
+    }
+    command_received = NO_COMMAND;
     packetbuf_copyfrom(message, strlen(message));
     abc_send(&abc);
 #else
-    /* example of bursting abc messages to sleepy u-mote */
-    /*PROCESS_WAIT_EVENT_UNTIL(ev==PROCESS_EVENT_CONTINUE);
-    printf("time_diff %u\n", *(int*)data);
-
-    etimer_set(&et, *(int*)data - 10);
-    counter = 10;
-    while (counter) {
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-      etimer_set(&et, 2);
-
-      memset(message, 0, MESSAGE_LEN);
-      sprintf(message, "Hello from EKA:%i", counter--);
-      packetbuf_copyfrom(message, strlen(message));
-      abc_send(&abc);
-    }*/
-    /* example of direct reply to sleepy u-mote */
+    /* example of direct reply as a sleepy u-mote */
     PROCESS_WAIT_EVENT_UNTIL(ev==PROCESS_EVENT_CONTINUE);
 
     memset(message, 0, MESSAGE_LEN);
 
     if (button_pressed || command_received == FIRE_COILS) sprintf(message, "fire coils:%i", 1);
     if (command_received == RELOAD_COILS) sprintf(message, "reload coils:%i", 1);
+    if (command_received == GET_TEMPERATURE) sprintf(message, "get temperature:%i", 1);
+    if (command_received == GET_BATTERY_LEVEL) sprintf(message, "get battery level:%i", 1);
 
     packetbuf_copyfrom(message, strlen(message));
 
@@ -245,6 +271,8 @@ PROCESS_THREAD(serial_in_process, ev, data)
     PRINTF("Serial_RX: %s\n", (char*)data);
     if (memcmp(data,"fire coils", 10) == 0) command_received = FIRE_COILS;
     if (memcmp(data,"reload coils", 12) == 0) command_received = RELOAD_COILS;
+    if (memcmp(data,"get temperature", 15) == 0) command_received = GET_TEMPERATURE;
+    if (memcmp(data,"get battery level", 17) == 0) command_received = GET_BATTERY_LEVEL;
   }
 
   PROCESS_END();

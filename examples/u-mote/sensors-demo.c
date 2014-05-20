@@ -142,8 +142,8 @@ PROCESS_THREAD(sensors_test_process, ev, data)
       /*
        * Temperature:
        * Using 1.25V ref. voltage (1250mV).
-       * Typical AD Output at 25°C: 1480
-       * Typical Co-efficient     : 4.5 mV/°C
+       * Typical AD Output at 25 degC: 1480
+       * Typical Co-efficient     : 4.5 mV/degC
        *
        * Thus, at 12bit decimation (and ignoring the VDD co-efficient as well
        * as offsets due to lack of calibration):
@@ -166,13 +166,13 @@ PROCESS_THREAD(sensors_test_process, ev, data)
        *
        * Thus, at 12bit resolution:
        *
-       *          ADC x 1.25 x 3
+       *          ADC x 1.15 x 3
        * Supply = -------------- V
        *               2047
        */
       rv = sensor->value(ADC_SENSOR_TYPE_VDD);
       if(rv != -1) {
-        sane = rv * 3.75 / 2047;
+        sane = rv * 1.15 * 3 / 2047;
         dec = sane;
         frac = sane - dec;
         PRINTF("Supply=%d.%02u V (%d)\n", dec, (unsigned int)(frac*100), rv);

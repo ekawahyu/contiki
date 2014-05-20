@@ -55,6 +55,12 @@ value(int type)
 
   /* 1.25V ref, max decimation rate */
   command = ADCCON3_EDIV1 | ADCCON3_EDIV0;
+#if TEMP_SENSOR_ON
+  /* TESTREG0 value is not retained during LPM2, that is why we reconfigure
+   * it again in here
+   */
+  TESTREG0 = 1;
+#endif
 
   /* Clear the Interrupt Flag */
   ADCIF = 0;
