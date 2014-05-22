@@ -41,33 +41,29 @@
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE  1
+#define STARTUP_CONF_VERBOSE            1
 
+#define MODELS_CONF_U_MOTE              0
+#define MODELS_CONF_U_MOTE_DONGLE       1
 #define MODELS_CONF_CC2531_USB_STICK    0
 #define MODELS_CONF_RC2400HP_MODULE     0
 
 #if MODELS_CONF_CC2531_USB_STICK
 #define CC2530_CONF_MAC_FROM_PRIMARY    0
 #define LPM_CONF_MODE                   0 /* USB Stick may not sleep as a router */
-#else
+#elif MODELS_CONF_U_MOTE_DONGLE
 #define CC2530_CONF_MAC_FROM_PRIMARY    1
 #define LPM_CONF_MODE                   0
-#endif
-
-/* TODO This is a temporary workaround to disable ADC Sensor while building for
- * dongle with button S1 is activated. With ADC Sensor disabled, all related
- * sensors such as temperature, VDD and battery sensor are disabled as well
- *
- * The u-mote sleepy node needs to read from temperature sensor, while dongle
- * can be disabled for now (until there is a fix for this issue)
- */
-#if LPM_CONF_MODE
-#define ADC_SENSOR_CONF_ON              1
 #else
-#define ADC_SENSOR_CONF_ON              0
+#define CC2530_CONF_MAC_FROM_PRIMARY    1
+#define LPM_CONF_MODE                   2
 #endif
 
-#define MESSAGE_LEN   30
+#if MODELS_CONF_U_MOTE
+#define BUTTON_SENSOR_CONF_ON           0
+#endif
+
+#define MESSAGE_LEN         30
 
 #define NO_COMMAND          0
 #define FIRE_COILS          1

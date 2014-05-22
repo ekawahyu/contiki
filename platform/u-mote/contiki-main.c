@@ -179,7 +179,7 @@ main(void) CC_NON_BANKED
   leds_off(LEDS_ALL);
   //fade(LEDS_GREEN);
 
-  //spi_init();
+  spi_init();
 
   /* initialize process manager. */
   process_init();
@@ -273,7 +273,7 @@ main(void) CC_NON_BANKED
   ADC_SENSOR_ACTIVATE();
 #endif
 #if LSM330DLC_SENSOR_ON
-  //LSM330DLC_SENSOR_ACTIVATE();
+  LSM330DLC_SENSOR_ACTIVATE();
 #endif
 
 #if UIP_CONF_IPV6

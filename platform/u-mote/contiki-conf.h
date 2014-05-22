@@ -163,6 +163,14 @@
 #define CC2531_CONF_B2_REBOOTS        0  /* General Purpose by default */
 #endif
 
+/* TODO This is a temporary workaround to disable ADC Sensor while button S1
+ * is being used. There is a bug related unresponsiveness of button S1
+ * when ADC_SENSOR_CONF_ON = 1
+ */
+#if BUTTON_SENSOR_CONF_ON
+#define ADC_SENSOR_CONF_ON      0
+#endif
+
 /* ADC - Turning this off will disable everything below */
 #ifndef ADC_SENSOR_CONF_ON
 #define ADC_SENSOR_CONF_ON      1

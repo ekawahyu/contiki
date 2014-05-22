@@ -143,7 +143,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
     sensor = sensors_find(ADC_SENSOR);
 
     memset(message, 0, MESSAGE_LEN);
-    if (sensor) {
+    if (sensor && (command_received != NO_COMMAND)) {
       if (command_received == GET_TEMPERATURE) {
       rv = sensor->value(ADC_SENSOR_TYPE_TEMP);
         if(rv != -1) {
@@ -162,10 +162,14 @@ PROCESS_THREAD(example_abc_process, ev, data)
           sprintf(message, "I am awake:%d.%02u V (%d)", dec, (unsigned int)(frac*100), rv);
         }
       }
-      else if (command_received == NO_COMMAND) {
-        sprintf(message, "I am awake:%i", counter++);
+      else {
+        sprintf(message, "Bad command!");
       }
     }
+    else {
+      sprintf(message, "I am awake:%i", counter++);
+    }
+
     command_received = NO_COMMAND;
     packetbuf_copyfrom(message, strlen(message));
     abc_send(&abc);

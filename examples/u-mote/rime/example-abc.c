@@ -43,10 +43,6 @@
 #include "sys/clock.h"
 #include "dev/serial-line.h"
 #include "dev/lsm330dlc-sensor.h"
-#include "dev/button-sensor.h"
-#include "dev/adc-sensor.h"
-#include "dev/gpio.h"
-#include "dev/leds.h"
 #include "dev/lpm.h"
 
 #include <stdio.h>
@@ -67,12 +63,7 @@ static char command_received = 0;
 PROCESS(example_abc_process, "ABC example");
 PROCESS(serial_in_process, "ABC example");
 /*---------------------------------------------------------------------------*/
-#if BUTTON_SENSOR_ON
-PROCESS(buttons_process, "Button Process");
-AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process, &buttons_process);
-#else
 AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process);
-#endif
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv_cb(struct abc_conn *c)
@@ -84,49 +75,11 @@ abc_recv_cb(struct abc_conn *c)
   memset(message, 0, MESSAGE_LEN);
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
   PRINTF("abc message received '%s'\n", message);
-#if (LPM_MODE == 0)
-  if (memcmp(message,"I am awake", 10) == 0) {
-    time_diff = clock_time() - curr_time;
-    curr_time = clock_time();
-    process_post_synch(&example_abc_process, PROCESS_EVENT_CONTINUE, &time_diff);
-  }
-#else
-  if (memcmp(message,"fire coils", 10) == 0) {
-    PRINTF("Firing now...\n");
-    gpio_clear(GPIO2 | GPIO4);
-    gpio_set(GPIO1 | GPIO3 | GPIO5);
-    repeat = 13;
-    while (repeat--) clock_delay_usec(65000);
-    gpio_clear(GPIO2 | GPIO4);
-    gpio_clear(GPIO1 | GPIO3 | GPIO5);
-    PRINTF("Firing done!\n");
-  }
-  if (memcmp(message,"reload coils", 12) == 0) {
-    PRINTF("Reloading now...\n");
-    gpio_clear(GPIO1 | GPIO3);
-    gpio_set(GPIO2 | GPIO4 | GPIO5);
-    repeat = 13;
-    while (repeat--) clock_delay_usec(65000);
-    gpio_clear(GPIO2 | GPIO4);
-    gpio_clear(GPIO1 | GPIO3 | GPIO5);
-    PRINTF("Reloading done!\n");
-  }
-  if (memcmp(message,"get temperature", 15) == 0) {
-    command_received = GET_TEMPERATURE;
-  }
-  if (memcmp(message,"get battery level", 17) == 0) {
-    command_received = GET_BATTERY_LEVEL;
-  }
-#endif /* (LPM_MODE == 0) */
 }
 static void
 abc_sent_cb(struct abc_conn *c, int status, int num_tx)
 {
   PRINTF("abc message sent\n");
-#if LPM_MODE
-  /* Listening delay for any incoming message */
-  clock_delay_usec(10000);
-#endif /* LPM_MODE */
 }
 static const struct abc_callbacks abc_call = {abc_recv_cb, abc_sent_cb};
 static struct abc_conn abc;
@@ -134,12 +87,7 @@ static struct abc_conn abc;
 PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
-  static int counter = 0;
-  static rv;
   static const struct sensors_sensor *sensor;
-  static float sane = 0;
-  static int dec;
-  static float frac;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -148,61 +96,11 @@ PROCESS_THREAD(example_abc_process, ev, data)
   abc_open(&abc, 128, &abc_call);
 
   while(1) {
-#if LPM_MODE
-    /* Delay 1 second */
+    /* Delay ~1 second */
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    sensor = sensors_find(ADC_SENSOR);
-
-    memset(message, 0, MESSAGE_LEN);
-    if (sensor) {
-      if (command_received == GET_TEMPERATURE) {
-      rv = sensor->value(ADC_SENSOR_TYPE_TEMP);
-        if(rv != -1) {
-          sane = 25 + ((rv - 1480) / 4.5) + 1;
-          dec = sane;
-          frac = sane - dec;
-          sprintf(message, "I am awake:%d.%02u C (%d)", dec, (unsigned int)(frac*100), rv);
-        }
-      }
-      else if (command_received == GET_BATTERY_LEVEL) {
-        rv = sensor->value(ADC_SENSOR_TYPE_VDD);
-        if(rv != -1) {
-          sane = rv * 3 * 1.15 / 2047;
-          dec = sane;
-          frac = sane - dec;
-          sprintf(message, "I am awake:%d.%02u V (%d)", dec, (unsigned int)(frac*100), rv);
-        }
-      }
-      else if (command_received == NO_COMMAND) {
-        sprintf(message, "I am awake:%i", counter++);
-      }
-    }
-    command_received = NO_COMMAND;
-    packetbuf_copyfrom(message, strlen(message));
-    abc_send(&abc);
-#else
-    /* example of direct reply as a sleepy u-mote */
-    PROCESS_WAIT_EVENT_UNTIL(ev==PROCESS_EVENT_CONTINUE);
-
-    memset(message, 0, MESSAGE_LEN);
-
-    if (button_pressed || command_received == FIRE_COILS) sprintf(message, "fire coils:%i", 1);
-    if (command_received == RELOAD_COILS) sprintf(message, "reload coils:%i", 1);
-    if (command_received == GET_TEMPERATURE) sprintf(message, "get temperature:%i", 1);
-    if (command_received == GET_BATTERY_LEVEL) sprintf(message, "get battery level:%i", 1);
-
-    packetbuf_copyfrom(message, strlen(message));
-
-    if (button_pressed || command_received) {
-      button_pressed = 0;
-      command_received = 0;
-      abc_send(&abc);
-    }
-#endif /* LPM_MODE */
-
-    /*sensor = sensors_find(LSM330DLC_SENSOR);
+    sensor = sensors_find(LSM330DLC_SENSOR);
 
     if (sensor) {
       printf("LSM330DLC Status: 0x%X\n",
@@ -223,49 +121,19 @@ PROCESS_THREAD(example_abc_process, ev, data)
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_X),
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Y),
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Z));
-    }*/
-  }
-
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/
-#if BUTTON_SENSOR_ON
-PROCESS_THREAD(buttons_process, ev, data)
-{
-  struct sensors_sensor *sensor;
-  static struct etimer et;
-
-  PROCESS_BEGIN();
-
-  while(1) {
-
-    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
-
-    /* If we woke up after a sensor event, inform what happened */
-    sensor = (struct sensors_sensor *)data;
-    if(sensor == &button_sensor) {
-      PRINTF("Button Press\n");
-      leds_toggle(LEDS_GREEN);
-      button_pressed = 1;
     }
   }
 
   PROCESS_END();
 }
-#endif
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
   PROCESS_BEGIN();
 
   while(1) {
-
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
     PRINTF("Serial_RX: %s\n", (char*)data);
-    if (memcmp(data,"fire coils", 10) == 0) command_received = FIRE_COILS;
-    if (memcmp(data,"reload coils", 12) == 0) command_received = RELOAD_COILS;
-    if (memcmp(data,"get temperature", 15) == 0) command_received = GET_TEMPERATURE;
-    if (memcmp(data,"get battery level", 17) == 0) command_received = GET_BATTERY_LEVEL;
   }
 
   PROCESS_END();
