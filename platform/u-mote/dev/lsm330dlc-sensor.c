@@ -49,116 +49,116 @@ value(int type)
   switch(type) {
   case LSM330DLC_SENSOR_TYPE_ACCL_X:
 
-    spi_select(SPI_CS4);
+    spi_select(LSM330DLC_ACCL_CS);
     spi_write(ACC_REG_OUT_X_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS4);
+    spi_deselect(LSM330DLC_ACCL_CS);
 
-    spi_select(SPI_CS4);
+    spi_select(LSM330DLC_ACCL_CS);
     spi_write(ACC_REG_OUT_X_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS4);
+    spi_deselect(LSM330DLC_ACCL_CS);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_ACCL_Y:
 
-    spi_select(SPI_CS4);
+    spi_select(LSM330DLC_ACCL_CS);
     spi_write(ACC_REG_OUT_Y_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS4);
+    spi_deselect(LSM330DLC_ACCL_CS);
 
-    spi_select(SPI_CS4);
+    spi_select(LSM330DLC_ACCL_CS);
     spi_write(ACC_REG_OUT_Y_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS4);
+    spi_deselect(LSM330DLC_ACCL_CS);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_ACCL_Z:
 
-    spi_select(SPI_CS4);
+    spi_select(LSM330DLC_ACCL_CS);
     spi_write(ACC_REG_OUT_Z_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS4);
+    spi_deselect(LSM330DLC_ACCL_CS);
 
-    spi_select(SPI_CS4);
+    spi_select(LSM330DLC_ACCL_CS);
     spi_write(ACC_REG_OUT_Z_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS4);
+    spi_deselect(LSM330DLC_ACCL_CS);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_GYRO_X:
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(GYR_REG_OUT_X_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(GYR_REG_OUT_X_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_GYRO_Y:
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(GYR_REG_OUT_Y_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(GYR_REG_OUT_Y_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_GYRO_Z:
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(GYR_REG_OUT_Z_L);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(GYR_REG_OUT_Z_H);
     read_byte_high = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
     sensor_value = read_byte_high;
     sensor_value = ((sensor_value << 8) & 0xFF00) | read_byte_low;
     return sensor_value;
   case LSM330DLC_SENSOR_TYPE_GYRO_TEMP:
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(OUT_TEMP_G);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
     return read_byte_low;
   case LSM330DLC_SENSOR_TYPE_GYRO_STATUS:
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(STATUS_REG_G);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
     return read_byte_low;
   case LSM330DLC_SENSOR_TYPE_ID:
 
-    spi_select(SPI_CS0);
+    spi_select(LSM330DLC_GYRO_CS);
     spi_write(WHO_AM_I_G);
     read_byte_low = spi_read();
-    spi_deselect(SPI_CS0);
+    spi_deselect(LSM330DLC_GYRO_CS);
 
     return read_byte_low;
   }
@@ -176,26 +176,26 @@ configure(int type, int value)
   case SENSORS_ACTIVE:
     if(value) {
       /* initialize gyro */
-      spi_select(SPI_CS0);
+      spi_select(LSM330DLC_GYRO_CS);
       spi_write(CTRL_REG1_G);
       spi_write((DRBW_1000 | LPen_G | xyz_en_G));
-      spi_deselect(SPI_CS0);
+      spi_deselect(LSM330DLC_GYRO_CS);
 
-      spi_select(SPI_CS0);
+      spi_select(LSM330DLC_GYRO_CS);
       spi_write(CTRL_REG4_G);
       spi_write(0x00);
-      spi_deselect(SPI_CS0);
+      spi_deselect(LSM330DLC_GYRO_CS);
 
       /* initialize accelerometer */
-      spi_select(SPI_CS4);
+      spi_select(LSM330DLC_ACCL_CS);
       spi_write(CTRL_REG1_A);
       spi_write(ACC_400_Hz_A | xyz_en_A);
-      spi_deselect(SPI_CS4);
+      spi_deselect(LSM330DLC_ACCL_CS);
 
-      spi_select(SPI_CS4);
+      spi_select(LSM330DLC_ACCL_CS);
       spi_write(CTRL_REG4_G);
       spi_write(ACC_2G_A | HR_A);
-      spi_deselect(SPI_CS4);
+      spi_deselect(LSM330DLC_ACCL_CS);
 
       lsm330dlc_sensor_status = 1;
     }

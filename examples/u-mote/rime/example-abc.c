@@ -43,6 +43,7 @@
 #include "sys/clock.h"
 #include "dev/serial-line.h"
 #include "dev/lsm330dlc-sensor.h"
+#include "dev/ad7689-sensor.h"
 #include "dev/lpm.h"
 
 #include <stdio.h>
@@ -97,7 +98,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
   while(1) {
     /* Delay ~1 second */
-    etimer_set(&et, CLOCK_SECOND);
+    etimer_set(&et, CLOCK_SECOND/128);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     sensor = sensors_find(LSM330DLC_SENSOR);
@@ -122,6 +123,14 @@ PROCESS_THREAD(example_abc_process, ev, data)
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Y),
           sensor->value(LSM330DLC_SENSOR_TYPE_ACCL_Z));
     }
+
+    /*sensor = sensors_find(AD7689_SENSOR);
+
+    if (sensor) {
+      printf("AD7689 Channel0: %u\n",
+                sensor->value(AD7689_SENSOR_CHANNEL0));
+    }
+    else printf("no sensor detected\n");*/
   }
 
   PROCESS_END();

@@ -16,6 +16,7 @@
 #include "dev/port2.h"
 #include "dev/lpm.h"
 #include "dev/lsm330dlc-sensor.h"
+#include "dev/ad7689-sensor.h"
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
 #include "dev/leds-arch.h"
@@ -274,6 +275,9 @@ main(void) CC_NON_BANKED
 #endif
 #if LSM330DLC_SENSOR_ON
   LSM330DLC_SENSOR_ACTIVATE();
+#endif
+#if AD7689_SENSOR_ON
+  AD7689_SENSOR_ACTIVATE();
 #endif
 
 #if UIP_CONF_IPV6

@@ -49,6 +49,9 @@ extern "C" {
 #include "lib/sensors.h"
 
 
+#define LSM330DLC_ACCL_CS     SPI_CS4
+#define LSM330DLC_GYRO_CS     SPI_CS0
+
 #ifndef DUMMY
 #define DUMMY     0x00
 #endif

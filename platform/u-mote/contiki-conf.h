@@ -154,6 +154,10 @@
 #define LSM330DLC_SENSOR_CONF_ON    1
 #endif
 
+#ifndef AD7689_SENSOR_CONF_ON
+#define AD7689_SENSOR_CONF_ON       1
+#endif
+
 #ifndef BUTTON_SENSOR_CONF_ON
 #define BUTTON_SENSOR_CONF_ON   1  /* Buttons */
 #endif
