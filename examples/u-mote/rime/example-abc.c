@@ -42,8 +42,8 @@
 #include "random.h"
 #include "sys/clock.h"
 #include "dev/serial-line.h"
-#include "dev/lsm330dlc-sensor.h"
-#include "dev/ad7689-sensor.h"
+#include "lsm330dlc-sensor.h"
+#include "ad7689-sensor.h"
 #include "dev/lpm.h"
 
 #include <stdio.h>

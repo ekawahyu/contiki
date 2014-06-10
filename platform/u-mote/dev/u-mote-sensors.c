@@ -37,10 +37,10 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
+#include "lsm330dlc-sensor.h"
+#include "ad7689-sensor.h"
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
-#include "dev/lsm330dlc-sensor.h"
-#include "dev/ad7689-sensor.h"
 #include "sys/energest.h"
 
 const struct sensors_sensor *sensors[] = {

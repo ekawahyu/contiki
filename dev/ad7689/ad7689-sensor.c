@@ -35,7 +35,7 @@
  */
 
 #include "dev/spi.h"
-#include "dev/ad7689-sensor.h"
+#include "ad7689-sensor.h"
 
 static int ad7689_sensor_status;
 

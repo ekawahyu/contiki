@@ -35,7 +35,7 @@
  */
 
 #include "dev/spi.h"
-#include "dev/lsm330dlc-sensor.h"
+#include "lsm330dlc-sensor.h"
 
 static int lsm330dlc_sensor_status;
 
