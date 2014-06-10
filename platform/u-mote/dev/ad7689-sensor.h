@@ -41,7 +41,6 @@
 extern "C" {
 #endif
 
-#include "cc253x.h"
 #include "contiki-conf.h"
 #include "lib/sensors.h"
 
