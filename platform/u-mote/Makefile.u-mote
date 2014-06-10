@@ -13,7 +13,6 @@ CONTIKI_TARGET_SOURCEFILES += leds.c leds-arch.c
 CONTIKI_TARGET_SOURCEFILES += spi.c spi1.c spi-arch.c
 CONTIKI_TARGET_SOURCEFILES += sensors.c u-mote-sensors.c
 CONTIKI_TARGET_SOURCEFILES += button-sensor.c adc-sensor.c
-CONTIKI_TARGET_SOURCEFILES += lsm330dlc-sensor.c ad7689-sensor.c
 CONTIKI_TARGET_SOURCEFILES += serial-line.c slip-arch.c slip.c
 CONTIKI_TARGET_SOURCEFILES += putchar.c debug.c
 CONTIKI_TARGET_SOURCEFILES += usb-serial.c
@@ -52,3 +51,6 @@ include $(CONTIKI_CPU)/Makefile.cc253x
 # Default modules
 MODULES += core/net/ip core/net/ipv6 core/net/rime core/net core/net/mac core/net/rpl
 MODULES += core/net/mac/contikimac
+
+# Additional modules
+MODULES += dev/lsm330dlc dev/ad7689
