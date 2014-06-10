@@ -167,7 +167,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
       }
     }
     else {
-      sprintf(message, "I am awake:%i", counter++);
+      sprintf(message, "I am awake(0x098C):%i", counter++);
     }
 
     command_received = NO_COMMAND;

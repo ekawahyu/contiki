@@ -43,10 +43,12 @@ extern "C" {
 
 #define STARTUP_CONF_VERBOSE            1
 
-#define MODELS_CONF_U_MOTE              0
-#define MODELS_CONF_U_MOTE_DONGLE       1
+#define MODELS_CONF_U_MOTE              1
+#define MODELS_CONF_U_MOTE_DONGLE       0
+
 #define MODELS_CONF_CC2531_USB_STICK    0
 #define MODELS_CONF_RC2400HP_MODULE     0
+#define MODELS_CONF_SOC_BB              1
 
 #if MODELS_CONF_CC2531_USB_STICK
 #define CC2530_CONF_MAC_FROM_PRIMARY    0

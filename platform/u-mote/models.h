@@ -96,6 +96,15 @@
 /* PxDIR and PxSEL masks */
 #define LED2_MASK  0x01
 #define LED1_MASK  0x02
+#elif MODELS_CONF_SOC_BB
+#define MODEL_STRING "u-mote CC2530 SOC_BB\n"
+#define LEDS_GREEN    1
+
+/* H/W Connections */
+#define LED1_PIN   P1_0
+
+/* PxDIR and PxSEL masks */
+#define LED1_MASK  0x01
 #else
 #define MODEL_STRING "u-mote CC2530 Generic Platform\n"
 #define LEDS_GREEN    1
