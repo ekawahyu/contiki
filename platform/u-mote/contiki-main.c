@@ -177,6 +177,9 @@ main(void) CC_NON_BANKED
 
   gpio_init();
   leds_init();
+#if MODELS_CONF_SOC_BB
+  leds_invert(LEDS_GREEN);
+#endif
   leds_off(LEDS_ALL);
   //fade(LEDS_GREEN);
 
