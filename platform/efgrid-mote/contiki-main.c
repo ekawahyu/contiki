@@ -280,7 +280,7 @@ main(void) CC_NON_BANKED
   netstack_init();
   set_rf_params();
 
-#if BUTTON_SENSOR_ON || ADC_SENSOR_ON || LSM330DLC_SENSOR_ON
+#if BUTTON_SENSOR_ON || ADC_SENSOR_ON
   process_start(&sensors_process, NULL);
 #endif
 #if BUTTON_SENSOR_ON
