@@ -1,4 +1,7 @@
 #include "contiki.h"
+#include "contiki-lib.h"
+#include "contiki-net.h"
+
 #include "soc.h"
 #include "stack.h"
 #include "sys/clock.h"
@@ -25,8 +28,6 @@
 #include "debug.h"
 #include "cc253x.h"
 #include "sfr-bits.h"
-#include "contiki-lib.h"
-#include "contiki-net.h"
 
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
