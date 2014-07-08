@@ -47,11 +47,12 @@
 #define SPI_MODE3   3   /* CPOL = 1 CPHA = 1 */
 
 /* List of valid CS */
-#define SPI_CS0     0
-#define SPI_CS1     1
-#define SPI_CS2     2
-#define SPI_CS3     3
-#define SPI_CS4     4
+#define SPI_CS1     0x01
+#define SPI_CS2     0x02
+#define SPI_CS3     0x04
+#define SPI_CS4     0x08
+#define SPI_CS5     0x10
+#define SPI_CS_ALL  (SPI_CS1 | SPI_CS2 | SPI_CS3 | SPI_CS4 | SPI_CS5)
 
 /* List of valid speed */
 #define SPI_ONE_HUNDRED_HZ    1

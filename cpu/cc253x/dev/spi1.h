@@ -54,7 +54,6 @@ extern "C" {
 /* SPI1 Function Declarations */
 #if SPI1_ENABLE
 void spi1_init(unsigned char mode,
-  unsigned char cs,
   unsigned char freq,
   unsigned char endianess);
 void spi1_write(unsigned char data);

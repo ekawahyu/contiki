@@ -113,6 +113,20 @@
 #define GPIO4_MASK   0x80
 #define GPIO5_MASK   0x01
 
+/* H/W Connections */
+#define SPI_CS1_PIN   P1_0
+#define SPI_CS2_PIN   P1_1
+#define SPI_CS3_PIN   P1_2
+#define SPI_CS4_PIN   P1_3
+#define SPI_CS5_PIN   P1_4
+
+/* PxDIR and PxSEL masks */
+#define SPI_CS1_MASK   0x01
+#define SPI_CS2_MASK   0x02
+#define SPI_CS3_MASK   0x04
+#define SPI_CS4_MASK   0x08
+#define SPI_CS5_MASK   0x10
+
 /*---------------------------------------------------------------------------*/
 /* Buttons */
 /*---------------------------------------------------------------------------*/

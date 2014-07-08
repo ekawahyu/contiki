@@ -44,7 +44,7 @@ extern "C" {
 #include "contiki-conf.h"
 #include "lib/sensors.h"
 
-#define AD7689_CS              SPI_CS0
+#define AD7689_CS              SPI_CS1
 
 #define AD7689_CFG_UPDATE         0x8000
 #define AD7689_CFG_KEEP           0x0000

@@ -34,69 +34,31 @@
  *
  */
 
-#include "contiki.h"
+#include "contiki-conf.h"
 #include "dev/spi.h"
+#include "dev/spi-arch.h"
+#include "cc253x.h"
+
+void spi_arch_cs_init(void)
+{
+  P1SEL &= ~(SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK | SPI_CS5_MASK);
+  P1DIR |= (SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK | SPI_CS5_MASK);
+}
 
 void
 spi_arch_deselect_all(void)
 {
-  spi_deselect(SPI_CS0);
-  spi_deselect(SPI_CS1);
-  spi_deselect(SPI_CS2);
-  spi_deselect(SPI_CS3);
-  spi_deselect(SPI_CS4);
+  spi_arch_select(~SPI_CS_ALL);
 }
 
 void
 spi_arch_select(unsigned char cs)
 {
 #if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
-  switch (cs) {
-  case SPI_CS0:
-    P1_0 = 0;
-    break;
-  case SPI_CS1:
-    P1_1 = 0;
-    break;
-  case SPI_CS2:
-    P1_2 = 0;
-    break;
-  case SPI_CS3:
-    P1_3 = 0;
-    break;
-  case SPI_CS4:
-    P1_4 = 0;
-    break;
-  default:
-    /* TODO: invalid chip select */
-    break;
-  }
-#endif
-}
-
-void
-spi_arch_deselect(unsigned char cs)
-{
-#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
-  switch (cs) {
-  case SPI_CS0:
-    P1_0 = 1;
-    break;
-  case SPI_CS1:
-    P1_1 = 1;
-    break;
-  case SPI_CS2:
-    P1_2 = 1;
-    break;
-  case SPI_CS3:
-    P1_3 = 1;
-    break;
-  case SPI_CS4:
-    P1_4 = 1;
-    break;
-  default:
-    /* TODO: invalid chip select */
-    break;
-  }
+  SPI_CS1_PIN = cs & 0x01;
+  SPI_CS2_PIN = (cs & 0x02) >> 1;
+  SPI_CS3_PIN = (cs & 0x04) >> 2;
+  SPI_CS4_PIN = (cs & 0x08) >> 3;
+  SPI_CS5_PIN = (cs & 0x10) >> 4;
 #endif
 }

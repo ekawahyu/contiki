@@ -43,7 +43,8 @@
 void
 spi_init(void)
 {
-  spi_arch_init(SPI_MODE3, SPI_CS0, SPI_ONE_MHZ, SPI_MSB_FIRST);
+  spi_arch_init(SPI_MODE3, SPI_ONE_MHZ, SPI_MSB_FIRST);
+  spi_arch_cs_init();
 }
 
 void
@@ -73,5 +74,6 @@ spi_select(unsigned char cs)
 void
 spi_deselect(unsigned char cs)
 {
-  spi_arch_deselect(cs);
+  cs = cs;
+  spi_arch_deselect_all();
 }

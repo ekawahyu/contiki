@@ -45,7 +45,6 @@ static char spi1_locked = 0;
 
 void
 spi1_init(unsigned char	mode,
-    unsigned char	cs,
     unsigned char	freq,
     unsigned char	endianess)
 {
@@ -54,12 +53,6 @@ spi1_init(unsigned char	mode,
 
   /* USART1 is set to use alternative 2 location */
   PERCFG |= PERCFG_U1CFG;
-
-  /* Set P1_7, P1_6, P1_5 as peripherals and the rest as CS0-4 (GPIO) */
-  P1SEL |= 0xE0;
-
-  /* Set GPIO (CS0-4) direction as outputs */
-  P1DIR |= 0x1F;
 
   /* Set SPI clock speed assuming 32MHz crystal is installed */
   switch (freq) {
@@ -121,9 +114,6 @@ spi1_init(unsigned char	mode,
 
   /* configure architecture chip selects */
   spi_arch_deselect_all();
-
-  /* optional, just to remove compile warning */
-  spi_deselect(cs);
 }
 
 void

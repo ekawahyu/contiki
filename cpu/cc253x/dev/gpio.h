@@ -41,11 +41,11 @@
 extern "C" {
 #endif
 
-#define GPIO1   1
-#define GPIO2   2
-#define GPIO3   4
-#define GPIO4   8
-#define GPIO5   16
+#define GPIO1   0x01
+#define GPIO2   0x02
+#define GPIO3   0x04
+#define GPIO4   0x08
+#define GPIO5   0x10
 #define GPIO_ALL  (GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5)
 
 void gpio_init();
@@ -53,7 +53,6 @@ unsigned char gpio_get(void);
 void gpio_set(unsigned char gpiov);
 void gpio_clear(unsigned char gpiov);
 void gpio_toggle(unsigned char gpiov);
-void gpio_invert(unsigned char gpiov);
 
 /**
  * GPIO implementation

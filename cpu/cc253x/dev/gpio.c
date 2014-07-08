@@ -36,13 +36,13 @@
 
 #include "dev/gpio.h"
 
-static unsigned char gpio, invert;
+static unsigned char gpio;
 /*---------------------------------------------------------------------------*/
 void
 gpio_init(void)
 {
   gpio_arch_init();
-  gpio = invert = 0;
+  gpio = 0;
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
@@ -67,17 +67,7 @@ gpio_clear(unsigned char gpiov)
 void
 gpio_toggle(unsigned char gpiov)
 {
-  gpiov = gpiov;
-  /* TODO
-  gpio_invert(gpiov); */
-}
-/*---------------------------------------------------------------------------*/
-void
-gpio_invert(unsigned char gpiov)
-{
-  gpiov = gpiov;
-  /* TODO
-  invert = invert ^ gpiov;
-  show_leds(gpiov); */
+  gpio ^= gpiov;
+  gpio_arch_set(gpio);
 }
 /*---------------------------------------------------------------------------*/
