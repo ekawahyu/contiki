@@ -61,6 +61,13 @@ extern "C" {
 #define BUTTON_SENSOR_CONF_ON           0
 #endif
 
+#define RS485_CONF_ENABLE               1
+
+#if RS485_CONF_ENABLE
+#define UART1_CONF_ENABLE               1
+#define SPI1_CONF_ENABLE                0
+#endif
+
 #define MESSAGE_LEN         30
 
 #define NO_COMMAND          0

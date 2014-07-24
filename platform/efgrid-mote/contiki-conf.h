@@ -75,7 +75,7 @@
 #define SPI1_CONF_ENABLE  1
 #endif
 
-#define UMOTE_SENSORS_ON_SPI        1
+#define EFGRID_SENSORS_ON_SPI        1
 
 /* USB output buffering enabled by default (relevant to cc2531 builds only) */
 #ifndef USB_SERIAL_CONF_BUFFERED

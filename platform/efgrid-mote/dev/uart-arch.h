@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * uart-arch.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Jul 23, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,41 +34,44 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef UART_ARCH_H_
+#define UART_ARCH_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE            1
+#include "contiki.h"
 
-#define MODELS_CONF_EFGRID_MOTE         0
-#define MODELS_CONF_EFGRID_DONGLE       1
-
-#define MODELS_CONF_HAVE_CC2591_PA_LNA  0
-#define MODELS_CONF_SOC_BB              1
-
-#if MODELS_CONF_EFGRID_DONGLE
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   2
+#if UART0_ENABLE
+#include "dev/uart0.h"
+#define UART_ARCH_PREFIX uart0
+#else /* UART1_ENABLE */
+#include "dev/uart1.h"
+#define UART_ARCH_PREFIX uart1
 #endif
 
-#if MODELS_CONF_EFGRID_MOTE
-#define BUTTON_SENSOR_CONF_ON           0
-#endif
-
-#define MESSAGE_LEN         30
-
-#define NO_COMMAND          0
-#define GET_TEMPERATURE     3
-#define GET_BATTERY_LEVEL   4
+/*---------------------------------------------------------------------------*/
+/* Expands to uart0_functions(), uart1_functions() */
+#define uart_arch_init(...) uart_arch_init_x(UART_ARCH_PREFIX, __VA_ARGS__)
+#define uart_arch_write(...) uart_arch_write_x(UART_ARCH_PREFIX, __VA_ARGS__)
+#define uart_arch_read(...) uart_arch_read_x(UART_ARCH_PREFIX, __VA_ARGS__)
+#define uart_arch_read_write(...) uart_arch_read_write_x(UART_ARCH_PREFIX, __VA_ARGS__)
+/*---------------------------------------------------------------------------*/
+/* Second round of macro substitutions. You can stop reading here */
+#define uart_arch_init_x(prefix, ...) uart_arch_init_x_x(prefix, __VA_ARGS__)
+#define uart_arch_write_x(prefix, ...) uart_arch_write_x_x(prefix, __VA_ARGS__)
+#define uart_arch_read_x(prefix, ...) uart_arch_read_x_x(prefix, __VA_ARGS__)
+#define uart_arch_read_write_x(prefix, ...) uart_arch_read_write_x_x(prefix, __VA_ARGS__)
+/*---------------------------------------------------------------------------*/
+#define uart_arch_init_x_x(prefix, ...) prefix##_init(__VA_ARGS__)
+#define uart_arch_write_x_x(prefix, ...) prefix##_write(__VA_ARGS__)
+#define uart_arch_read_x_x(prefix, ...) prefix##_read(__VA_ARGS__)
+#define uart_arch_read_write_x_x(prefix, ...) prefix##_read_write(__VA_ARGS__)
+/*---------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* UART_ARCH_H_ */

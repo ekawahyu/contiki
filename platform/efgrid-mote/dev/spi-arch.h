@@ -43,20 +43,20 @@ extern "C" {
 
 #include "contiki-conf.h"
 
-#if (UMOTE_SENSORS_ON_SPI == 0)
+#if (EFGRID_SENSORS_ON_SPI == 0)
 #include "dev/spi0.h"
-#define IO_ARCH_PREFIX spi0
-#elif (UMOTE_SENSORS_ON_SPI == 1)
+#define SPI_ARCH_PREFIX spi0
+#elif (EFGRID_SENSORS_ON_SPI == 1)
 #include "dev/spi1.h"
-#define IO_ARCH_PREFIX spi1
+#define SPI_ARCH_PREFIX spi1
 #endif
 
 /*---------------------------------------------------------------------------*/
 /* Expands to spi0_functions(), spi1_functions() */
-#define spi_arch_init(...) spi_arch_init_x(IO_ARCH_PREFIX, __VA_ARGS__)
-#define spi_arch_write(...) spi_arch_write_x(IO_ARCH_PREFIX, __VA_ARGS__)
-#define spi_arch_read(...) spi_arch_read_x(IO_ARCH_PREFIX, __VA_ARGS__)
-#define spi_arch_read_write(...) spi_arch_read_write_x(IO_ARCH_PREFIX, __VA_ARGS__)
+#define spi_arch_init(...) spi_arch_init_x(SPI_ARCH_PREFIX, __VA_ARGS__)
+#define spi_arch_write(...) spi_arch_write_x(SPI_ARCH_PREFIX, __VA_ARGS__)
+#define spi_arch_read(...) spi_arch_read_x(SPI_ARCH_PREFIX, __VA_ARGS__)
+#define spi_arch_read_write(...) spi_arch_read_write_x(SPI_ARCH_PREFIX, __VA_ARGS__)
 /*---------------------------------------------------------------------------*/
 /* Second round of macro substitutions. You can stop reading here */
 #define spi_arch_init_x(prefix, ...) spi_arch_init_x_x(prefix, __VA_ARGS__)

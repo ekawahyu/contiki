@@ -12,6 +12,7 @@
 #include "dev/leds.h"
 #include "dev/spi.h"
 #include "dev/io-arch.h"
+#include "dev/uart-arch.h"
 #include "dev/dma.h"
 #include "dev/cc2530-rf.h"
 #include "dev/radio.h"
@@ -195,6 +196,7 @@ main(void) CC_NON_BANKED
   leds_init();
   leds_off(LEDS_ALL);
 
+  uart_arch_init();
   spi_init();
 
   /* initialize process manager. */
@@ -379,7 +381,7 @@ main(void) CC_NON_BANKED
       nop
     __endasm;
 
-    fade_fast(LEDS_RED);
+    //fade_fast(LEDS_RED);
 
     /* Remember energest IRQ for next pass */
     ENERGEST_IRQ_SAVE(irq_energest);
