@@ -54,20 +54,17 @@ extern "C" {
 /*---------------------------------------------------------------------------*/
 /* Expands to uart0_functions(), uart1_functions() */
 #define uart_arch_init(...) uart_arch_init_x(UART_ARCH_PREFIX, __VA_ARGS__)
-#define uart_arch_write(...) uart_arch_write_x(UART_ARCH_PREFIX, __VA_ARGS__)
-#define uart_arch_read(...) uart_arch_read_x(UART_ARCH_PREFIX, __VA_ARGS__)
-#define uart_arch_read_write(...) uart_arch_read_write_x(UART_ARCH_PREFIX, __VA_ARGS__)
+#define uart_arch_writeb(...) uart_arch_writeb_x(UART_ARCH_PREFIX, __VA_ARGS__)
+#define uart_arch_set_input(f) uart_arch_set_input_x(UART_ARCH_PREFIX, f)
 /*---------------------------------------------------------------------------*/
 /* Second round of macro substitutions. You can stop reading here */
 #define uart_arch_init_x(prefix, ...) uart_arch_init_x_x(prefix, __VA_ARGS__)
-#define uart_arch_write_x(prefix, ...) uart_arch_write_x_x(prefix, __VA_ARGS__)
-#define uart_arch_read_x(prefix, ...) uart_arch_read_x_x(prefix, __VA_ARGS__)
-#define uart_arch_read_write_x(prefix, ...) uart_arch_read_write_x_x(prefix, __VA_ARGS__)
+#define uart_arch_writeb_x(prefix, ...) uart_arch_writeb_x_x(prefix, __VA_ARGS__)
+#define uart_arch_set_input_x(prefix, f) uart_arch_set_input_x_x(prefix, f)
 /*---------------------------------------------------------------------------*/
 #define uart_arch_init_x_x(prefix, ...) prefix##_init(__VA_ARGS__)
-#define uart_arch_write_x_x(prefix, ...) prefix##_write(__VA_ARGS__)
-#define uart_arch_read_x_x(prefix, ...) prefix##_read(__VA_ARGS__)
-#define uart_arch_read_write_x_x(prefix, ...) prefix##_read_write(__VA_ARGS__)
+#define uart_arch_writeb_x_x(prefix, ...) prefix##_writeb(__VA_ARGS__)
+#define uart_arch_set_input_x_x(prefix, f) prefix##_set_input(f)
 /*---------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
