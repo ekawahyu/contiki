@@ -78,16 +78,15 @@ uart0_init()
 void
 uart0_writeb(uint8_t byte)
 {
-  UTX0IF = 0;
+  U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 #ifdef RS485_CONF_ENABLE
   P1 |= 0x20; /* set P1.5 high (DE) */
 #endif
   U0DBUF = byte;
-  while(!UTX0IF); /* Wait until byte has been transmitted. */
+  while(!(U0CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
 #ifdef RS485_CONF_ENABLE
-  clock_delay(80);
   P1 &= ~0x20; /* set P1.5 low (RE) */
 #endif
-  UTX0IF = 0;
+  U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 }
 #endif
