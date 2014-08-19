@@ -43,22 +43,21 @@ uart0_init()
 #else
   PERCFG &= ~PERCFG_U0CFG; /* alternative port 1 = P0.5-2 */
 #ifdef UART0_RTSCTS
-  P0SEL |= 0x3C;    /* peripheral select for TX and RX */
+  P0SEL |= 0x3C;    /* peripheral select for TX and RX, RTS, CTS */
   P0DIR |= 0x20;    /* RTS out */
-  P0DIR &= 0x10;     /* CTS in */
+  P0DIR &= 0x10;    /* CTS in */
 #else
   P0SEL |= 0x0C;    /* peripheral select for TX and RX */
-  P0 &= ~0x20;    /* RTS down */
+  P0 &= ~0x20;      /* RTS down */
 #endif
   P0DIR |= 0x08;    /* TX out */
   P0DIR &= ~0x04;   /* RX in */
 #endif
 
-
 #ifdef UART0_RTSCTS
-  U0UCR = 0x42; /*defaults: 8N1, RTS/CTS, high stop bit*/
+  U0UCR = 0x42; /* defaults: 8N1, RTS/CTS, high stop bit */
 #else
-  U0UCR = 0x02; /*defaults: 8N1, no flow control, high stop bit*/
+  U0UCR = 0x02; /* defaults: 8N1, no flow control, high stop bit */
 #endif
 
   U0CSR = UCSR_MODE; /* UART mode */
