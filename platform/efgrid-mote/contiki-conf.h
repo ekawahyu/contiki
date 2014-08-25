@@ -47,10 +47,13 @@
 
 /*
  * USARTs:
- *   u-mote RS232 -> USART0 / Alternative 1 (UART)
- *   u-mote SPI   -> USART1 / Alternative 2 (SPI)
+ *   efgrid-mote RS232 -> USART0 / Alternative 1 (UART)
+ *   efgrid-mote SPI   -> USART1 / Alternative 2 (SPI)
+ *
+ *   alternative function:
+ *   efgrid-mote RS485 -> USART1 /Alternative 2 (UART + DE/RE)
  */
-#define UART_ON_USART     0
+#define UART_ON_USART     1
 
 #ifndef UART0_CONF_ENABLE
 #define UART0_CONF_ENABLE  1

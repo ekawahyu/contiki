@@ -197,6 +197,16 @@ main(void) CC_NON_BANKED
   leds_off(LEDS_ALL);
 
   uart_arch_init();
+
+  /* TODO derive serial line driver for RS485 */
+  uart_arch_set_input(NULL);
+  /* Low level RS485 test */
+  uart_arch_writeb('Z');
+  uart_arch_writeb('e');
+  uart_arch_writeb('b');
+  uart_arch_writeb('r');
+  uart_arch_writeb('a');
+
   spi_init();
 
   /* initialize process manager. */
@@ -388,7 +398,7 @@ main(void) CC_NON_BANKED
 
     ENERGEST_ON(ENERGEST_TYPE_CPU);
     ENERGEST_OFF(ENERGEST_TYPE_LPM);
-    //}
+
 #endif /* LPM_MODE */
   }
 }

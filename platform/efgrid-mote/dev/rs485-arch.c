@@ -1,7 +1,7 @@
 /*
- * uart-arch.h
+ * rs485-arch.c
  *
- * Created on: Jul 23, 2014
+ * Created on: Aug 20, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,41 +34,21 @@
  *
  */
 
-#ifndef UART_ARCH_H_
-#define UART_ARCH_H_
+#include "cc253x.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "contiki.h"
-
-#if (UART_ON_USART == 0)
-#include "dev/uart0.h"
-#define UART_ARCH_PREFIX uart0
-#elif (UART_ON_USART == 1)
-#include "dev/uart1.h"
-#define UART_ARCH_PREFIX uart1
-#endif
-
-/*---------------------------------------------------------------------------*/
-/* Expands to uart0_functions(), uart1_functions() */
-#define uart_arch_init(...) uart_arch_init_x(UART_ARCH_PREFIX, __VA_ARGS__)
-#define uart_arch_writeb(...) uart_arch_writeb_x(UART_ARCH_PREFIX, __VA_ARGS__)
-#define uart_arch_set_input(f) uart_arch_set_input_x(UART_ARCH_PREFIX, f)
-/*---------------------------------------------------------------------------*/
-/* Second round of macro substitutions. You can stop reading here */
-#define uart_arch_init_x(prefix, ...) uart_arch_init_x_x(prefix, __VA_ARGS__)
-#define uart_arch_writeb_x(prefix, ...) uart_arch_writeb_x_x(prefix, __VA_ARGS__)
-#define uart_arch_set_input_x(prefix, f) uart_arch_set_input_x_x(prefix, f)
-/*---------------------------------------------------------------------------*/
-#define uart_arch_init_x_x(prefix, ...) prefix##_init(__VA_ARGS__)
-#define uart_arch_writeb_x_x(prefix, ...) prefix##_writeb(__VA_ARGS__)
-#define uart_arch_set_input_x_x(prefix, f) prefix##_set_input(f)
-/*---------------------------------------------------------------------------*/
-
-#ifdef __cplusplus
+void rs485_de_nre_init(void)
+{
+  P1SEL &= ~0x20; /* configure P1.5 as GPIO for DE/RE */
+  P1DIR |= 0x20;
+  P1 &= ~0x20; /* set P1.5 low (RE) */
 }
-#endif
 
-#endif /* UART_ARCH_H_ */
+void rs485_de_nre_high(void)
+{
+  P1 |= 0x20; /* set P1.5 high (DE) */
+}
+
+void rs485_de_nre_low(void)
+{
+  P1 &= ~0x20; /* set P1.5 low (RE) */
+}

@@ -15,6 +15,10 @@
 #include "sfr-bits.h"
 #include "dev/uart1.h"
 
+#ifdef RS485_CONF_ENABLE
+#include "dev/rs485-arch.h"
+#endif
+
 #if UART1_ENABLE
 /*---------------------------------------------------------------------------*/
 /* UART1 initialization */
@@ -64,6 +68,10 @@ uart1_init()
   UART1_RX_EN();
 
   UART1_RX_INT(1);
+
+#ifdef RS485_CONF_ENABLE
+  rs485_de_nre_init();
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /* Write one byte over the UART. */
@@ -71,8 +79,14 @@ void
 uart1_writeb(uint8_t byte)
 {
   U1CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
+#ifdef RS485_CONF_ENABLE
+  rs485_de_nre_high();
+#endif
   U1DBUF = byte;
   while(!(U1CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
+#ifdef RS485_CONF_ENABLE
+  rs485_de_nre_low();
+#endif
   U1CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 }
 /*---------------------------------------------------------------------------*/

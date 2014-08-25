@@ -15,8 +15,6 @@
 #include "sfr-bits.h"
 #include "dev/uart0.h"
 
-#include "sys/clock.h"
-
 #if UART0_ENABLE
 /*---------------------------------------------------------------------------*/
 void
@@ -65,12 +63,6 @@ uart0_init()
   UART0_RX_EN();
 
   UART0_RX_INT(1);
-
-#ifdef RS485_CONF_ENABLE
-  P1SEL &= ~0x20; /* configure P1.5 as GPIO for DE/RE */
-  P1DIR |= 0x20;
-  P1 &= ~0x20; /* set P1.5 low (RE) */
-#endif
 }
 /*---------------------------------------------------------------------------*/
 /* Write one byte over the UART. */
@@ -78,14 +70,8 @@ void
 uart0_writeb(uint8_t byte)
 {
   U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
-#ifdef RS485_CONF_ENABLE
-  P1 |= 0x20; /* set P1.5 high (DE) */
-#endif
   U0DBUF = byte;
   while(!(U0CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
-#ifdef RS485_CONF_ENABLE
-  P1 &= ~0x20; /* set P1.5 low (RE) */
-#endif
   U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 }
 #endif

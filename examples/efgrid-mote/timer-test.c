@@ -77,6 +77,17 @@ PROCESS_THREAD(clock_test_process, ev, data)
         10000 * i, diff, diff * 64);
     i++;
   }
+  /* Added timer test for RS485 fixed start/stop at 750us and 1750us */
+  i = 1;
+  while(i < 7) {
+    start_count = RTIMER_NOW();
+    clock_delay_usec(1750);
+    end_count = RTIMER_NOW();
+    diff = end_count - start_count;
+    printf("Requested: %u usec, Real: %u rtimer ticks = ~%u us\n",
+        1750, diff, diff * 64);
+    i++;
+  }
 #endif
 
 #if TEST_RTIMER

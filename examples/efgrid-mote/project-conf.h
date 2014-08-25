@@ -1,7 +1,7 @@
 /*
- * uart-arch.h
+ * project-conf.h
  *
- * Created on: Jul 23, 2014
+ * Created on: Mar 3, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,41 +34,48 @@
  *
  */
 
-#ifndef UART_ARCH_H_
-#define UART_ARCH_H_
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "contiki.h"
+#define STARTUP_CONF_VERBOSE            1
 
-#if (UART_ON_USART == 0)
-#include "dev/uart0.h"
-#define UART_ARCH_PREFIX uart0
-#elif (UART_ON_USART == 1)
-#include "dev/uart1.h"
-#define UART_ARCH_PREFIX uart1
+#define MODELS_CONF_EFGRID_MOTE         0
+#define MODELS_CONF_EFGRID_DONGLE       1
+
+#define MODELS_CONF_HAVE_CC2591_PA_LNA  0
+#define MODELS_CONF_SOC_BB              1
+
+#if MODELS_CONF_EFGRID_DONGLE
+#define CC2530_CONF_MAC_FROM_PRIMARY    1
+#define LPM_CONF_MODE                   0
+#else
+#define CC2530_CONF_MAC_FROM_PRIMARY    1
+#define LPM_CONF_MODE                   2
 #endif
 
-/*---------------------------------------------------------------------------*/
-/* Expands to uart0_functions(), uart1_functions() */
-#define uart_arch_init(...) uart_arch_init_x(UART_ARCH_PREFIX, __VA_ARGS__)
-#define uart_arch_writeb(...) uart_arch_writeb_x(UART_ARCH_PREFIX, __VA_ARGS__)
-#define uart_arch_set_input(f) uart_arch_set_input_x(UART_ARCH_PREFIX, f)
-/*---------------------------------------------------------------------------*/
-/* Second round of macro substitutions. You can stop reading here */
-#define uart_arch_init_x(prefix, ...) uart_arch_init_x_x(prefix, __VA_ARGS__)
-#define uart_arch_writeb_x(prefix, ...) uart_arch_writeb_x_x(prefix, __VA_ARGS__)
-#define uart_arch_set_input_x(prefix, f) uart_arch_set_input_x_x(prefix, f)
-/*---------------------------------------------------------------------------*/
-#define uart_arch_init_x_x(prefix, ...) prefix##_init(__VA_ARGS__)
-#define uart_arch_writeb_x_x(prefix, ...) prefix##_writeb(__VA_ARGS__)
-#define uart_arch_set_input_x_x(prefix, f) prefix##_set_input(f)
-/*---------------------------------------------------------------------------*/
+#if MODELS_CONF_EFGRID_MOTE
+#define BUTTON_SENSOR_CONF_ON           0
+#endif
+
+#define RS485_CONF_ENABLE               1
+
+#if RS485_CONF_ENABLE
+#define UART1_CONF_ENABLE               1
+#define SPI1_CONF_ENABLE                0
+#endif
+
+#define MESSAGE_LEN         30
+
+#define NO_COMMAND          0
+#define GET_TEMPERATURE     3
+#define GET_BATTERY_LEVEL   4
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_ARCH_H_ */
+#endif /* PROJECT_CONF_H_ */
