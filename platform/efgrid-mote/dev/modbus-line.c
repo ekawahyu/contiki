@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * modbus-line.c
  *
- * Created on: Mar 3, 2014
+ * Created on: Sep 2, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,48 +34,51 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "dev/modbus-line.h"
+#include "dev/leds.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define BUFSIZE 128
 
-#define STARTUP_CONF_VERBOSE            1
+static int pos;
+static uint8_t modbus_rx_data[BUFSIZE];
 
-#define MODELS_CONF_EFGRID_MOTE         0
-#define MODELS_CONF_EFGRID_DONGLE       1
+PROCESS(modbus_line_process, "MODBUS driver");
 
-#define MODELS_CONF_HAVE_CC2591_PA_LNA  0
-#define MODELS_CONF_SOC_BB              0
+process_event_t modbus_line_event_message;
 
-#if MODELS_CONF_EFGRID_DONGLE
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   2
-#endif
+/*---------------------------------------------------------------------------*/
+int
+modbus_line_input_byte(unsigned char c)
+{
+  modbus_rx_data[pos++] = c;
 
-#if MODELS_CONF_EFGRID_MOTE
-#define BUTTON_SENSOR_CONF_ON           0
-#endif
+  if(pos >= BUFSIZE) {
+    pos = 0;
+  }
 
-#define RS485_CONF_ENABLE               1
-
-#if RS485_CONF_ENABLE
-#define UART1_CONF_ENABLE               1
-#define SPI1_CONF_ENABLE                0
-#endif
-
-#define MESSAGE_LEN         30
-
-#define NO_COMMAND          0
-#define GET_TEMPERATURE     3
-#define GET_BATTERY_LEVEL   4
-
-#ifdef __cplusplus
+  /* Wake up consumer process */
+  process_poll(&modbus_line_process);
+  return 1;
 }
-#endif
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(modbus_line_process, ev, data)
+{
+  PROCESS_BEGIN();
 
-#endif /* PROJECT_CONF_H_ */
+  modbus_line_event_message = process_alloc_event();
+
+  while(1) {
+
+    PROCESS_YIELD();
+    leds_toggle(LEDS_YELLOW);
+    //process_post(PROCESS_BROADCAST, modbus_line_event_message, modbus_rx_data);
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+void
+modbus_line_init(void)
+{
+  process_start(&modbus_line_process, NULL);
+}

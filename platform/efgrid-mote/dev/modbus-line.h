@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * modbus-line.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Sep 2, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,48 +34,24 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef MODBUS_LINE_H_
+#define MODBUS_LINE_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE            1
+#include "contiki.h"
 
-#define MODELS_CONF_EFGRID_MOTE         0
-#define MODELS_CONF_EFGRID_DONGLE       1
+extern process_event_t modbus_line_event_message;
 
-#define MODELS_CONF_HAVE_CC2591_PA_LNA  0
-#define MODELS_CONF_SOC_BB              0
+int modbus_line_input_byte(unsigned char c);
+void modbus_line_init(void);
 
-#if MODELS_CONF_EFGRID_DONGLE
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   2
-#endif
-
-#if MODELS_CONF_EFGRID_MOTE
-#define BUTTON_SENSOR_CONF_ON           0
-#endif
-
-#define RS485_CONF_ENABLE               1
-
-#if RS485_CONF_ENABLE
-#define UART1_CONF_ENABLE               1
-#define SPI1_CONF_ENABLE                0
-#endif
-
-#define MESSAGE_LEN         30
-
-#define NO_COMMAND          0
-#define GET_TEMPERATURE     3
-#define GET_BATTERY_LEVEL   4
+PROCESS_NAME(modbus_line_process);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* MODBUS_LINE_H_ */

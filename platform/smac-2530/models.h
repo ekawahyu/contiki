@@ -51,76 +51,32 @@
 #undef LEDS_GREEN
 #undef LEDS_YELLOW
 #undef LEDS_RED
-#define LEDS_YELLOW 4
 
 /*
- * Smart RF LEDs
+ * SMAC-2530 LEDs
  *  1: P1_0 (Green)
  *  2: P1_1 (Red)
  *  3: P1_4 (Yellow)
- *  4: P0_1 (LED4 shares port/pin with B1 and is currently unused)
- *
- * USB Dongle LEDs
- *  1: P0_0 (Red)
- *  2: P1_1 (Green - active: low)
+ *  4: P2_0 (Blue)
  */
-#if MODELS_CONF_CC2531_USB_STICK
-#define MODEL_STRING "u-mote CC2531 USB Dongle\n"
-#define USB_CONF_ENABLE 1
 
-/* Enabled the ISR for Interrupt Num 6 */
-#define PORT_2_ISR_ENABLED 1
-
-#ifndef USB_CONF_CLASS
-#define DMA_CONF_ON     1
-#define DMA_USB_CHANNEL 0
-#define CTRL_EP_SIZE    8
-#define USB_EP1_SIZE    32
-#define USB_EP2_SIZE    64
-#define USB_EP3_SIZE    64
-#define USB_CONF_CLASS  1 /* CDC-ACM */
-#endif
-
-#define CDC_ACM_CONF_VID 0x0451 /* Vendor: TI */
-#define CDC_ACM_CONF_PID 0x16A8 /* cc2531 CDC */
-
-#undef LEDS_CONF_ALL
-#define LEDS_CONF_ALL 3
-#define LEDS_RED      1
-#define LEDS_GREEN    2
-
-/* H/W Connections */
-#define LED2_PIN   P0_0
-#define LED1_PIN   P1_1
-
-/* PxDIR and PxSEL masks */
-#define LED2_MASK  0x01
-#define LED1_MASK  0x02
-#elif MODELS_CONF_SOC_BB
-#define MODEL_STRING "u-mote CC2530 SOC_BB\n"
-#define LEDS_GREEN    1
-
-/* H/W Connections */
-#define LED1_PIN   P1_0
-
-/* PxDIR and PxSEL masks */
-#define LED1_MASK  0x01
-#else
-#define MODEL_STRING "u-mote CC2530DK\n"
+#define MODEL_STRING "SMAC-2530DB\n"
 #define LEDS_GREEN    1
 #define LEDS_RED      2
+#define LEDS_YELLOW   3
+#define LEDS_BLUE     4
 
 /* H/W Connections */
 #define LED1_PIN   P1_0
 #define LED2_PIN   P1_1
 #define LED3_PIN   P1_4
+#define LED4_PIN   P2_0
 
 /* PxDIR and PxSEL masks */
 #define LED1_MASK  0x01
 #define LED2_MASK  0x02
 #define LED3_MASK  0x10
-#define LED4_MASK  0x02
-#endif /* MODELS_CONF_CC2531_USB_STICK */
+#define LED4_MASK  0x01
 
 /* H/W Connections */
 #define GPIO1_PIN   P0_4

@@ -7,6 +7,7 @@
 #include "sys/clock.h"
 #include "sys/autostart.h"
 #include "dev/serial-line.h"
+#include "dev/modbus-line.h"
 #include "dev/slip.h"
 #include "dev/gpio.h"
 #include "dev/leds.h"
@@ -196,21 +197,22 @@ main(void) CC_NON_BANKED
   leds_init();
   leds_off(LEDS_ALL);
 
+  spi_init();
+
+  /* initialize process manager. */
+  process_init();
+
   uart_arch_init();
 
-  /* TODO derive serial line driver for RS485 */
-  uart_arch_set_input(NULL);
+  uart_arch_set_input(modbus_line_input_byte);
+  modbus_line_init();
+
   /* Low level RS485 test */
   uart_arch_writeb('Z');
   uart_arch_writeb('e');
   uart_arch_writeb('b');
   uart_arch_writeb('r');
   uart_arch_writeb('a');
-
-  spi_init();
-
-  /* initialize process manager. */
-  process_init();
 
 #if DMA_ON
   dma_init();

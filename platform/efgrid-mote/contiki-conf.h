@@ -69,6 +69,9 @@
 #ifndef UART1_CONF_ENABLE
 #define UART1_CONF_ENABLE  0
 #endif
+#ifndef UART1_CONF_WITH_INPUT
+#define UART1_CONF_WITH_INPUT 1
+#endif
 
 #ifndef SPI0_CONF_ENABLE
 #define SPI0_CONF_ENABLE  0
