@@ -42,7 +42,6 @@
 #include "sys/etimer.h"
 #include "cc253x.h"
 #include "sys/energest.h"
-#include <stdio.h>
 
 /* Sleep timer runs on the 32k RC osc. */
 /* One clock tick is 7.8 ms */

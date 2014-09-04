@@ -42,8 +42,35 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-#define BUTTON_SENSOR_CONF_ON 1
+#define STARTUP_CONF_VERBOSE            1
+
+#define MODELS_CONF_EFGRID_MOTE         0
+#define MODELS_CONF_EFGRID_DONGLE       1
+
+#define MODELS_CONF_HAVE_CC2591_PA_LNA  0
+#define MODELS_CONF_SOC_BB              0
+
+#if MODELS_CONF_EFGRID_DONGLE
+#define CC2530_CONF_MAC_FROM_PRIMARY    1
+#define LPM_CONF_MODE                   0
+#else
+#define CC2530_CONF_MAC_FROM_PRIMARY    1
+#define LPM_CONF_MODE                   2
+#endif
+
+#if MODELS_CONF_EFGRID_MOTE
+#define BUTTON_SENSOR_CONF_ON           0
+#endif
+
+#define RS485_CONF_ENABLE               1
+
+#if RS485_CONF_ENABLE
+#define UART1_CONF_ENABLE               1
+#define SPI1_CONF_ENABLE                0
+#endif
+
+#define BUTTON_SENSOR_CONF_ON 0
 #define UIP_CONF_ICMP6        1
-#define RIMESTATS_CONF_ENABLED 1
+#define RIMESTATS_CONF_ENABLED 0
 
 #endif /* PROJECT_CONF_H_ */
