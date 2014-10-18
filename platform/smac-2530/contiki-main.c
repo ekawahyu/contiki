@@ -347,53 +347,55 @@ main(void) CC_NON_BANKED
       }
     }
 #if LPM_MODE
-    /* Making sure that the next sleep timer interrupt happens at least 3ms
-     * after sleep command is issued. Otherwise, the system will go to sleep
-     * and never wake up again.
-     *
-     * If the system runs on 32kHz --> 96 counts ~3ms
-     * If the system runs on 32.768kHz ---> 98 counts ~3ms
-     *
-     * The sleep timer is being used as a systick, therefore, adding a new
-     * value to it may affect every thread running with etimer. The workaround
-     * for the moment is to skip ahead one ISR and manually adjust the systick
-     * ahead of time. One tick adjustment is equivalent to adding 7.8ms
-     */
-    clock_adjust_systick_ahead_by(100);
+    if (rtimer_is_scheduled() == 0) {
+      /* Making sure that the next sleep timer interrupt happens at least 3ms
+       * after sleep command is issued. Otherwise, the system will go to sleep
+       * and never wake up again.
+       *
+       * If the system runs on 32kHz --> 96 counts ~3ms
+       * If the system runs on 32.768kHz ---> 98 counts ~3ms
+       * CLOCK_SECOND = 128 counts (see TICK_VAL as well)
+       *
+       * The sleep timer is being used as a systick, therefore, adding a new
+       * value to it may affect every thread running with etimer. The workaround
+       * for the moment is to skip ahead one ISR and manually adjust the systick
+       * ahead of time. One tick adjustment is equivalent to adding 7.8ms
+       */
+      clock_adjust_systick_ahead_by(CLOCK_SECOND);
 
-    /*
-     * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
-     * Sleep Timer will wake us up in no more than 7.8ms (max idle interval)
-     */
-    SLEEPCMD = (SLEEPCMD & 0xFC) | LPM_MODE;
+      /*
+       * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
+       * Sleep Timer will wake us up in no more than 7.8ms (max idle interval)
+       */
+      SLEEPCMD = (SLEEPCMD & 0xFC) | LPM_MODE;
 
-    ENERGEST_OFF(ENERGEST_TYPE_CPU);
-    ENERGEST_ON(ENERGEST_TYPE_LPM);
+      ENERGEST_OFF(ENERGEST_TYPE_CPU);
+      ENERGEST_ON(ENERGEST_TYPE_LPM);
 
-    /* We are only interested in IRQ energest while idle or in LPM */
-    ENERGEST_IRQ_RESTORE(irq_energest);
+      /* We are only interested in IRQ energest while idle or in LPM */
+      ENERGEST_IRQ_RESTORE(irq_energest);
 
-    /* Go IDLE or Enter PM1 */
-    PCON |= PCON_IDLE;
+      /* Go IDLE or Enter PM1 */
+      PCON |= PCON_IDLE;
 
-    /* First instruction upon exiting PM1 must be a NOP
-     * There is no harm in adding more NOP and it seems that
-     * lock up does not occur anymore in PM1 with two additional NOP
-     */
-    __asm
-      nop
-      nop
-      nop
-    __endasm;
+      /* First instruction upon exiting PM1 must be a NOP
+       * There is no harm in adding more NOP and it seems that
+       * lock up does not occur anymore in PM1 with two additional NOP
+       */
+      __asm
+        nop
+        nop
+        nop
+      __endasm;
 
-    fade_fast(LEDS_GREEN);
+      fade_fast(LEDS_GREEN);
 
-    /* Remember energest IRQ for next pass */
-    ENERGEST_IRQ_SAVE(irq_energest);
+      /* Remember energest IRQ for next pass */
+      ENERGEST_IRQ_SAVE(irq_energest);
 
-    ENERGEST_ON(ENERGEST_TYPE_CPU);
-    ENERGEST_OFF(ENERGEST_TYPE_LPM);
-    //}
+      ENERGEST_ON(ENERGEST_TYPE_CPU);
+      ENERGEST_OFF(ENERGEST_TYPE_LPM);
+    }
 #endif /* LPM_MODE */
   }
 }

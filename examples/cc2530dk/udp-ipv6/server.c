@@ -53,7 +53,7 @@ static uint16_t len;
 #define SERVER_REPLY          1
 
 /* Should we act as RPL root? */
-#define SERVER_RPL_ROOT       0
+#define SERVER_RPL_ROOT       1
 
 #if SERVER_RPL_ROOT
 static uip_ipaddr_t ipaddr;
@@ -67,7 +67,7 @@ tcpip_handler(void)
 {
   memset(buf, 0, MAX_PAYLOAD_LEN);
   if(uip_newdata()) {
-    leds_on(LEDS_RED);
+    leds_on(LEDS_YELLOW);
     len = uip_datalen();
     memcpy(buf, uip_appdata, len);
     PRINTF("%u bytes from [", len);
@@ -83,7 +83,7 @@ tcpip_handler(void)
     server_conn->rport = 0;
 #endif
   }
-  leds_off(LEDS_RED);
+  leds_off(LEDS_YELLOW);
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -162,6 +162,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
   udp_bind(server_conn, UIP_HTONS(3000));
 
   PRINTF("Listen port: 3000, TTL=%u\n", server_conn->ttl);
+  print_local_addresses();
 
   while(1) {
     PROCESS_YIELD();

@@ -39,6 +39,12 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
+#if (DEBUG==DEBUG_PRINT)
+#define PRINTF(...) printf(__VA_ARGS__)
+#else /* DEBUG */
+#define PRINTF(...)
+#endif /* DEBUG */
+
 #define SEND_INTERVAL		2 * CLOCK_SECOND
 #define MAX_PAYLOAD_LEN		40
 
@@ -117,7 +123,9 @@ PROCESS_THREAD(udp_client_process, ev, data)
   PROCESS_BEGIN();
   PRINTF("UDP client process started\n");
 
-  uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0x0215, 0x2000, 0x0002, 0x2145);
+  //uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0x0215, 0x2000, 0x0002, 0x2145);
+  uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x4b00, 0x01ad, 0xee35);
+
   /* new connection with remote host */
   l_conn = udp_new(&ipaddr, UIP_HTONS(3000), NULL);
   if(!l_conn) {
@@ -130,7 +138,9 @@ PROCESS_THREAD(udp_client_process, ev, data)
   PRINTF(" local/remote port %u/%u\n",
          UIP_HTONS(l_conn->lport), UIP_HTONS(l_conn->rport));
 
-  uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0x0215, 0x2000, 0x0002, 0x2145);
+  //uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0x0215, 0x2000, 0x0002, 0x2145);
+  uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0x0212, 0x4b00, 0x01ad, 0xee35);
+
   g_conn = udp_new(&ipaddr, UIP_HTONS(3000), NULL);
   if(!g_conn) {
     PRINTF("udp_new g_conn error.\n");

@@ -43,8 +43,8 @@ extern "C" {
 
 #define STARTUP_CONF_VERBOSE            1
 
-#define MODELS_CONF_EFGRID_MOTE         0
-#define MODELS_CONF_EFGRID_DONGLE       1
+#define MODELS_CONF_EFGRID_MOTE         1
+#define MODELS_CONF_EFGRID_DONGLE       0
 
 #define MODELS_CONF_HAVE_CC2591_PA_LNA  0
 #define MODELS_CONF_SOC_BB              0

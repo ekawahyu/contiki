@@ -120,6 +120,14 @@ int rtimer_set(struct rtimer *task, rtimer_clock_t time,
 void rtimer_run_next(void);
 
 /**
+ * \brief      Check for scheduled real-time timer, if any
+ *
+ *             This function returns 1 when at least one real-time timer is scheduled.
+ *
+ */
+int rtimer_is_scheduled(void);
+
+/**
  * \brief      Get the current clock time
  * \return     The current time
  *

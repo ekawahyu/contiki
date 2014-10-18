@@ -41,6 +41,12 @@
 #include "dev/button-sensor.h"
 #include "debug.h"
 
+#if (DEBUG==DEBUG_PRINT)
+#define PRINTF(...) printf(__VA_ARGS__)
+#else /* DEBUG */
+#define PRINTF(...)
+#endif /* DEBUG */
+
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 
@@ -162,6 +168,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
   udp_bind(server_conn, UIP_HTONS(3000));
 
   PRINTF("Listen port: 3000, TTL=%u\n", server_conn->ttl);
+  print_local_addresses();
 
   while(1) {
     PROCESS_YIELD();

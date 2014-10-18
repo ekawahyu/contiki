@@ -105,6 +105,9 @@ clock_adjust_systick_ahead_by(unsigned int tick)
   while (tick) {
     timer_value += TICK_VAL;
     ++count;
+    if(count % CLOCK_CONF_SECOND == 0) {
+      ++seconds;
+    }
     --tick;
   }
   ST2 = (unsigned char)(timer_value >> 16);
