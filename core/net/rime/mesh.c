@@ -51,13 +51,15 @@
 
 #define PACKET_TIMEOUT (CLOCK_SECOND * 10)
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
 #endif
+
+static int mesh_status;
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -75,7 +77,7 @@ data_packet_received(struct multihop_conn *multihop,
   if(rt != NULL) {
     route_refresh(rt);
   }
-  
+
   if(c->cb->recv) {
     c->cb->recv(c, from, hops);
   }
@@ -106,7 +108,7 @@ data_packet_forward(struct multihop_conn *multihop,
   } else {
     route_refresh(rt);
   }
-  
+
   return &rt->nexthop;
 }
 /*---------------------------------------------------------------------------*/
@@ -188,16 +190,18 @@ mesh_send(struct mesh_conn *c, const linkaddr_t *to)
   PRINTF("%d.%d: mesh_send to %d.%d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	 to->u8[0], to->u8[1]);
-  
+
   could_send = multihop_send(&c->multihop, to);
 
   if(!could_send) {
     PRINTF("mesh_send: could not send\n");
+    mesh_status = 0;
     return 0;
   }
   if(c->cb->sent != NULL) {
     c->cb->sent(c);
   }
+  mesh_status = 1;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -205,6 +209,12 @@ int
 mesh_ready(struct mesh_conn *c)
 {
   return (c->queued_data == NULL);
+}
+
+int
+mesh_is_connected(void)
+{
+  return mesh_status;
 }
 
 

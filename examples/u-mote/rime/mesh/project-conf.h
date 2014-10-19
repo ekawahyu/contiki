@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE            1
+#define STARTUP_CONF_VERBOSE            0
 
 /* Configuration for debugging and short distance test */
 #define CC2530_RF_CONF_LEDS             1
@@ -71,6 +71,14 @@ extern "C" {
 #if MODELS_CONF_U_MOTE_SENSOR
 #define BUTTON_SENSOR_CONF_ON           0
 #endif
+
+#define MESSAGE_LEN         30
+
+#define NO_COMMAND          0
+#define FIRE_COILS          1
+#define RELOAD_COILS        2
+#define GET_TEMPERATURE     3
+#define GET_BATTERY_LEVEL   4
 
 #ifdef __cplusplus
 }

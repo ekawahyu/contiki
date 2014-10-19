@@ -1,7 +1,7 @@
 /*
  * project-conf.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Oct 18, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -41,36 +41,7 @@
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE            1
-
-/* Configuration for debugging and short distance test */
-#define CC2530_RF_CONF_LEDS             1
-#define CC2530_RF_CONF_LOW_POWER_RX     1    /* set only to 0 or 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER         0x05 /* tx power range: 0x05 - 0xD5(the highest) */
-
-#define ROUTE_CONF_DEFAULT_LIFETIME     600
-
-#define MODELS_CONF_U_MOTE_SENSOR       1
-#define MODELS_CONF_U_MOTE_ROUTER       0
-
-#define MODELS_CONF_CC2531_USB_STICK    0
-#define MODELS_CONF_RC2400HP_MODULE     0
-#define MODELS_CONF_SOC_BB              0
-
-#if MODELS_CONF_CC2531_USB_STICK
-#define CC2530_CONF_MAC_FROM_PRIMARY    0
-#define LPM_CONF_MODE                   0 /* USB Stick may not sleep as a router */
-#elif MODELS_CONF_U_MOTE_ROUTER
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
 #define LPM_CONF_MODE                   2
-#endif
-
-#if MODELS_CONF_U_MOTE_SENSOR
-#define BUTTON_SENSOR_CONF_ON           0
-#endif
 
 #ifdef __cplusplus
 }

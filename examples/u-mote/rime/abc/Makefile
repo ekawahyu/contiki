@@ -1,6 +1,6 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CONTIKI = ../../..
+CONTIKI = ../../../..
 
-all: example-broadcast example-unicast
+all: example-mote example-dongle example-abc
 
 include $(CONTIKI)/Makefile.include

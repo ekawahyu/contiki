@@ -80,6 +80,25 @@ fade(int l) CC_NON_BANKED
 }
 /*---------------------------------------------------------------------------*/
 static void
+fade_fast(int l) CC_NON_BANKED
+{
+  volatile int i, a;
+  int k, j;
+  for(k = 0; k < 200; ++k) {
+    j = k > 100 ? 200 - k : k;
+
+    leds_on(l);
+    for(i = 0; i < j; ++i) {
+      a = i;
+    }
+    leds_off(l);
+    for(i = 0; i < 100 - j; ++i) {
+      a = i;
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
 set_rf_params(void) CC_NON_BANKED
 {
   char i;
@@ -307,33 +326,27 @@ main(void) CC_NON_BANKED
     }
 
 #if LPM_MODE
-#if (LPM_MODE==LPM_MODE_PM2)
-    SLEEP &= ~OSC_PD;            /* Make sure both HS OSCs are on */
-    while(!(SLEEP & HFRC_STB));  /* Wait for RCOSC to be stable */
-    CLKCON |= OSC;               /* Switch to the RCOSC */
-    while(!(CLKCON & OSC));      /* Wait till it's happened */
-    SLEEP |= OSC_PD;             /* Turn the other one off */
-#endif /* LPM_MODE==LPM_MODE_PM2 */
+    if (rtimer_is_scheduled() == 0) {
+      /* Making sure that the next sleep timer interrupt happens at least 3ms
+       * after sleep command is issued. Otherwise, the system will go to sleep
+       * and never wake up again.
+       *
+       * If the system runs on 32kHz --> 96 counts ~3ms
+       * If the system runs on 32.768kHz ---> 98 counts ~3ms
+       * CLOCK_SECOND = 128 counts (see TICK_VAL as well)
+       *
+       * The sleep timer is being used as a systick, therefore, adding a new
+       * value to it may affect every thread running with etimer. The workaround
+       * for the moment is to skip ahead one ISR and manually adjust the systick
+       * ahead of time. One tick adjustment is equivalent to adding 7.8ms
+       */
+      clock_adjust_systick_ahead_by(CLOCK_SECOND);
 
-    /*
-     * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
-     * Sleep Timer will wake us up in no more than 7.8ms (max idle interval)
-     */
-    SLEEPCMD = (SLEEPCMD & 0xFC) | (LPM_MODE - 1);
-
-#if (LPM_MODE==LPM_MODE_PM2)
-    /*
-     * Wait 3 NOPs. Either an interrupt occurred and SLEEP.MODE was cleared or
-     * no interrupt occurred and we can safely power down
-     */
-    __asm
-      nop
-      nop
-      nop
-    __endasm;
-
-    if(SLEEPCMD & SLEEP_MODE0) {
-#endif /* LPM_MODE==LPM_MODE_PM2 */
+      /*
+       * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
+       * Sleep Timer will wake us up in no more than 7.8ms (max idle interval)
+       */
+      SLEEPCMD = (SLEEPCMD & 0xFC) | LPM_MODE;
 
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       ENERGEST_ON(ENERGEST_TYPE_LPM);
@@ -344,29 +357,24 @@ main(void) CC_NON_BANKED
       /* Go IDLE or Enter PM1 */
       PCON |= PCON_IDLE;
 
-      /* First instruction upon exiting PM1 must be a NOP */
+      /* First instruction upon exiting PM1 must be a NOP
+       * There is no harm in adding more NOP and it seems that
+       * lock up does not occur anymore in PM1 with two additional NOP
+       */
       __asm
         nop
+        nop
+        nop
       __endasm;
+
+      //fade_fast(LEDS_GREEN);
 
       /* Remember energest IRQ for next pass */
       ENERGEST_IRQ_SAVE(irq_energest);
 
       ENERGEST_ON(ENERGEST_TYPE_CPU);
       ENERGEST_OFF(ENERGEST_TYPE_LPM);
-
-#if (LPM_MODE==LPM_MODE_PM2)
-      SLEEPCMD &= ~SLEEP_OSC_PD;            /* Make sure both HS OSCs are on */
-      while(!(SLEEPCMD & SLEEP_XOSC_STB));  /* Wait for XOSC to be stable */
-      CLKCONCMD &= ~CLKCONCMD_OSC;              /* Switch to the XOSC */
-      /*
-       * On occasion the XOSC is reported stable when in reality it's not.
-       * We need to wait for a safeguard of 64us or more before selecting it
-       */
-      clock_delay_usec(65);
-      while(CLKCONCMD & CLKCONCMD_OSC);         /* Wait till it's happened */
     }
-#endif /* LPM_MODE==LPM_MODE_PM2 */
 #endif /* LPM_MODE */
   }
 }

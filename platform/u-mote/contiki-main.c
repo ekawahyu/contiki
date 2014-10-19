@@ -31,6 +31,7 @@
 #include "contiki-net.h"
 
 #include <stdio.h>
+int mesh_is_connected(void); /* TODO clean up this function prototype */
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
 PROCESS_NAME(viztool_process);
@@ -347,7 +348,10 @@ main(void) CC_NON_BANKED
       }
     }
 #if LPM_MODE
-    if (rtimer_is_scheduled() == 0) {
+    if (rtimer_is_scheduled() || mesh_is_connected() == 0) {
+      /* keep the system awake */
+    }
+    else {
       /* Making sure that the next sleep timer interrupt happens at least 3ms
        * after sleep command is issued. Otherwise, the system will go to sleep
        * and never wake up again.
@@ -361,7 +365,7 @@ main(void) CC_NON_BANKED
        * for the moment is to skip ahead one ISR and manually adjust the systick
        * ahead of time. One tick adjustment is equivalent to adding 7.8ms
        */
-      clock_adjust_systick_ahead_by(CLOCK_SECOND);
+      clock_adjust_systick_ahead_by(10*CLOCK_SECOND);
 
       /*
        * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
@@ -388,7 +392,7 @@ main(void) CC_NON_BANKED
         nop
       __endasm;
 
-      //fade_fast(LEDS_GREEN);
+      //fade_fast(LEDS_RED);
 
       /* Remember energest IRQ for next pass */
       ENERGEST_IRQ_SAVE(irq_energest);
