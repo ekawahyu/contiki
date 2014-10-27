@@ -84,6 +84,7 @@ struct rtimer {
   rtimer_clock_t time;
   rtimer_callback_t func;
   void *ptr;
+  struct rtimer *next;
 };
 
 enum {

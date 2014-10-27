@@ -36,7 +36,7 @@ static clock_time_t count;
 #endif
 
 #if TEST_RTIMER
-static struct rtimer rt;
+static struct rtimer rt[5];
 rtimer_clock_t rt_now, rt_for;
 static clock_time_t ct;
 #endif
@@ -83,13 +83,13 @@ PROCESS_THREAD(clock_test_process, ev, data)
   printf("Rtimer Test, 1 sec (%u rtimer ticks):\n", RTIMER_SECOND);
   i = 0;
   while(i < 5) {
-    etimer_set(&et, 2 * CLOCK_SECOND);
+    etimer_set(&et, CLOCK_SECOND/8);
     printf("=======================\n");
     ct = clock_time();
     rt_now = RTIMER_NOW();
-    rt_for = rt_now + RTIMER_SECOND;
+    rt_for = rt_now + (5-i) * (RTIMER_SECOND/2);
     printf("Now=%u (clock = %u) - For=%u\n", rt_now, ct, rt_for);
-    if(rtimer_set(&rt, rt_for, 1,
+    if(rtimer_set(&rt[i], rt_for, 1,
               (void (*)(struct rtimer *, void *))rt_callback, NULL) != RTIMER_OK) {
       printf("Error setting\n");
     }
@@ -97,6 +97,8 @@ PROCESS_THREAD(clock_test_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     i++;
   }
+  etimer_set(&et, 3 * CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 #endif
 
 #if TEST_ETIMER

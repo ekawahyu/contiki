@@ -61,10 +61,10 @@
 
 #if CC2530_RF_LEDS
 #include "dev/leds.h"
-#define RF_RX_LED_ON()		leds_on(LEDS_YELLOW);
-#define RF_RX_LED_OFF()		leds_off(LEDS_YELLOW);
-#define RF_TX_LED_ON()		leds_on(LEDS_RED);
-#define RF_TX_LED_OFF()		leds_off(LEDS_RED);
+#define RF_RX_LED_ON()		leds_on(LEDS_RED);
+#define RF_RX_LED_OFF()		leds_off(LEDS_RED);
+#define RF_TX_LED_ON()		leds_on(LEDS_GREEN);
+#define RF_TX_LED_OFF()		leds_off(LEDS_GREEN);
 #else
 #define RF_RX_LED_ON()
 #define RF_RX_LED_OFF()

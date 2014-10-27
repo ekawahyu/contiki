@@ -69,19 +69,48 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 	   rtimer_clock_t duration,
 	   rtimer_callback_t func, void *ptr)
 {
+  struct rtimer *t;
+  rtimer_clock_t rt_now;
   int first = 0;
 
   PRINTF("rtimer_set time %d\n", time);
 
-  if(next_rtimer == NULL) {
-    first = 1;
-  }
+  rt_now = RTIMER_NOW();
 
   rtimer->func = func;
   rtimer->ptr = ptr;
-
   rtimer->time = time;
-  next_rtimer = rtimer;
+  rtimer->next = NULL;
+
+  if(next_rtimer == NULL) {
+    first = 1;
+    next_rtimer = rtimer;
+  }
+  else {
+    t = next_rtimer;
+
+    /* if the new rtimer will occur earlier than the one currently running, schedule it */
+    if ((rtimer->time - rt_now) < (t->time - rt_now)) {
+      first = 1;
+      rtimer->next = t;
+      next_rtimer = rtimer;
+    }
+
+    /* otherwise try to put it in order within the list */
+    else {
+      do {
+        rtimer->next = t->next;
+        if (((rtimer->time - rt_now) < (t->next->time - rt_now)) || (rtimer->next == NULL)) {
+          t->next = rtimer;
+          break;
+        }
+        else {
+          t = rtimer->next;
+        }
+      } while(rtimer->next);
+    }
+
+  }
 
   if(first == 1) {
     rtimer_arch_schedule(time);
@@ -97,7 +126,7 @@ rtimer_run_next(void)
     return;
   }
   t = next_rtimer;
-  next_rtimer = NULL;
+  next_rtimer = t->next;
   t->func(t, t->ptr);
   if(next_rtimer != NULL) {
     rtimer_arch_schedule(next_rtimer->time);
