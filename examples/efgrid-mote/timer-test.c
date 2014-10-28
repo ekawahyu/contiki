@@ -37,7 +37,7 @@ static clock_time_t count;
 
 #if TEST_RTIMER
 static struct rtimer rt[5];
-rtimer_clock_t rt_now, rt_for;
+rtimer_clock_t rt_now, rt_for, rt_rs485;
 static clock_time_t ct;
 #endif
 
@@ -53,6 +53,12 @@ rt_callback(struct rtimer *t, void *ptr)
   rt_now = RTIMER_NOW();
   ct = clock_time();
   printf("Task called at %u (clock = %u)\n", rt_now, ct);
+}
+void
+rt_rs485_callback(struct rtimer *t, void *ptr)
+{
+  rt_now = RTIMER_NOW();
+  printf("RS485 timing set=%u off=%u\n", rt_rs485, rt_now);
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -77,15 +83,16 @@ PROCESS_THREAD(clock_test_process, ev, data)
         10000 * i, diff, diff * 64);
     i++;
   }
+
   /* Added timer test for RS485 fixed start/stop at 750us and 1750us */
   i = 1;
   while(i < 7) {
     start_count = RTIMER_NOW();
-    clock_delay_usec(1750);
+    clock_delay_usec(1850);
     end_count = RTIMER_NOW();
     diff = end_count - start_count;
     printf("Requested: %u usec, Real: %u rtimer ticks = ~%u us\n",
-        1750, diff, diff * 64);
+        1850, diff, diff * 64);
     i++;
   }
 #endif
@@ -107,6 +114,17 @@ PROCESS_THREAD(clock_test_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     i++;
+  }
+  etimer_set(&et, 3 * CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  /* Added timer test for RS485 fixed start/stop at 750us and 1750us */
+  printf("RS485 timing test at 1750 us\n");
+  rt_rs485 = RTIMER_NOW();
+  rt_for = rt_rs485 + 28;
+  if(rtimer_set(&rt[0], rt_for, 1,
+            (void (*)(struct rtimer *, void *))rt_rs485_callback, NULL) != RTIMER_OK) {
+    printf("Error setting\n");
   }
   etimer_set(&et, 3 * CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));

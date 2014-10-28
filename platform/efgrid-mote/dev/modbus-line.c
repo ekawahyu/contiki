@@ -70,8 +70,14 @@ PROCESS_THREAD(modbus_line_process, ev, data)
   while(1) {
 
     PROCESS_YIELD();
-    leds_toggle(LEDS_YELLOW);
-    //process_post(PROCESS_BROADCAST, modbus_line_event_message, modbus_rx_data);
+
+    process_post(PROCESS_BROADCAST, modbus_line_event_message, modbus_rx_data);
+
+    /* Wait until all processes have handled the modbus line event */
+    if(PROCESS_ERR_OK ==
+      process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
+      PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+    }
   }
 
   PROCESS_END();

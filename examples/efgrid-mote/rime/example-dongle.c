@@ -39,6 +39,7 @@
 #include "random.h"
 #include "sys/clock.h"
 #include "dev/serial-line.h"
+#include "dev/modbus-line.h"
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 #include "dev/lpm.h"
@@ -59,13 +60,14 @@ static char command_received = 0;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ABC example");
-PROCESS(serial_in_process, "ABC example");
+PROCESS(serial_in_process, "Serial example");
+PROCESS(modbus_in_process, "Modbus example");
 /*---------------------------------------------------------------------------*/
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_process, "Button Process");
-AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process, &buttons_process);
+AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process, &modbus_in_process, &buttons_process);
 #else
-AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process);
+AUTOSTART_PROCESSES(&example_abc_process, &serial_in_process, &modbus_in_process);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -171,3 +173,17 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
   PROCESS_END();
 }
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(modbus_in_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
+    PRINTF("Modbus_RX: %s\n", (char*)data);
+  }
+
+  PROCESS_END();
+}
+

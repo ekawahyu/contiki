@@ -211,11 +211,11 @@ main(void) CC_NON_BANKED
   modbus_line_init();
 
   /* Low level RS485 test */
-  uart_arch_writeb('Z');
-  uart_arch_writeb('e');
-  uart_arch_writeb('b');
-  uart_arch_writeb('r');
-  uart_arch_writeb('a');
+  //uart_arch_writeb('Z');
+  //uart_arch_writeb('e');
+  //uart_arch_writeb('b');
+  //uart_arch_writeb('r');
+  //uart_arch_writeb('a');
 
 #if DMA_ON
   dma_init();
