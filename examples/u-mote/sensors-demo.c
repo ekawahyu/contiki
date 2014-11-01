@@ -186,6 +186,8 @@ PROCESS_THREAD(sensors_test_process, ev, data)
 
       leds_off(LEDS_RED);
     }
+    else PRINTF("No ADC_SENSOR detected!\n");
+
     etimer_reset(&et);
   }
   PROCESS_END();

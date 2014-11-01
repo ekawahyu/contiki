@@ -69,9 +69,11 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 
   while(1) {
 
+    /* if no end-of_modbus frame detected */
     PROCESS_YIELD();
 
-    process_post(PROCESS_BROADCAST, modbus_line_event_message, modbus_rx_data);
+    /* else */
+    process_post(PROCESS_BROADCAST, modbus_line_event_message, &modbus_rx_data[pos-1]);
 
     /* Wait until all processes have handled the modbus line event */
     if(PROCESS_ERR_OK ==
