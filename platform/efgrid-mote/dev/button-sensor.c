@@ -43,7 +43,7 @@ static CC_AT_DATA struct timer debouncetimer;
 static int
 value_b1(int type)
 {
-  type;
+  type = type;
   return BUTTON_READ(1) || !timer_expired(&debouncetimer);
 }
 /*---------------------------------------------------------------------------*/
@@ -89,12 +89,19 @@ configure_b1(int type, int value)
 /* ISRs */
 /*---------------------------------------------------------------------------*/
 /* avoid referencing bits, we don't call code which use them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=P0INT_VECTOR
+__near_func __interrupt void port_0_isr(void)
+#else
 void
 port_0_isr(void) __interrupt(P0INT_VECTOR)
+#endif
 {
   EA = 0;
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
@@ -113,6 +120,8 @@ port_0_isr(void) __interrupt(P0INT_VECTOR)
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   EA = 1;
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(button_1_sensor, BUTTON_SENSOR, value_b1, configure_b1, status_b1);

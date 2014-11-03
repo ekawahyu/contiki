@@ -52,7 +52,12 @@ volatile uint8_t sleep_flag;
 #endif
 /*---------------------------------------------------------------------------*/
 /* Do NOT remove the absolute address and do NOT remove the initialiser here */
+#if defined __IAR_SYSTEMS_ICC__
+/* TODO How to declare a variable at a particular location in IAR? */
+static volatile unsigned long timer_value = 0;
+#else
 __xdata __at(0x0000) static unsigned long timer_value = 0;
+#endif
 
 static volatile CC_AT_DATA clock_time_t count = 0; /* Uptime in ticks */
 static volatile CC_AT_DATA clock_time_t seconds = 0; /* Uptime in secs */
@@ -65,7 +70,9 @@ clock_delay_usec(uint16_t len)
 {
   DISABLE_INTERRUPTS();
   while(len--) {
-    ASM(nop);
+    __asm_begin
+    ASM(nop)
+    __asm_end;
   }
   ENABLE_INTERRUPTS();
 }
@@ -155,12 +162,19 @@ clock_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /* avoid referencing bits, we don't call code which use them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=ST_VECTOR
+__near_func __interrupt void clock_isr(void)
+#else
 void
 clock_isr(void) __interrupt(ST_VECTOR)
+#endif
 {
   DISABLE_INTERRUPTS();
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
@@ -204,5 +218,7 @@ clock_isr(void) __interrupt(ST_VECTOR)
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   ENABLE_INTERRUPTS();
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif
 /*---------------------------------------------------------------------------*/

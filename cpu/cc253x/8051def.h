@@ -28,7 +28,9 @@
  * lint - style defines to help syntax parsers with sdcc-specific 8051 code
  * They don't interfere with actual compilation
  */
-#if !defined(__SDCC_mcs51) && !defined(SDCC_mcs51)
+#if defined __IAR_SYSTEMS_ICC__
+#elif defined(__SDCC_mcs51) || defined(SDCC_mcs51)
+#else
 #define __data
 #define __xdata
 #define __code
@@ -52,8 +54,10 @@
 
 #if (defined(__SDCC_mcs51) || defined(SDCC_mcs51)) && CC_CONF_NON_BANKED_OPTIMIZATION
 #define CC_NON_BANKED __nonbanked
+#define NEAR_FUNC
 #else
 #define CC_NON_BANKED
+#define NEAR_FUNC __near_func
 #endif
 
 /*
@@ -68,7 +72,7 @@
  *
  * More information on the wiki
  */
-#define CC_CONF_OPTIMIZE_STACK_SIZE 0
+#define CC_CONF_OPTIMIZE_STACK_SIZE 1
 
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #define CC_AT_DATA
@@ -90,12 +94,18 @@ typedef unsigned short clock_time_t;
 #define CLIF
 
 /* Single asm instruction without messing up syntax highlighting */
-#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
-#define ASM(x) __asm \
-  x \
-  __endasm
+#if defined __IAR_SYSTEMS_ICC__
+# define ASM(...) asm(#__VA_ARGS__);
+# define __asm_begin
+# define __asm_end
+#elif defined(__SDCC_mcs51) || defined(SDCC_mcs51)
+# define ASM(...) __VA_ARGS__
+# define __asm_begin __asm
+# define __asm_end __endasm
 #else
-#define ASM(x)
+# define ASM(...)
+# define __asm_begin
+# define __asm_end
 #endif
 
 /* Critical section management */

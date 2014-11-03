@@ -108,12 +108,16 @@ fade_fast(int l) CC_NON_BANKED
 static void
 set_rf_params(void) CC_NON_BANKED
 {
-  char i;
+  signed char i;
   uint16_t short_addr;
   uint8_t ext_addr[8];
 
 #if CC2530_CONF_MAC_FROM_PRIMARY
+#if defined __IAR_SYSTEMS_ICC__
+  volatile unsigned char *macp = &X_IEEE_ADDR;
+#else
   __xdata unsigned char *macp = &X_IEEE_ADDR;
+#endif
 #else
   __code unsigned char *macp = (__code unsigned char *)0xFFE8;
 #endif
@@ -386,11 +390,11 @@ main(void) CC_NON_BANKED
        * There is no harm in adding more NOP and it seems that
        * lock up does not occur anymore in PM1 with two additional NOP
        */
-      __asm
-        nop
-        nop
-        nop
-      __endasm;
+      __asm_begin
+        ASM(nop)
+        ASM(nop)
+        ASM(nop)
+      __asm_end;
 
       //fade_fast(LEDS_RED);
 

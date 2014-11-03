@@ -123,7 +123,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
   static int counter = 0;
-  static rv;
+  static int rv;
   static const struct sensors_sensor *sensor;
   static float sane = 0;
   static int dec;

@@ -23,7 +23,11 @@ void uart0_writeb(uint8_t byte);
 void uart0_set_input(int (* input)(unsigned char c));
 
 #if UART0_CONF_WITH_INPUT
+#if defined __IAR_SYSTEMS_ICC__
+__near_func __interrupt void uart0_rx_isr(void);
+#else
 void uart0_rx_isr(void) __interrupt(URX0_VECTOR);
+#endif
 /* Macro to turn on / off UART RX Interrupt */
 #define UART0_RX_INT(v) do { URX0IE = v; } while(0)
 #define UART0_RX_EN()   do {   U0CSR |= UCSR_RE; } while(0)

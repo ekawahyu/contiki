@@ -46,7 +46,11 @@
 #include "8051def.h"
 #include "dev/uart1.h"
 
+#if defined __IAR_SYSTEMS_ICC__
+void putchar_iar(char c);
+#else
 void putchar(char c);
+#endif
 void putstring(char *s);
 void puthex(uint8_t c);
 void putbin(uint8_t c);

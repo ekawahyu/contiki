@@ -392,11 +392,11 @@ main(void) CC_NON_BANKED
        * There is no harm in adding more NOP and it seems that
        * lock up does not occur anymore in PM1 with two additional NOP
        */
-      __asm
-        nop
-        nop
-        nop
-      __endasm;
+      __asm_begin
+        ASM(nop)
+        ASM(nop)
+        ASM(nop)
+      __asm_end;
 
       //fade_fast(LEDS_RED);
 

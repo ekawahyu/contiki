@@ -33,12 +33,19 @@ extern void spi_rx_dma_callback(void);
  * if callback defined a poll is made to that process
  */
 /* Avoid referencing bits, we don't call code which use them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=DMA_VECTOR
+__near_func __interrupt void dma_isr(void)
+#else
 void
 dma_isr(void) __interrupt(DMA_VECTOR)
+#endif
 {
 #if DMA_ON
   uint8_t i;
@@ -70,5 +77,7 @@ dma_isr(void) __interrupt(DMA_VECTOR)
 #endif
   EA = 1;
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif
 /*---------------------------------------------------------------------------*/

@@ -73,7 +73,6 @@ abc_recv_cb(struct abc_conn *c)
 {
   static clock_time_t curr_time;
   static clock_time_t time_diff;
-  static unsigned int repeat;
 
   memset(message, 0, MESSAGE_LEN);
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
@@ -97,14 +96,6 @@ static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_abc_process, ev, data)
 {
-  static struct etimer et;
-  static int counter = 0;
-  static rv;
-  static const struct sensors_sensor *sensor;
-  static float sane = 0;
-  static int dec;
-  static float frac;
-
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();

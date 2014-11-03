@@ -81,8 +81,12 @@ rtimer_arch_init(void)
 #endif
 
   /* Interrupt Mask Flags: No interrupt on overflow */
+#if defined __IAR_SYSTEMS_ICC__
+  T1OVFIM = 0;
+#else
   OVFIM = 0;
-
+#endif
+  
   /* Acknowledge Timer 1 Interrupts */
   T1IE = 1;
 }
@@ -109,12 +113,19 @@ pwm_arch_set_duty_cycle(uint8_t channel, uint8_t precentage)
 }
 /*---------------------------------------------------------------------------*/
 /* avoid referencing bits, we don't call code which use them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=T1_VECTOR
+__near_func __interrupt void rtimer_isr(void)
+#else
 void
 rtimer_isr(void) __interrupt(T1_VECTOR)
+#endif
 {
   T1IE = 0; /* Ignore Timer 1 Interrupts */
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
@@ -143,4 +154,6 @@ rtimer_isr(void) __interrupt(T1_VECTOR)
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   T1IE = 1; /* Acknowledge Timer 1 Interrupts */
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif

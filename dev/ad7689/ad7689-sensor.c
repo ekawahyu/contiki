@@ -46,7 +46,6 @@ value(int type)
   unsigned char read_byte_low;
   int sensor_value;
   uint16_t config;
-  int i;
 
   switch(type) {
   case AD7689_SENSOR_CHANNEL0:

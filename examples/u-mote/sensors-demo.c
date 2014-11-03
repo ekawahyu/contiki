@@ -113,7 +113,7 @@ PROCESS_THREAD(sensors_test_process, ev, data)
 
   /* Sensor Values */
   static int rv;
-  static struct sensors_sensor *sensor;
+  static struct sensors_sensor const *sensor;
   static float sane = 0;
   static int dec;
   static float frac;

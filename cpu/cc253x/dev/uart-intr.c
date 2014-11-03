@@ -33,12 +33,19 @@ uart0_set_input(int (* input)(unsigned char c))
 /*---------------------------------------------------------------------------*/
 #if UART0_CONF_WITH_INPUT
 /* avoid referencing bits since we're not using them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=URX0_VECTOR
+__near_func __interrupt void uart0_rx_isr(void)
+#else
 void
 uart0_rx_isr(void) __interrupt(URX0_VECTOR)
+#endif
 {
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   URX0IF = 0;
@@ -47,7 +54,9 @@ uart0_rx_isr(void) __interrupt(URX0_VECTOR)
   }
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif
 #endif
 #endif /* UART0_ENABLE */
 #if UART1_ENABLE
@@ -60,12 +69,19 @@ uart1_set_input(int (* input)(unsigned char c))
 /*---------------------------------------------------------------------------*/
 #if UART1_CONF_WITH_INPUT
 /* avoid referencing bits since we're not using them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=URX1_VECTOR
+__near_func __interrupt void uart1_rx_isr(void)
+#else
 void
 uart1_rx_isr(void) __interrupt(URX1_VECTOR)
+#endif
 {
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   URX1IF = 0;
@@ -74,7 +90,9 @@ uart1_rx_isr(void) __interrupt(URX1_VECTOR)
   }
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif
 /*---------------------------------------------------------------------------*/
 #endif /* UART_ONE_CONF_WITH_INPUT */
 #endif /* UART1_ENABLE */

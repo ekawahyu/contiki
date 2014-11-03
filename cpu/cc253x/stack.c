@@ -48,19 +48,23 @@ CC_AT_DATA uint8_t sp;
 void
 stack_poison(void)
 {
-  __asm
-  mov r1, _SP
+  __asm_begin
+  ASM(mov r1, _SP)
 poison_loop:
-  inc r1
-  mov @r1, #STACK_POISON
-  cjne r1, #0xFF, poison_loop
-  __endasm;
+  ASM(inc r1)
+  ASM(mov @r1, #STACK_POISON)
+  ASM(cjne r1, #0xFF, poison_loop)
+  __asm_end;
 }
 
 uint8_t
 stack_get_max(void)
 {
+#if defined __IAR_SYSTEMS_ICC__
+  uint8_t *sp = (uint8_t *)0xff;
+#else
   __data uint8_t *sp = (__data uint8_t *)0xff;
+#endif
   uint8_t free = 0;
 
   while(*sp-- == STACK_POISON) {

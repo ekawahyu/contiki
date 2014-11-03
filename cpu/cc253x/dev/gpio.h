@@ -48,7 +48,7 @@ extern "C" {
 #define GPIO5   0x10
 #define GPIO_ALL  (GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5)
 
-void gpio_init();
+void gpio_init(void);
 unsigned char gpio_get(void);
 void gpio_set(unsigned char gpiov);
 void gpio_clear(unsigned char gpiov);

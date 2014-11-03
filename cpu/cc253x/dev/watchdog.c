@@ -76,6 +76,8 @@ watchdog_reboot(void)
 
   /* NOP till the dog barks... */
   while(1) {
-    ASM(nop);
+    __asm_begin
+    ASM(nop)
+    __asm_end;
   }
 }

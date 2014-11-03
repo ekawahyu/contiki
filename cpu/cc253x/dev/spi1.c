@@ -119,9 +119,9 @@ spi1_init(unsigned char	mode,
 void
 spi1_write(unsigned char data)
 {
-  TX_BYTE = 0;
+  U1CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
   U1DBUF = data;
-  while(!(TX_BYTE));
+  while(!(U1CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
 }
 
 unsigned char
@@ -129,9 +129,9 @@ spi1_read(void)
 {
   unsigned char data_read;
 
-  TX_BYTE = 0;
+  U1CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
   U1DBUF = 0;
-  while(!(TX_BYTE));
+  while(!(U1CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
   data_read = U1DBUF;
 
   return data_read;
@@ -142,9 +142,9 @@ spi1_read_write(unsigned char data)
 {
   unsigned char data_read;
 
-  TX_BYTE = 0;
+  U1CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
   U1DBUF = data;
-  while(!(TX_BYTE));
+  while(!(U1CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
   data_read = U1DBUF;
 
   return data_read;
