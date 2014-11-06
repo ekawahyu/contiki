@@ -55,6 +55,16 @@ value(int type)
 
   /* 1.25V ref, max decimation rate */
   command = ADCCON3_EDIV1 | ADCCON3_EDIV0;
+#if TEMP_SENSOR_ON
+  /* TESTREG0 value is not retained during LPM2, that is why we reconfigure
+   * it again in here
+   */
+#if defined __IAR_SYSTEMS_ICC__
+  TR0 = 1;
+#else
+  TESTREG0 = 1;
+#endif
+#endif
 
   /* Clear the Interrupt Flag */
   ADCIF = 0;
@@ -111,7 +121,11 @@ configure(int type, int value)
 #if TEMP_SENSOR_ON
     /* Connect temperature sensor to the SoC */
     ATEST = 1;
-    TESTREG0 = 1;
+#if defined __IAR_SYSTEMS_ICC__
+  TR0 = 1;
+#else
+  TESTREG0 = 1;
+#endif
 #endif
     APCFG = 0; /* Disables Input Channels */
     break;

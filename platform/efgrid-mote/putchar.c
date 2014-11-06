@@ -40,7 +40,7 @@ putchar(char c)
     debug_frame = 0;
   }
 #endif
-}
 #if defined __IAR_SYSTEMS_ICC__
   return c;
 #endif
+}
