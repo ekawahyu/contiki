@@ -45,10 +45,13 @@
 #define PRINTF(...)
 #endif /* DEBUG */
 
-#define SEND_INTERVAL		2 * CLOCK_SECOND
+#define SEND_INTERVAL		10 * CLOCK_SECOND
 #define MAX_PAYLOAD_LEN		40
 
 static char buf[MAX_PAYLOAD_LEN];
+
+/* TODO workaround to prevent sleep while expecting a reply */
+unsigned char app_busy = 0;
 
 /* Our destinations and udp conns. One link-local and one global */
 #define LOCAL_CONN_PORT 3001
@@ -80,6 +83,7 @@ tcpip_handler(void)
     putchar('\n');
   }
   leds_off(LEDS_GREEN);
+  app_busy = 0;
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -89,12 +93,12 @@ timeout_handler(void)
   static int seq_id;
   struct uip_udp_conn *this_conn;
 
-  leds_on(LEDS_RED);
+  //leds_on(LEDS_RED);
   memset(buf, 0, MAX_PAYLOAD_LEN);
   seq_id++;
 
   /* evens / odds */
-  if(seq_id & 0x01) {
+  if(/*seq_id & 0x01*/1) {
     this_conn = l_conn;
   } else {
     this_conn = g_conn;
@@ -103,6 +107,7 @@ timeout_handler(void)
     }
   }
 
+  app_busy = 1;
   PRINTF("Client to: ");
   PRINT6ADDR(&this_conn->ripaddr);
 
@@ -112,7 +117,7 @@ timeout_handler(void)
   PRINTF(" (msg=0x%04x), %u bytes\n", *(uint16_t *) buf, sizeof(seq_id));
 
   uip_udp_packet_send(this_conn, buf, sizeof(seq_id));
-  leds_off(LEDS_RED);
+  //leds_off(LEDS_RED);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_client_process, ev, data)
@@ -125,6 +130,8 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   //uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0x0215, 0x2000, 0x0002, 0x2145);
   uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x4b00, 0x01ad, 0xee35);
+  //uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x4b00, 0x01ad, 0xee19);
+  //uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0x0212, 0x4b00, 0x0100, 0x39a0);
 
   /* new connection with remote host */
   l_conn = udp_new(&ipaddr, UIP_HTONS(3000), NULL);
@@ -140,6 +147,8 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   //uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0x0215, 0x2000, 0x0002, 0x2145);
   uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0x0212, 0x4b00, 0x01ad, 0xee35);
+  //uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0x0212, 0x4b00, 0x01ad, 0xee19);
+  //uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0x0212, 0x4b00, 0x0100, 0x39a0);
 
   g_conn = udp_new(&ipaddr, UIP_HTONS(3000), NULL);
   if(!g_conn) {

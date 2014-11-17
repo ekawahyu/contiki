@@ -35,30 +35,45 @@
  */
 
 #include "contiki-conf.h"
-#include "dev/spi.h"
 #include "dev/spi-arch.h"
 #include "cc253x.h"
 
+#if (SPI0_ENABLE || SPI1_ENABLE)
 void spi_arch_cs_init(void)
 {
-  P1SEL &= ~(SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK | SPI_CS5_MASK);
-  P1DIR |= (SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK | SPI_CS5_MASK);
+#if MODELS_CONF_SOC_BB
+  P1SEL &= ~(SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK);
+  P1DIR |= (SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK);
+#elif MODELS_CONF_EVB485
+  P2SEL &= ~(SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK);
+  P2DIR |= (SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK);
+#else
+  P1SEL &= ~(SPI_FLASH_CS_MASK | SPI_LCD_CS_MASK);
+  P1DIR |= (SPI_FLASH_CS_MASK | SPI_LCD_CS_MASK);
+#endif
 }
 
 void
 spi_arch_deselect_all(void)
 {
-  spi_arch_select(~SPI_CS_ALL);
+  spi_arch_select(0);
 }
 
 void
 spi_arch_select(unsigned char cs)
 {
-#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
-  SPI_CS1_PIN = cs & 0x01;
-  SPI_CS2_PIN = (cs & 0x02) >> 1;
-  SPI_CS3_PIN = (cs & 0x04) >> 2;
-  SPI_CS4_PIN = (cs & 0x08) >> 3;
-  SPI_CS5_PIN = (cs & 0x10) >> 4;
+#if MODELS_CONF_SOC_BB
+  SPI_CS1_PIN = (cs & 0x01) ^ 0x01;
+  SPI_CS2_PIN = ((cs & 0x02) >> 1) ^ 0x01;
+  SPI_CS3_PIN = ((cs & 0x04) >> 2) ^ 0x01;
+  SPI_CS4_PIN = ((cs & 0x08) >> 3) ^ 0x01;
+#elif MODELS_CONF_EVB485
+  SPI_CS1_PIN = (cs & 0x01) ^ 0x01;
+  SPI_CS2_PIN = ((cs & 0x02) >> 1) ^ 0x01;
+  SPI_CS3_PIN = ((cs & 0x04) >> 2) ^ 0x01;
+#else
+  SPI_FLASH_CS_PIN = (cs & 0x01) ^ 0x01;
+  SPI_LCD_CS_PIN = ((cs & 0x02) >> 1) ^ 0x01;
 #endif
 }
+#endif

@@ -70,9 +70,15 @@ extern "C" {
 #define spi_arch_read_write_x_x(prefix, ...) prefix##_read_write(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
 
+#if (SPI0_ENABLE || SPI1_ENABLE)
 void spi_arch_cs_init(void);
 void spi_arch_deselect_all(void);
 void spi_arch_select(unsigned char cs);
+#else
+#define spi_arch_cs_init()
+#define spi_arch_deselect_all()
+#define spi_arch_select(...)
+#endif
 
 #ifdef __cplusplus
 }

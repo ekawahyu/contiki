@@ -44,15 +44,16 @@ gpio_arch_init(void)
   /* TODO initialize as output only
    * GPIO should support input, output and tri-state
    */
+#if MODELS_CONF_EVB485
+  P0SEL &= ~(GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK | GPIO5_MASK);
+  P0DIR |= (GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK | GPIO5_MASK);
+#else
   P0SEL &= ~(GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK);
   P0DIR |= (GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK);
   P2SEL &= ~GPIO5_MASK;
   P2DIR |= GPIO5_MASK;
-  GPIO1_PIN = 0;
-  GPIO2_PIN = 0;
-  GPIO3_PIN = 0;
-  GPIO4_PIN = 0;
-  GPIO5_PIN = 0;
+#endif
+  gpio_arch_set(0);
 }
 /*---------------------------------------------------------------------------*/
 unsigned char

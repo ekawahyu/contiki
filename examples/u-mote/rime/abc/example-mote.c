@@ -113,7 +113,7 @@ abc_sent_cb(struct abc_conn *c, int status, int num_tx)
 {
   PRINTF("abc message sent\n");
   /* Listening delay for any incoming message */
-  clock_delay_usec(10000);
+  clock_delay_usec(11000);
 }
 
 static const struct abc_callbacks abc_call = {abc_recv_cb, abc_sent_cb};

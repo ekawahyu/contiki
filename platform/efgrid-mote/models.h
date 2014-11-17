@@ -51,6 +51,7 @@
 /* LEDs */
 /*---------------------------------------------------------------------------*/
 /* Some files include leds.h before us */
+#undef LEDS_CONF_ALL
 #undef LEDS_GREEN
 #undef LEDS_YELLOW
 #undef LEDS_RED
@@ -58,6 +59,10 @@
 /*
  * SOC BB
  *  1: P1_0 (Red)
+ *
+ * EFGrid EVB485
+ *  1: P1_0 (Green)
+ *  2: P1_2 (Red)
  *
  * Smart RF LEDs
  *  1: P1_0 (Green)
@@ -68,7 +73,6 @@
 #if MODELS_CONF_SOC_BB
 
 #define MODEL_STRING "efgrid-mote on SOC BB\n"
-#undef LEDS_CONF_ALL
 #define LEDS_CONF_ALL 1
 #define LEDS_RED      1
 
@@ -77,27 +81,6 @@
 
 /* PxDIR and PxSEL masks */
 #define LED1_MASK  0x01
-
-#else
-
-#define MODEL_STRING "efgrid-mote on CC2530DK\n"
-#undef LEDS_CONF_ALL
-#define LEDS_CONF_ALL 7
-#define LEDS_GREEN    1
-#define LEDS_RED      2
-#define LEDS_YELLOW   4
-
-/* H/W Connections */
-#define LED1_PIN   P1_0
-#define LED2_PIN   P1_1
-#define LED3_PIN   P1_4
-
-/* PxDIR and PxSEL masks */
-#define LED1_MASK  0x01
-#define LED2_MASK  0x02
-#define LED3_MASK  0x10
-
-#endif /* MODELS_CONF_SOC_BB */
 
 /* H/W Connections */
 #define GPIO1_PIN   P0_4
@@ -114,21 +97,96 @@
 #define GPIO5_MASK   0x01
 
 /* H/W Connections */
-#define SPI_CS1_PIN   P1_0
-#define SPI_CS2_PIN   P1_1
-#define SPI_CS3_PIN   P1_2
-#define SPI_CS4_PIN   P1_3
-#define SPI_CS5_PIN   P1_4
+#define SPI_CS1_PIN   P1_1
+#define SPI_CS2_PIN   P1_2
+#define SPI_CS3_PIN   P1_3
+#define SPI_CS4_PIN   P1_4
+
+/* PxDIR and PxSEL masks */
+#define SPI_CS1_MASK   0x02
+#define SPI_CS2_MASK   0x04
+#define SPI_CS3_MASK   0x08
+#define SPI_CS4_MASK   0x10
+
+#elif MODELS_CONF_EVB485
+
+#define MODEL_STRING "EFGrid EVB485\n"
+#define LEDS_CONF_ALL 3
+#define LEDS_GREEN    1
+#define LEDS_RED      2
+
+/* H/W Connections */
+#define LED1_PIN   P1_0
+#define LED2_PIN   P1_2
+
+/* PxDIR and PxSEL masks */
+#define LED1_MASK  0x01
+#define LED2_MASK  0x04
+
+/* H/W Connections */
+#define GPIO1_PIN   P0_0
+#define GPIO2_PIN   P0_1
+#define GPIO3_PIN   P0_4
+#define GPIO4_PIN   P0_5
+#define GPIO5_PIN   P0_6
+
+/* PxDIR and PxSEL masks */
+#define GPIO1_MASK   0x01
+#define GPIO2_MASK   0x02
+#define GPIO3_MASK   0x10
+#define GPIO4_MASK   0x20
+#define GPIO5_MASK   0x40
+
+/* H/W Connections */
+#define SPI_CS1_PIN   P2_0
+#define SPI_CS2_PIN   P2_3 /* if not being used by OSC32_1 */
+#define SPI_CS3_PIN   P2_4 /* if not being used by OSC32_2 */
 
 /* PxDIR and PxSEL masks */
 #define SPI_CS1_MASK   0x01
-#define SPI_CS2_MASK   0x02
-#define SPI_CS3_MASK   0x04
-#define SPI_CS4_MASK   0x08
-#define SPI_CS5_MASK   0x10
+#define SPI_CS2_MASK   0x08
+#define SPI_CS3_MASK   0x10
 
-/*---------------------------------------------------------------------------*/
-/* Buttons */
-/*---------------------------------------------------------------------------*/
+#else
+
+#define MODEL_STRING "efgrid-mote on CC2530DK\n"
+#define LEDS_CONF_ALL 7
+#define LEDS_GREEN    1
+#define LEDS_RED      2
+#define LEDS_YELLOW   4
+
+/* H/W Connections */
+#define LED1_PIN   P1_0
+#define LED2_PIN   P1_1
+#define LED3_PIN   P1_4
+
+/* PxDIR and PxSEL masks */
+#define LED1_MASK  0x01
+#define LED2_MASK  0x02
+#define LED3_MASK  0x10
+
+/* H/W Connections */
+#define GPIO1_PIN   P0_4
+#define GPIO2_PIN   P0_5
+#define GPIO3_PIN   P0_6
+#define GPIO4_PIN   P0_7
+#define GPIO5_PIN   P2_0
+
+/* PxDIR and PxSEL masks */
+#define GPIO1_MASK   0x10
+#define GPIO2_MASK   0x20
+#define GPIO3_MASK   0x40
+#define GPIO4_MASK   0x80
+#define GPIO5_MASK   0x01
+
+/* H/W Connections */
+#define SPI_FLASH_CS_PIN  P1_2
+#define SPI_LCD_CS_PIN    P1_3
+
+/* PxDIR and PxSEL masks */
+#define SPI_FLASH_CS_MASK   0x04
+#define SPI_LCD_CS_MASK     0x08
+
+#endif /* MODELS_CONF_SOC_BB */
 
 #endif /* MODELS_H_ */

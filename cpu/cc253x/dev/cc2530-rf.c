@@ -65,11 +65,15 @@
 #define RF_RX_LED_OFF()		leds_off(LEDS_RED);
 #define RF_TX_LED_ON()		leds_on(LEDS_GREEN);
 #define RF_TX_LED_OFF()		leds_off(LEDS_GREEN);
+#define RF_RX_ACTIVE_ON()	leds_on(LEDS_YELLOW);
+#define RF_RX_ACTIVE_OFF()	leds_off(LEDS_YELLOW);
 #else
 #define RF_RX_LED_ON()
 #define RF_RX_LED_OFF()
 #define RF_TX_LED_ON()
 #define RF_TX_LED_OFF()
+#define RF_RX_ACTIVE_ON()
+#define RF_RX_ACTIVE_OFF()
 #endif
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
@@ -350,6 +354,9 @@ init(void)
 #endif /* CC2530_RF_LOW_POWER_RX */
 
   CCACTRL0 = CC2530_RF_CCA_THRES;
+  
+  /* TODO a workaround to make CCA reports clear channel always */
+  CCACTRL1 = 0x02;
 
   /*
    * According to the user guide, these registers must be updated from their
@@ -599,6 +606,9 @@ read(void *buf, unsigned short bufsize)
 static int
 channel_clear(void)
 {
+  /* workaround */
+  return 1;
+  
   if(FSMSTAT1 & FSMSTAT1_CCA) {
     return CC2530_RF_CCA_CLEAR;
   }
@@ -633,6 +643,7 @@ on(void)
     CC2530_CSP_ISRXON();
 
     rf_flags |= RX_ACTIVE;
+    RF_RX_ACTIVE_ON();
   }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -646,6 +657,7 @@ off(void)
   CC2530_CSP_ISFLUSHRX();
 
   rf_flags &= ~RX_ACTIVE;
+  RF_RX_ACTIVE_OFF();
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   return 1;

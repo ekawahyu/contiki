@@ -54,6 +54,9 @@
 #define PRINTF(...)
 #endif /* DEBUG */
 
+/* TODO workaround to prevent sleep while expecting a reply */
+unsigned char app_busy = 0;
+
 static char message[MESSAGE_LEN];
 static char button_pressed = 0;
 static char command_received = 0;
@@ -79,7 +82,7 @@ abc_recv_cb(struct abc_conn *c)
 
   memset(message, 0, MESSAGE_LEN);
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  PRINTF("abc message received '%s'\n", message);
+  PRINTF("abc message received '%s' (%i dBm)\n", message, packetbuf_attr(PACKETBUF_ATTR_RSSI));
 
   if (memcmp(message,"I am awake", 10) == 0) {
     time_diff = clock_time() - curr_time;

@@ -43,11 +43,18 @@ extern "C" {
 
 #define STARTUP_CONF_VERBOSE            1
 
+/* Configuration for debugging and short distance test */
+#define CC2530_RF_CONF_LEDS             1
+#define CC2530_RF_CONF_LOW_POWER_RX     0    /* set only to 1 to conserve power during reception */
+#define CC2530_RF_CONF_TX_POWER         0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
+
 #define MODELS_CONF_EFGRID_MOTE         0
 #define MODELS_CONF_EFGRID_DONGLE       1
 
 #define MODELS_CONF_HAVE_CC2591_PA_LNA  0
-#define MODELS_CONF_SOC_BB              1
+
+#define MODELS_CONF_SOC_BB              0
+#define MODELS_CONF_EVB485              1
 
 #if MODELS_CONF_EFGRID_DONGLE
 #define CC2530_CONF_MAC_FROM_PRIMARY    1
@@ -61,7 +68,11 @@ extern "C" {
 #define BUTTON_SENSOR_CONF_ON           0
 #endif
 
+#if MODELS_CONF_EVB485
 #define RS485_CONF_ENABLE               1
+#else
+#define RS485_CONF_ENABLE               0
+#endif
 
 #if RS485_CONF_ENABLE
 #define UART1_CONF_ENABLE               1

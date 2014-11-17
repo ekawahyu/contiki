@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Loughborough University - Computer Science
+ * Copyright (c) 2012
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,53 +26,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
- *
  */
 
 /**
  * \file
- *         Project specific configuration defines for the UDP client/server
- *         example.
- *
+ *         A simple radio duty cycling layer, meant to be a low-complexity and
+ *         low-RAM alternative to ContikiMAC.
+ *         
  * \author
- *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         Marcus Linderoth <linderoth.marcus@gmail.com>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef __SIMPLE_RDC_H__
+#define __SIMPLE_RDC_H__
 
-#define STARTUP_CONF_VERBOSE            1
+#include "sys/rtimer.h"
+#include "net/mac/rdc.h"
+#include "dev/radio.h"
 
-#define CC2530_RF_CONF_LEDS             1
+extern const struct rdc_driver simplerdc_driver;
 
-#define MODELS_CONF_EFGRID_MOTE         0
-#define MODELS_CONF_EFGRID_DONGLE       1
+#endif /* __SIMPLE_RDC_H__ */
 
-#define MODELS_CONF_HAVE_CC2591_PA_LNA  0
-#define MODELS_CONF_SOC_BB              0
-
-#if MODELS_CONF_EFGRID_DONGLE
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   2
-#endif
-
-#if MODELS_CONF_EFGRID_MOTE
-#define BUTTON_SENSOR_CONF_ON           0
-#endif
-
-#define RS485_CONF_ENABLE               1
-
-#if RS485_CONF_ENABLE
-#define UART1_CONF_ENABLE               1
-#define SPI1_CONF_ENABLE                0
-#endif
-
-#define BUTTON_SENSOR_CONF_ON 0
-#define UIP_CONF_ICMP6        1
-#define RIMESTATS_CONF_ENABLED 0
-
-#endif /* PROJECT_CONF_H_ */

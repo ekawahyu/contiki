@@ -41,8 +41,7 @@
 extern "C" {
 #endif
 
-void
-gpio_arch_init(void);
+void gpio_arch_init(void);
 unsigned char gpio_arch_get(void);
 void gpio_arch_set(unsigned char gpio);
 

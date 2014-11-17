@@ -32,6 +32,8 @@
 #include "sfr-bits.h"
 
 #include <stdio.h>
+/* TODO workaround to prevent sleep while expecting a reply */
+extern unsigned char app_busy;
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
 PROCESS_NAME(viztool_process);
@@ -198,6 +200,9 @@ main(void) CC_NON_BANKED
   stack_poison();
 
   gpio_init();
+  //gpio_clear(GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5);
+  gpio_set(GPIO1 | GPIO2 | GPIO3 | GPIO4 | GPIO5);
+
   leds_init();
   leds_off(LEDS_ALL);
   fade(LEDS_GREEN);
@@ -324,7 +329,7 @@ main(void) CC_NON_BANKED
 
   autostart_start(autostart_processes);
 
-  watchdog_start();
+  //watchdog_start();
 
   /* TODO not supposed to be here for CC2591 initialization */
 #if MODELS_CONF_HAVE_CC2591_PA_LNA
@@ -361,7 +366,7 @@ main(void) CC_NON_BANKED
       }
     }
 #if LPM_MODE
-    if (rtimer_is_scheduled() == 0) {
+    if ((rtimer_is_scheduled() == 0) && (app_busy == 0)) {
       /* Making sure that the next sleep timer interrupt happens at least 3ms
        * after sleep command is issued. Otherwise, the system will go to sleep
        * and never wake up again.

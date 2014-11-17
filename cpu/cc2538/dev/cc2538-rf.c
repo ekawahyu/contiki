@@ -51,6 +51,22 @@
 #include "reg.h"
 
 #include <string.h>
+#if 1
+#include "dev/leds.h"
+#define RF_RX_LED_ON()    leds_on(LEDS_RED);
+#define RF_RX_LED_OFF()   leds_off(LEDS_RED);
+#define RF_TX_LED_ON()    leds_on(LEDS_GREEN);
+#define RF_TX_LED_OFF()   leds_off(LEDS_GREEN);
+#define RF_RX_ACTIVE_ON() leds_on(LEDS_YELLOW);
+#define RF_RX_ACTIVE_OFF()  leds_off(LEDS_YELLOW);
+#else
+#define RF_RX_LED_ON()
+#define RF_RX_LED_OFF()
+#define RF_TX_LED_ON()
+#define RF_TX_LED_OFF()
+#define RF_RX_ACTIVE_ON()
+#define RF_RX_ACTIVE_OFF()
+#endif
 /*---------------------------------------------------------------------------*/
 #define CHECKSUM_LEN 2
 
@@ -369,6 +385,7 @@ on(void)
     CC2538_RF_CSP_ISRXON();
 
     rf_flags |= RX_ACTIVE;
+    RF_RX_ACTIVE_ON();
   }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -391,6 +408,7 @@ off(void)
   }
 
   rf_flags &= ~RX_ACTIVE;
+  RF_RX_ACTIVE_OFF();
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   return 1;
@@ -573,6 +591,7 @@ transmit(unsigned short transmit_len)
   }
 
   /* Start the transmission */
+  RF_TX_LED_ON();
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
 
@@ -602,6 +621,8 @@ transmit(unsigned short transmit_len)
   }
 
   RIMESTATS_ADD(lltx);
+
+  RF_TX_LED_OFF();
 
   return ret;
 }
@@ -655,6 +676,8 @@ read(void *buf, unsigned short bufsize)
     CC2538_RF_CSP_ISFLUSHRX();
     return 0;
   }
+
+  RF_RX_LED_ON();
 
   /* If we reach here, chances are the FIFO is holding a valid frame */
   PRINTF("RF: read (0x%02x bytes) = ", len);
@@ -727,6 +750,8 @@ read(void *buf, unsigned short bufsize)
       CC2538_RF_CSP_ISFLUSHRX();
     }
   }
+
+  RF_RX_LED_OFF();
 
   return (len);
 }
