@@ -48,8 +48,8 @@ extern "C" {
 #define CC2530_RF_CONF_LOW_POWER_RX     0    /* set only to 1 to conserve power during reception */
 #define CC2530_RF_CONF_TX_POWER         0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
 
-#define MODELS_CONF_EFGRID_MOTE         0
-#define MODELS_CONF_EFGRID_DONGLE       1
+#define MODELS_CONF_EFGRID_MOTE         1
+#define MODELS_CONF_EFGRID_DONGLE       0
 
 #define MODELS_CONF_HAVE_CC2591_PA_LNA  0
 

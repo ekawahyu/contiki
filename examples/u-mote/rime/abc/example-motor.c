@@ -54,9 +54,6 @@
 #define PRINTF(...)
 #endif /* DEBUG */
 
-/* TODO workaround to prevent sleep while expecting a reply */
-unsigned char app_busy = 0;
-
 static char message[MESSAGE_LEN];
 static char button_pressed = 0;
 static char command_received = 0;
@@ -83,6 +80,26 @@ abc_recv_cb(struct abc_conn *c)
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
   PRINTF("abc message received '%s'\n", message);
 
+  if (memcmp(message,"fire coils", 10) == 0) {
+    PRINTF("Firing now...\n");
+    gpio_clear(GPIO2 | GPIO4);
+    gpio_set(GPIO1 | GPIO3 | GPIO5);
+    repeat = 13;
+    while (repeat--) clock_delay_usec(65000);
+    gpio_clear(GPIO2 | GPIO4);
+    gpio_clear(GPIO1 | GPIO3 | GPIO5);
+    PRINTF("Firing done!\n");
+  }
+  if (memcmp(message,"reload coils", 12) == 0) {
+    PRINTF("Reloading now...\n");
+    gpio_clear(GPIO1 | GPIO3);
+    gpio_set(GPIO2 | GPIO4 | GPIO5);
+    repeat = 13;
+    while (repeat--) clock_delay_usec(65000);
+    gpio_clear(GPIO2 | GPIO4);
+    gpio_clear(GPIO1 | GPIO3 | GPIO5);
+    PRINTF("Reloading done!\n");
+  }
   if (memcmp(message,"get temperature", 15) == 0) {
     command_received = GET_TEMPERATURE;
   }
@@ -96,7 +113,7 @@ abc_sent_cb(struct abc_conn *c, int status, int num_tx)
 {
   PRINTF("abc message sent\n");
   /* Listening delay for any incoming message */
-  clock_delay_usec(12000);
+  clock_delay_usec(11000);
 }
 
 static const struct abc_callbacks abc_call = {abc_recv_cb, abc_sent_cb};
@@ -106,7 +123,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
   static int counter = 0;
-  static rv;
+  static int rv;
   static const struct sensors_sensor *sensor;
   static float sane = 0;
   static int dec;
@@ -150,7 +167,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
       }
     }
     else {
-      sprintf(message, "I am awake(0x0001):%i", counter++);
+      sprintf(message, "I am awake(0x098C):%i", counter++);
     }
 
     command_received = NO_COMMAND;
@@ -194,6 +211,8 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
     PRINTF("Serial_RX: %s\n", (char*)data);
+    if (memcmp(data,"fire coils", 10) == 0) command_received = FIRE_COILS;
+    if (memcmp(data,"reload coils", 12) == 0) command_received = RELOAD_COILS;
     if (memcmp(data,"get temperature", 15) == 0) command_received = GET_TEMPERATURE;
     if (memcmp(data,"get battery level", 17) == 0) command_received = GET_BATTERY_LEVEL;
   }
