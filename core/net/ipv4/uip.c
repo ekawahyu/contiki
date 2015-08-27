@@ -78,6 +78,8 @@
 #include "net/ipv4/uip-neighbor.h"
 
 #include <string.h>
+#include "sys/cc.h"
+
 /*---------------------------------------------------------------------------*/
 /* Variable definitions. */
 
@@ -386,7 +388,7 @@ uip_init(void)
 /*---------------------------------------------------------------------------*/
 #if UIP_ACTIVE_OPEN
 struct uip_conn *
-uip_connect(uip_ipaddr_t *ripaddr, uint16_t rport)
+uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 {
   register struct uip_conn *conn, *cconn;
 
@@ -707,7 +709,7 @@ uip_process(uint8_t flag)
     }
 
     /* Reset the length variables. */
-    uip_len = 0;
+    uip_clear_buf();
     uip_slen = 0;
 
 #if UIP_TCP
@@ -1587,7 +1589,7 @@ uip_process(uint8_t flag)
       uip_add_rcv_nxt(1);
       uip_flags = UIP_CONNECTED | UIP_NEWDATA;
       uip_connr->len = 0;
-      uip_len = 0;
+      uip_clear_buf();
       uip_slen = 0;
       UIP_APPCALL();
       goto appsend;
@@ -1932,7 +1934,7 @@ uip_process(uint8_t flag)
   return;
 
  drop:
-  uip_len = 0;
+  uip_clear_buf();
   uip_flags = 0;
   return;
 }
@@ -1953,7 +1955,6 @@ void
 uip_send(const void *data, int len)
 {
   int copylen;
-#define MIN(a,b) ((a) < (b)? (a): (b))
   copylen = MIN(len, UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN -
 		(int)((char *)uip_sappdata - (char *)&uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN]));
   if(copylen > 0) {

@@ -600,7 +600,7 @@ void uip_unlisten(uint16_t port);
  * or NULL if no connection could be allocated.
  *
  */
-struct uip_conn *uip_connect(uip_ipaddr_t *ripaddr, uint16_t port);
+struct uip_conn *uip_connect(const uip_ipaddr_t *ripaddr, uint16_t port);
 
 
 
@@ -1030,10 +1030,10 @@ struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, uint16_t rport);
 #define uip_ipaddr_copy(dest, src) (*(dest) = *(src))
 #endif
 #ifndef uip_ip4addr_copy
-#define uip_ip4addr_copy(dest, src) (*(dest) = *(src))
+#define uip_ip4addr_copy(dest, src) (*((uip_ip4addr_t *)dest) = *((uip_ip4addr_t *)src))
 #endif
 #ifndef uip_ip6addr_copy
-#define uip_ip6addr_copy(dest, src) (*(dest) = *(src))
+#define uip_ip6addr_copy(dest, src) (*((uip_ip6addr_t *)dest) = *((uip_ip6addr_t *)src))
 #endif
 
 /**
@@ -1326,6 +1326,22 @@ extern uint8_t uip_ext_len;
 extern uint16_t uip_urglen, uip_surglen;
 #endif /* UIP_URGDATA > 0 */
 
+/*
+ * Clear uIP buffer
+ *
+ * This function clears the uIP buffer by reseting the uip_len and
+ * uip_ext_len pointers.
+ */
+#if NETSTACK_CONF_WITH_IPV6
+#define uip_clear_buf() { \
+  uip_len = 0; \
+  uip_ext_len = 0; \
+}
+#else /*NETSTACK_CONF_WITH_IPV6*/
+#define uip_clear_buf() { \
+  uip_len = 0; \
+}
+#endif /*NETSTACK_CONF_WITH_IPV6*/
 
 /**
  * Representation of a uIP TCP connection.
