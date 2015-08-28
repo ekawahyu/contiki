@@ -95,35 +95,35 @@ unsigned char spi_read(void);
 unsigned char spi_read_write(unsigned char data);
 
 /* Write one character to SPI */
-#define SPI_WRITE(data)                         \
-  do {                                          \
-    SPI_WAITFORTx_BEFORE();                     \
-    SPI_TXBUF = data;                           \
-    SPI_WAITFOREOTx();                          \
-  } while(0)
+#define SPI_WRITE(data) \
+  do { \
+    SPI_WAITFORTx_BEFORE(); \
+    SPI_TXBUF = data; \
+    SPI_WAITFOREOTx(); \
+  } while(0);
 
 /* Write one character to SPI - will not wait for end
    useful for multiple writes with wait after final */
-#define SPI_WRITE_FAST(data)                    \
-  do {                                          \
-    SPI_WAITFORTx_BEFORE();                     \
-    SPI_TXBUF = data;                           \
-    SPI_WAITFORTx_AFTER();                      \
-  } while(0)
+#define SPI_WRITE_FAST(data) \
+  do { \
+    SPI_WAITFORTx_BEFORE(); \
+    SPI_TXBUF = data; \
+    SPI_WAITFORTx_AFTER(); \
+  } while(0);
 
 /* Read one character from SPI */
-#define SPI_READ(data)   \
-  do {                   \
-    SPI_TXBUF = 0;       \
-    SPI_WAITFOREORx();   \
-    data = SPI_RXBUF;    \
-  } while(0)
+#define SPI_READ(data) \
+  do { \
+    SPI_TXBUF = 0; \
+    SPI_WAITFOREORx(); \
+    data = SPI_RXBUF; \
+  } while(0);
 
 /* Flush the SPI read register */
 #ifndef SPI_FLUSH
 #define SPI_FLUSH() \
-  do {              \
-    SPI_RXBUF;      \
+  do { \
+    SPI_RXBUF; \
   } while(0);
 #endif
 

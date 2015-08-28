@@ -1,8 +1,3 @@
-/**
- * \addtogroup rime
- * @{
- */
-
 /*
  * Copyright (c) 2006, Swedish Institute of Computer Science.
  * All rights reserved.
@@ -40,6 +35,11 @@
  *         Rime initialization and common code
  * \author
  *         Adam Dunkels <adam@sics.se>
+ */
+
+/**
+ * \addtogroup rime
+ * @{
  */
 
 #define DEBUG 0
@@ -108,13 +108,13 @@ input(void)
 
   RIMESTATS_ADD(rx);
   c = chameleon_parse();
-
+  
   for(s = list_head(sniffers); s != NULL; s = list_item_next(s)) {
     if(s->input_callback != NULL) {
       s->input_callback();
     }
   }
-
+  
   if(c != NULL) {
     abc_input(c);
   }
@@ -128,7 +128,7 @@ init(void)
   announcement_init();
 
   chameleon_init();
-
+  
   /* XXX This is initializes the transmission of announcements but it
    * is not currently certain where this initialization is supposed to
    * be. Also, the times are arbitrarily set for now. They should
@@ -148,11 +148,11 @@ packet_sent(void *ptr, int status, int num_tx)
 {
   struct channel *c = ptr;
   struct rime_sniffer *s;
-
+  
   switch(status) {
   case MAC_TX_COLLISION:
     PRINTF("rime: collision after %d tx\n", num_tx);
-    break;
+    break; 
   case MAC_TX_NOACK:
     PRINTF("rime: noack after %d tx\n", num_tx);
     break;
@@ -180,7 +180,7 @@ rime_output(struct channel *c)
   if(chameleon_create(c)) {
     packetbuf_compact();
 
-    NETSTACK_MAC.send(packet_sent, c);
+    NETSTACK_LLSEC.send(packet_sent, c);
     return 1;
   }
   return 0;

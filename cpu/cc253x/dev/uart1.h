@@ -30,7 +30,7 @@ void uart1_rx_isr(void) __interrupt(URX1_VECTOR);
 #endif
 /* Macro to turn on / off UART RX Interrupt */
 #define UART1_RX_INT(v) do { URX1IE = v; } while(0)
-#define UART1_RX_EN()   do {   U1CSR |= UCSR_RE; } while(0)
+#define UART1_RX_EN()   do { U1CSR |= UCSR_RE; } while(0)
 #else
 #define UART1_RX_INT(v)
 #define UART1_RX_EN()

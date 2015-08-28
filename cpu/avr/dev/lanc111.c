@@ -167,9 +167,12 @@
 #endif
 
 /*!
- * \addtogroup xgSmscRegs
- */
-/*@{*/
+ * \addtogroup avr
+ * @{ */
+/*!
+ * \defgroup xgSmscRegs SMSC Registers
+ *
+ * @{ */
 
 /*!
  * \brief Bank select register.
@@ -1200,6 +1203,7 @@ PROCESS_THREAD(lanc111_process, ev, data)
     PROCESS_END();
 }
 #endif  /* 0 */
+#if 0
 /*!
  * \brief Send Ethernet packet.
  *
@@ -1210,7 +1214,6 @@ PROCESS_THREAD(lanc111_process, ev, data)
  *
  * \return 0 on success, -1 in case of any errors.
  */
-#if 0
 int LancOutput(NUTDEVICE * dev, NETBUF * nb)
 {
     static u_long mx_wait = 5000;
@@ -1359,5 +1362,8 @@ lanc111_init(void)
 
     return 0;
 }
+
+/** @} */
+/** @} */
 
 /** @} */

@@ -42,6 +42,11 @@
  *         Adam Dunkels <adam@sics.se>
  */
 
+/**
+ * \addtogroup rimemesh
+ * @{
+ */
+
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "net/rime/route.h"
@@ -77,7 +82,7 @@ data_packet_received(struct multihop_conn *multihop,
   if(rt != NULL) {
     route_refresh(rt);
   }
-
+  
   if(c->cb->recv) {
     c->cb->recv(c, from, hops);
   }
@@ -108,7 +113,7 @@ data_packet_forward(struct multihop_conn *multihop,
   } else {
     route_refresh(rt);
   }
-
+  
   return &rt->nexthop;
 }
 /*---------------------------------------------------------------------------*/
@@ -190,7 +195,7 @@ mesh_send(struct mesh_conn *c, const linkaddr_t *to)
   PRINTF("%d.%d: mesh_send to %d.%d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	 to->u8[0], to->u8[1]);
-
+  
   could_send = multihop_send(&c->multihop, to);
 
   if(!could_send) {
