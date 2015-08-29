@@ -300,11 +300,11 @@ main(void) CC_NON_BANKED
   AD7689_SENSOR_ACTIVATE();
 #endif
 
-#if UIP_CONF_IPV6
+#if NETSTACK_CONF_WITH_IPV6
   memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
   queuebuf_init();
   process_start(&tcpip_process, NULL);
-#endif /* UIP_CONF_IPV6 */
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #if VIZTOOL_CONF_ON
   process_start(&viztool_process, NULL);
