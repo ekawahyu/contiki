@@ -54,7 +54,7 @@
 #define PRINTF(...)
 #endif
 
-static struct rtimer *next_rtimer;
+static struct rtimer *next_rtimer = NULL;
 
 /*---------------------------------------------------------------------------*/
 void
