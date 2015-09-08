@@ -69,8 +69,10 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 	   rtimer_callback_t func, void *ptr)
 {
   struct rtimer *t;
-  rtimer_clock_t rt_now;
+  rtimer_clock_t rt_now, rt1, rt2;
   int first = 0;
+
+  rtimer_arch_halt();
 
   PRINTF("rtimer_set time %d\n", time);
 
@@ -81,6 +83,15 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
   rtimer->time = time;
   rtimer->next = NULL;
 
+  /* FIXME there can be only one rtimer value associated to one interrupt event.
+   * increment it by one for additional 64us to the assigned value.
+   */
+  t = next_rtimer;
+  while (t) {
+	  if (t->time == rtimer->time) rtimer->time++;
+	  t = t->next;
+  }
+
   if(next_rtimer == NULL) {
     first = 1;
     next_rtimer = rtimer;
@@ -89,7 +100,17 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
     t = next_rtimer;
 
     /* if the new rtimer will occur earlier than the one currently running, schedule it */
-    if ((rtimer->time - rt_now) < (t->time - rt_now)) {
+    if (rt_now > rtimer->time)
+      rt1 = rtimer->time + ~rt_now + 1;
+    else
+      rt1 = rtimer->time - rt_now;
+
+    if (rt_now > t->time)
+      rt2 = t->time + ~rt_now + 1;
+    else
+      rt2 = t->time - rt_now;
+
+    if (rt1 < rt2) {
       first = 1;
       rtimer->next = t;
       next_rtimer = rtimer;
@@ -99,7 +120,18 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
     else {
       do {
         rtimer->next = t->next;
-        if (((rtimer->time - rt_now) < (t->next->time - rt_now)) || (rtimer->next == NULL)) {
+
+        if (rt_now > rtimer->time)
+          rt1 = rtimer->time + ~rt_now + 1;
+        else
+          rt1 = rtimer->time - rt_now;
+
+        if (rt_now > t->next->time)
+          rt2 = t->next->time + ~rt_now + 1;
+        else
+          rt2 = t->next->time - rt_now;
+
+        if ((rt1 < rt2) || (rtimer->next == NULL)) {
           t->next = rtimer;
           break;
         }
@@ -112,8 +144,11 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
   }
 
   if(first == 1) {
-    rtimer_arch_schedule(time);
+    rtimer_arch_schedule(next_rtimer->time);
   }
+
+  rtimer_arch_continue();
+
   return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/

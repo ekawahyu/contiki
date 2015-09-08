@@ -106,6 +106,18 @@ rtimer_arch_schedule(rtimer_clock_t t)
   T1CCTL1 |= T1CCTL_IM;
 }
 /*---------------------------------------------------------------------------*/
+void
+rtimer_arch_halt(void)
+{
+  T1CTL &= ~(T1CTL_MODE1 | T1CTL_MODE0);
+}
+/*---------------------------------------------------------------------------*/
+void
+rtimer_arch_continue(void)
+{
+  T1CTL |= T1CTL_MODE0;
+}
+/*---------------------------------------------------------------------------*/
 uint8_t
 pwm_arch_set_duty_cycle(uint8_t channel, uint8_t precentage)
 {

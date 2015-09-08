@@ -155,6 +155,8 @@ int rtimer_is_scheduled(void);
 #define RTIMER_TIME(task) ((task)->time)
 
 void rtimer_arch_init(void);
+void rtimer_arch_halt(void);
+void rtimer_arch_continue(void);
 void rtimer_arch_schedule(rtimer_clock_t t);
 /*rtimer_clock_t rtimer_arch_now(void);*/
 
