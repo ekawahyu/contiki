@@ -40,7 +40,7 @@
 #ifndef BUTTON_SENSOR_H_
 #define BUTTON_SENSOR_H_
 
-#include "../../conectric/contiki-conf.h"
+#include "contiki-conf.h"
 #include "lib/sensors.h"
 
 #define BUTTON_SENSOR "Button"

@@ -27,11 +27,11 @@
 
 #include <stdio.h>
 
-#include "../conectric/debug.h"
-#include "../conectric/dev/adc-sensor.h"
-#include "../conectric/dev/button-sensor.h"
-#include "../conectric/dev/io-arch.h"
-#include "../conectric/dev/leds-arch.h"
+#include "debug.h"
+#include "dev/adc-sensor.h"
+#include "dev/button-sensor.h"
+#include "dev/io-arch.h"
+#include "dev/leds-arch.h"
 int mesh_is_connected(void); /* TODO clean up this function prototype */
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
@@ -199,8 +199,9 @@ main(void) CC_NON_BANKED
   stack_poison();
 
   gpio_init();
-  //leds_init();
+  leds_init();
   leds_off(LEDS_ALL);
+  fade(LEDS_GREEN);
 
   spi_init();
 
@@ -219,6 +220,7 @@ main(void) CC_NON_BANKED
   io_arch_set_input(serial_line_input_byte);
   serial_line_init();
 #endif
+  fade(LEDS_RED);
 
   PUTSTRING("##########################################\n");
   putstring(CONTIKI_VERSION_STRING "\n");
@@ -317,6 +319,8 @@ main(void) CC_NON_BANKED
   autostart_start(autostart_processes);
 
   watchdog_start();
+
+  fade(LEDS_YELLOW);
 
   /* TODO not supposed to be here for RC2400HP */
 #if MODELS_CONF_RC2400HP_MODULE

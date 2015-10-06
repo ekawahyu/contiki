@@ -43,7 +43,7 @@
 #ifndef ADC_SENSOR_H_
 #define ADC_SENSOR_H_
 
-#include "../../conectric/contiki-conf.h"
+#include "contiki-conf.h"
 #include "cc253x.h"
 #include "lib/sensors.h"
 

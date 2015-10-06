@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-#include "../../conectric/contiki-conf.h"
+#include "contiki-conf.h"
 
 #if (UMOTE_SENSORS_ON_SPI == 0)
 #include "dev/spi0.h"

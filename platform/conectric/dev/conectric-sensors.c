@@ -37,8 +37,8 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "../../conectric/dev/adc-sensor.h"
-#include "../../conectric/dev/button-sensor.h"
+#include "dev/adc-sensor.h"
+#include "dev/button-sensor.h"
 #include "lsm330dlc-sensor.h"
 #include "ad7689-sensor.h"
 #include "sys/energest.h"

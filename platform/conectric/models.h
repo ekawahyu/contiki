@@ -51,7 +51,6 @@
 #undef LEDS_GREEN
 #undef LEDS_YELLOW
 #undef LEDS_RED
-#define LEDS_YELLOW 4
 
 /*
  * Smart RF LEDs
@@ -65,7 +64,7 @@
  *  2: P1_1 (Green - active: low)
  */
 #if MODELS_CONF_CC2531_USB_STICK
-#define MODEL_STRING "u-mote CC2531 USB Dongle\n"
+#define MODEL_STRING "TI CC2531 USB Dongle\n"
 #define USB_CONF_ENABLE 1
 
 /* Enabled the ISR for Interrupt Num 6 */
@@ -97,7 +96,7 @@
 #define LED2_MASK  0x01
 #define LED1_MASK  0x02
 #elif MODELS_CONF_SOC_BB
-#define MODEL_STRING "u-mote CC2530 SOC_BB\n"
+#define MODEL_STRING "TI CC2530 SOC_BB\n"
 #define LEDS_GREEN    1
 
 /* H/W Connections */
@@ -106,49 +105,49 @@
 /* PxDIR and PxSEL masks */
 #define LED1_MASK  0x01
 #else
-#define MODEL_STRING "u-mote CC2530DK\n"
+#define MODEL_STRING "Conectric 6LoWPAN Gateway\n"
 #define LEDS_GREEN    1
 #define LEDS_RED      2
+#define LEDS_YELLOW   4
 
 /* H/W Connections */
 #define LED1_PIN   P1_0
-#define LED2_PIN   P1_1
-#define LED3_PIN   P1_4
+#define LED2_PIN   P0_4
+#define LED3_PIN   P0_6
 
 /* PxDIR and PxSEL masks */
 #define LED1_MASK  0x01
-#define LED2_MASK  0x02
-#define LED3_MASK  0x10
-#define LED4_MASK  0x02
+#define LED2_MASK  0x10
+#define LED3_MASK  0x40
 #endif /* MODELS_CONF_CC2531_USB_STICK */
 
-/* H/W Connections */
-#define GPIO1_PIN   P0_4
-#define GPIO2_PIN   P0_5
-#define GPIO3_PIN   P0_6
-#define GPIO4_PIN   P0_7
-#define GPIO5_PIN   P2_0
+/* H/W Connections */ /* TODO overlap with LED */
+#define GPIO1_PIN   P0_0
+#define GPIO2_PIN   P0_1
+#define GPIO3_PIN   P0_4
+#define GPIO4_PIN   P0_6
+#define GPIO5_PIN   P1_0
 
 /* PxDIR and PxSEL masks */
-#define GPIO1_MASK   0x10
-#define GPIO2_MASK   0x20
-#define GPIO3_MASK   0x40
-#define GPIO4_MASK   0x80
+#define GPIO1_MASK   0x01
+#define GPIO2_MASK   0x02
+#define GPIO3_MASK   0x10
+#define GPIO4_MASK   0x40
 #define GPIO5_MASK   0x01
 
-/* H/W Connections */
-#define SPI_CS1_PIN   P1_0
-#define SPI_CS2_PIN   P1_1
-#define SPI_CS3_PIN   P1_2
-#define SPI_CS4_PIN   P1_3
-#define SPI_CS5_PIN   P1_4
+/* H/W Connections */ /* TODO overlap with LED */
+#define SPI_CS1_PIN   P0_0
+#define SPI_CS2_PIN   P0_1
+#define SPI_CS3_PIN   P0_4
+#define SPI_CS4_PIN   P0_6
+#define SPI_CS5_PIN   P1_0
 
 /* PxDIR and PxSEL masks */
 #define SPI_CS1_MASK   0x01
 #define SPI_CS2_MASK   0x02
-#define SPI_CS3_MASK   0x04
-#define SPI_CS4_MASK   0x08
-#define SPI_CS5_MASK   0x10
+#define SPI_CS3_MASK   0x10
+#define SPI_CS4_MASK   0x40
+#define SPI_CS5_MASK   0x01
 
 /*---------------------------------------------------------------------------*/
 /* Buttons */

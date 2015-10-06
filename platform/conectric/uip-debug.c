@@ -39,7 +39,7 @@
 
 #include "net/ip/uip-debug.h"
 
-#include "../conectric/debug.h"
+#include "debug.h"
 /*---------------------------------------------------------------------------*/
 void
 uip_debug_ipaddr_print(const uip_ipaddr_t *addr)

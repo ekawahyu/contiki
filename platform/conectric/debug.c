@@ -9,7 +9,7 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "../conectric/debug.h"
+#include "debug.h"
 
 #include "8051def.h"
 

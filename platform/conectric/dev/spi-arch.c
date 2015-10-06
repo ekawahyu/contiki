@@ -34,9 +34,9 @@
  *
  */
 
-#include "../../conectric/dev/spi-arch.h"
+#include "dev/spi-arch.h"
 
-#include "../../conectric/contiki-conf.h"
+#include "contiki-conf.h"
 #include "dev/spi.h"
 #include "cc253x.h"
 

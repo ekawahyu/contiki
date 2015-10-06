@@ -36,7 +36,7 @@
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
-#include "../../conectric/dev/adc-sensor.h"
+#include "dev/adc-sensor.h"
 
 #include "sfr-bits.h"
 #include "cc253x.h"

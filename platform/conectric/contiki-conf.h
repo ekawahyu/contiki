@@ -18,7 +18,7 @@
 #define MODELS_CONF_CC2531_USB_STICK 0
 #endif
 
-#include "../conectric/models.h"
+#include "models.h"
 
 /*
  * Define this as 1 to poll the etimer process from within main instead of from

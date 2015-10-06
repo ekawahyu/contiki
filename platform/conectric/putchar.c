@@ -6,8 +6,8 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "../conectric/contiki-conf.h"
-#include "../conectric/dev/io-arch.h"
+#include "contiki-conf.h"
+#include "dev/io-arch.h"
 /*---------------------------------------------------------------------------*/
 #if defined __IAR_SYSTEMS_ICC__
 int

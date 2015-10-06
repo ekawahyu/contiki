@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, George Oikonomou - <oikonomou@users.sourceforge.net>
+ * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,62 +27,84 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
+ *
  */
 
 /**
  * \file
- *         Platform-specific led driver for the TI SmartRF05 Eval. Board.
- *
+ *         Testing the broadcast layer in Rime
  * \author
- *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         Adam Dunkels <adam@sics.se>
  */
-#include "dev/leds-arch.h"
 
-#include "contiki-conf.h"
+#include "contiki.h"
+#include "net/rime/rime.h"
+#include "random.h"
+#include "dev/button-sensor.h"
+#include "dev/adc-sensor.h"
 #include "dev/leds.h"
-#include "cc253x.h"
+
+#include <stdio.h>
+
+static char message[MESSAGE_LEN];
+
 /*---------------------------------------------------------------------------*/
-void
-leds_arch_init(void)
+PROCESS(example_broadcast_process, "Broadcast example");
+AUTOSTART_PROCESSES(&example_broadcast_process);
+/*---------------------------------------------------------------------------*/
+static void
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-#if MODELS_CONF_CC2531_USB_STICK
-  P1SEL &= ~LED1_MASK;
-  P1DIR |= LED1_MASK;
-  P0SEL &= ~LED2_MASK;
-  P0DIR |= LED2_MASK;
-#elif MODELS_CONF_SOC_BB
-  P1SEL &= ~LED1_MASK;
-  P1DIR |= LED1_MASK;
-#else
-  P1SEL &= ~(LED1_MASK | LED2_MASK | LED3_MASK);
-  P1DIR |= (LED1_MASK | LED2_MASK | LED3_MASK);
-#endif
+  //printf("[%x.%x]: %s\n", from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
 }
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
 /*---------------------------------------------------------------------------*/
-unsigned char
-leds_arch_get(void)
+PROCESS_THREAD(example_broadcast_process, ev, data)
 {
-#if MODELS_CONF_CC2531_USB_STICK
-  return (unsigned char)(LED1_PIN | ((LED2_PIN ^ 0x01) << 1));
-#elif MODELS_CONF_SOC_BB
-  return (unsigned char)(LED1_PIN);
-#else
-  return (unsigned char)(LED1_PIN | (LED2_PIN << 1) | (LED3_PIN << 2));
-#endif
-}
-/*---------------------------------------------------------------------------*/
-void
-leds_arch_set(unsigned char leds)
-{
-#if MODELS_CONF_CC2531_USB_STICK
-  LED1_PIN = leds & 0x01;
-  LED2_PIN = ((leds & 0x02) >> 1) ^ 0x01;
-#elif MODELS_CONF_SOC_BB
-  LED1_PIN = leds & 0x01;
-#else
-  LED1_PIN = leds & 0x01;
-  LED2_PIN = (leds & 0x02) >> 1;
-  LED3_PIN = (leds & 0x04) >> 2;
-#endif
+  static struct etimer et;
+  static int counter;
+  static int rv;
+  static const struct sensors_sensor *sensor;
+  static float sane = 0;
+  static int dec;
+  static float frac;
+
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
+
+  PROCESS_BEGIN();
+
+  broadcast_open(&broadcast, 129, &broadcast_call);
+
+  while(1) {
+
+    /* Delay 10 seconds */
+    etimer_set(&et, CLOCK_SECOND * 5);
+
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    sensor = sensors_find(ADC_SENSOR);
+
+    memset(message, 0, MESSAGE_LEN);
+
+    rv = sensor->value(ADC_SENSOR_TYPE_TEMP);
+
+    if(rv != -1) {
+      sane = 25 + ((rv - 1480) / 4.5) + 1;
+      dec = sane;
+      frac = sane - dec;
+      sprintf(message, "I am awake:%d.%02u C (%d)", dec, (unsigned int)(frac*100), rv);
+    }
+
+    packetbuf_copyfrom(message, strlen(message));
+
+    //packetbuf_copyfrom("Conectric-6LoWPAN broadcast", 28);
+
+    broadcast_send(&broadcast);
+
+    //printf("broadcast message sent (%i)\n", counter++);
+  }
+
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

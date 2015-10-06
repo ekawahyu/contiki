@@ -34,7 +34,7 @@
  *
  */
 
-#include "../../conectric/contiki-conf.h"
+#include "contiki-conf.h"
 #include "dev/gpio.h"
 #include "cc253x.h"
 /*---------------------------------------------------------------------------*/

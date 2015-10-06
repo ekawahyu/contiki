@@ -32,7 +32,7 @@
 /*
  * This file contains ISRs: Keep it in the HOME bank.
  */
-#include "../../conectric/dev/button-sensor.h"
+#include "dev/button-sensor.h"
 
 #include "dev/port.h"
 #include "dev/watchdog.h"
