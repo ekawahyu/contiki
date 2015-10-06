@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * spi-arch.c
  *
- * Created on: Mar 3, 2014
+ * Created on: Apr 24, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,46 +34,32 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "../../conectric/dev/spi-arch.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "../../conectric/contiki-conf.h"
+#include "dev/spi.h"
+#include "cc253x.h"
 
-#define STARTUP_CONF_VERBOSE            1
-
-/* Configuration for debugging and short distance test */
-#define CC2530_RF_CONF_LEDS             0
-#define CC2530_RF_CONF_LOW_POWER_RX     0    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER         0xF5 /* tx power range: 0x05 - 0xD5(the highest) */
-
-#define ROUTE_CONF_DEFAULT_LIFETIME     600
-
-#define MODELS_CONF_U_MOTE_SENSOR       0
-#define MODELS_CONF_U_MOTE_ROUTER       1
-
-#define MODELS_CONF_CC2531_USB_STICK    0
-#define MODELS_CONF_RC2400HP_MODULE     1
-#define MODELS_CONF_SOC_BB              0
-
-#if MODELS_CONF_CC2531_USB_STICK
-#define CC2530_CONF_MAC_FROM_PRIMARY    0
-#define LPM_CONF_MODE                   0 /* USB Stick may not sleep as a router */
-#elif MODELS_CONF_U_MOTE_ROUTER
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   2
-#endif
-
-#if MODELS_CONF_U_MOTE_SENSOR
-#define BUTTON_SENSOR_CONF_ON           0
-#endif
-
-#ifdef __cplusplus
+void spi_arch_cs_init(void)
+{
+  P1SEL &= ~(SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK | SPI_CS5_MASK);
+  P1DIR |= (SPI_CS1_MASK | SPI_CS2_MASK | SPI_CS3_MASK | SPI_CS4_MASK | SPI_CS5_MASK);
 }
-#endif
 
-#endif /* PROJECT_CONF_H_ */
+void
+spi_arch_deselect_all(void)
+{
+  spi_arch_select(~SPI_CS_ALL);
+}
+
+void
+spi_arch_select(unsigned char cs)
+{
+#if (SPI0_CONF_ENABLE || SPI1_CONF_ENABLE)
+  SPI_CS1_PIN = cs & 0x01;
+  SPI_CS2_PIN = (cs & 0x02) >> 1;
+  SPI_CS3_PIN = (cs & 0x04) >> 2;
+  SPI_CS4_PIN = (cs & 0x08) >> 3;
+  SPI_CS5_PIN = (cs & 0x10) >> 4;
+#endif
+}

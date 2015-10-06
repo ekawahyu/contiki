@@ -99,8 +99,9 @@ def populate(project, modules, segment_rules, bins):
 
 	map_file = project + '.map'
 #	file_pat = re.compile('obj_cc2530dk[^ ]+\.')
-	file_pat = re.compile('obj_u-mote[^ ]+\.')
+#	file_pat = re.compile('obj_u-mote[^ ]+\.')
 #	file_pat = re.compile('obj_efgrid-mote[^ ]+\.')
+	file_pat = re.compile('obj_conectric[^ ]+\.')
 	for line in open(map_file):
 		file_name = file_pat.search(line)
 		if file_name is not None:

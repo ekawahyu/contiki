@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,63 +26,58 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
- *
  */
 
 /**
  * \file
- *         Testing the broadcast layer in Rime
+ *         A set of debugging tools
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Nicolas Tsiftes <nvt@sics.se>
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
  */
 
-#include "contiki.h"
-#include "net/rime/rime.h"
-#include "random.h"
+#include "net/ip/uip-debug.h"
 
-#include "dev/button-sensor.h"
-
-#include "dev/leds.h"
-
-#include <stdio.h>
+#include "../conectric/debug.h"
 /*---------------------------------------------------------------------------*/
-PROCESS(example_broadcast_process, "Broadcast example");
-AUTOSTART_PROCESSES(&example_broadcast_process);
-/*---------------------------------------------------------------------------*/
-static void
-broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
+void
+uip_debug_ipaddr_print(const uip_ipaddr_t *addr)
 {
-  printf("broadcast message received from %d.%d: '%s'\n",
-         from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
-}
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
-static struct broadcast_conn broadcast;
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_broadcast_process, ev, data)
-{
-  static struct etimer et;
-  static int counter;
-
-  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
-
-  PROCESS_BEGIN();
-
-  broadcast_open(&broadcast, 129, &broadcast_call);
-
-  while(1) {
-
-    /* Delay 2-4 seconds */
-    //etimer_set(&et, CLOCK_SECOND * 4 + random_rand() % (CLOCK_SECOND * 4));
-    etimer_set(&et, CLOCK_SECOND);
-
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    packetbuf_copyfrom("Hello", 6);
-    broadcast_send(&broadcast);
-    printf("broadcast message sent (%i)\n", counter++);
+#if NETSTACK_CONF_WITH_IPV6
+  uint16_t a;
+  unsigned int i;
+  int f;
+  for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+    a = (addr->u8[i] << 8) + addr->u8[i + 1];
+    if(a == 0 && f >= 0) {
+      if(f++ == 0) {
+        putstring("::");
+      }
+    } else {
+      if(f > 0) {
+        f = -1;
+      } else if(i > 0) {
+        putstring(":");
+      }
+      puthex(a >> 8);
+      puthex(a & 0xFF);
+    }
   }
-
-  PROCESS_END();
+#else /* NETSTACK_CONF_WITH_IPV6 */
+  PRINTA("%u.%u.%u.%u", addr->u8[0], addr->u8[1], addr->u8[2], addr->u8[3]);
+#endif /* NETSTACK_CONF_WITH_IPV6 */
+}
+/*---------------------------------------------------------------------------*/
+void
+uip_debug_lladdr_print(const uip_lladdr_t *addr)
+{
+  unsigned int i;
+  for(i = 0; i < sizeof(uip_lladdr_t); i++) {
+    if(i > 0) {
+      putstring(":");
+    }
+    puthex(addr->addr[i]);
+  }
 }
 /*---------------------------------------------------------------------------*/

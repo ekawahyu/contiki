@@ -32,57 +32,89 @@
 
 /**
  * \file
- *         Testing the broadcast layer in Rime
+ *         An example of how the Mesh primitive can be used.
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
 
 #include "contiki.h"
 #include "net/rime/rime.h"
-#include "random.h"
+#include "net/rime/mesh.h"
 
 #include "dev/button-sensor.h"
 
 #include "dev/leds.h"
 
 #include <stdio.h>
+#include <string.h>
+
+#define MESSAGE "Hello"
+
+static struct mesh_conn mesh;
+int mesh_is_connected(void); /* TODO clean up this function prototype */
 /*---------------------------------------------------------------------------*/
-PROCESS(example_broadcast_process, "Broadcast example");
-AUTOSTART_PROCESSES(&example_broadcast_process);
+PROCESS(example_mesh_process, "Mesh example");
+AUTOSTART_PROCESSES(&example_mesh_process);
 /*---------------------------------------------------------------------------*/
 static void
-broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
+sent(struct mesh_conn *c)
 {
-  printf("broadcast message received from %d.%d: '%s'\n",
-         from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
+  printf("packet sent\n");
 }
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
-static struct broadcast_conn broadcast;
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_broadcast_process, ev, data)
+
+static void
+timedout(struct mesh_conn *c)
 {
-  static struct etimer et;
-  static int counter;
+  printf("packet timedout\n");
+}
 
-  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
+static void
+recv(struct mesh_conn *c, const linkaddr_t *from, uint8_t hops)
+{
+  printf("Data received from %x.%x: %s (%d)\n",
+  from->u8[0], from->u8[1],
+  (char *)packetbuf_dataptr(), packetbuf_datalen());
+}
 
+const static struct mesh_callbacks callbacks = {recv, sent, timedout};
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(example_mesh_process, ev, data)
+{
+  static struct etimer periodic;
+  static linkaddr_t addr;
+  static int ret;
+
+  PROCESS_EXITHANDLER(mesh_close(&mesh);)
   PROCESS_BEGIN();
 
-  broadcast_open(&broadcast, 129, &broadcast_call);
+  mesh_open(&mesh, 132, &callbacks);
+
+  SENSORS_ACTIVATE(button_sensor);
+
+  addr.u8[0] = 0xEE;
+  addr.u8[1] = 0x35;
 
   while(1) {
 
-    /* Delay 2-4 seconds */
-    //etimer_set(&et, CLOCK_SECOND * 4 + random_rand() % (CLOCK_SECOND * 4));
-    etimer_set(&et, CLOCK_SECOND);
+    if (mesh_is_connected())
+      etimer_set(&periodic, 30*CLOCK_SECOND);
+    else
+      etimer_set(&periodic, 10*CLOCK_SECOND);
 
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic));
+    etimer_reset(&periodic);
 
-    packetbuf_copyfrom("Hello", 6);
-    broadcast_send(&broadcast);
-    printf("broadcast message sent (%i)\n", counter++);
+    /* Send a message to node number 1. */
+
+    if (linkaddr_cmp(&linkaddr_node_addr, &addr) == 0) {
+      packetbuf_copyfrom(MESSAGE, strlen(MESSAGE));
+      addr.u8[0] = 0xEE;
+      addr.u8[1] = 0x35;
+      ret = mesh_send(&mesh, &addr);
+      printf("mesh_send: %i (%d)\n", ret, (unsigned int)clock_seconds());
+    }
+    else printf("I am the sink\n");
   }
-
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

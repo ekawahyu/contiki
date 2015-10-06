@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2010, Loughborough University - Computer Science
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,62 +27,74 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
- *
  */
 
 /**
  * \file
- *         Testing the broadcast layer in Rime
+ *         Definition of a fake RDC driver to be used with passive
+ *         examples. The sniffer will never send packets and it will never
+ *         push incoming packets up the stack. We do this by defining this
+ *         driver as our RDC. We then drop everything
+ *
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "contiki.h"
-#include "net/rime/rime.h"
-#include "random.h"
-
-#include "dev/button-sensor.h"
-
-#include "dev/leds.h"
-
-#include <stdio.h>
-/*---------------------------------------------------------------------------*/
-PROCESS(example_broadcast_process, "Broadcast example");
-AUTOSTART_PROCESSES(&example_broadcast_process);
+#include "net/mac/mac.h"
+#include "net/mac/rdc.h"
 /*---------------------------------------------------------------------------*/
 static void
-broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
+send(mac_callback_t sent, void *ptr)
 {
-  printf("broadcast message received from %d.%d: '%s'\n",
-         from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
-}
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
-static struct broadcast_conn broadcast;
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_broadcast_process, ev, data)
-{
-  static struct etimer et;
-  static int counter;
-
-  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
-
-  PROCESS_BEGIN();
-
-  broadcast_open(&broadcast, 129, &broadcast_call);
-
-  while(1) {
-
-    /* Delay 2-4 seconds */
-    //etimer_set(&et, CLOCK_SECOND * 4 + random_rand() % (CLOCK_SECOND * 4));
-    etimer_set(&et, CLOCK_SECOND);
-
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    packetbuf_copyfrom("Hello", 6);
-    broadcast_send(&broadcast);
-    printf("broadcast message sent (%i)\n", counter++);
+  if(sent) {
+    sent(ptr, MAC_TX_OK, 1);
   }
-
-  PROCESS_END();
 }
+/*---------------------------------------------------------------------------*/
+static void
+send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *list)
+{
+  if(sent) {
+    sent(ptr, MAC_TX_OK, 1);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+input(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+static int
+on(void)
+{
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static int
+off(int keep_radio_on)
+{
+  return keep_radio_on;
+}
+/*---------------------------------------------------------------------------*/
+static unsigned short
+cca(void)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+static void
+init(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+const struct rdc_driver stub_rdc_driver = {
+  "stub-rdc",
+  init,
+  send,
+  send_list,
+  input,
+  on,
+  off,
+  cca,
+};
 /*---------------------------------------------------------------------------*/

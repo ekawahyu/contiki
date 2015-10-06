@@ -41,20 +41,20 @@
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE            1
+#define STARTUP_CONF_VERBOSE            0
 
 /* Configuration for debugging and short distance test */
-#define CC2530_RF_CONF_LEDS             0
-#define CC2530_RF_CONF_LOW_POWER_RX     0    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER         0xF5 /* tx power range: 0x05 - 0xD5(the highest) */
+#define CC2530_RF_CONF_LEDS             1
+#define CC2530_RF_CONF_LOW_POWER_RX     1    /* set to 1 to conserve power during reception */
+#define CC2530_RF_CONF_TX_POWER         0x05 /* tx power range: 0x05 - 0xD5(the highest) */
 
 #define ROUTE_CONF_DEFAULT_LIFETIME     600
 
-#define MODELS_CONF_U_MOTE_SENSOR       0
-#define MODELS_CONF_U_MOTE_ROUTER       1
+#define MODELS_CONF_U_MOTE_SENSOR       1
+#define MODELS_CONF_U_MOTE_ROUTER       0
 
 #define MODELS_CONF_CC2531_USB_STICK    0
-#define MODELS_CONF_RC2400HP_MODULE     1
+#define MODELS_CONF_RC2400HP_MODULE     0
 #define MODELS_CONF_SOC_BB              0
 
 #if MODELS_CONF_CC2531_USB_STICK
@@ -71,6 +71,14 @@ extern "C" {
 #if MODELS_CONF_U_MOTE_SENSOR
 #define BUTTON_SENSOR_CONF_ON           0
 #endif
+
+#define MESSAGE_LEN         30
+
+#define NO_COMMAND          0
+#define FIRE_COILS          1
+#define RELOAD_COILS        2
+#define GET_TEMPERATURE     3
+#define GET_BATTERY_LEVEL   4
 
 #ifdef __cplusplus
 }

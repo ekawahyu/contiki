@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * gpio-arch.c
  *
- * Created on: Mar 3, 2014
+ * Created on: May 13, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,46 +34,41 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define STARTUP_CONF_VERBOSE            1
-
-/* Configuration for debugging and short distance test */
-#define CC2530_RF_CONF_LEDS             0
-#define CC2530_RF_CONF_LOW_POWER_RX     0    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER         0xF5 /* tx power range: 0x05 - 0xD5(the highest) */
-
-#define ROUTE_CONF_DEFAULT_LIFETIME     600
-
-#define MODELS_CONF_U_MOTE_SENSOR       0
-#define MODELS_CONF_U_MOTE_ROUTER       1
-
-#define MODELS_CONF_CC2531_USB_STICK    0
-#define MODELS_CONF_RC2400HP_MODULE     1
-#define MODELS_CONF_SOC_BB              0
-
-#if MODELS_CONF_CC2531_USB_STICK
-#define CC2530_CONF_MAC_FROM_PRIMARY    0
-#define LPM_CONF_MODE                   0 /* USB Stick may not sleep as a router */
-#elif MODELS_CONF_U_MOTE_ROUTER
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   0
-#else
-#define CC2530_CONF_MAC_FROM_PRIMARY    1
-#define LPM_CONF_MODE                   2
-#endif
-
-#if MODELS_CONF_U_MOTE_SENSOR
-#define BUTTON_SENSOR_CONF_ON           0
-#endif
-
-#ifdef __cplusplus
+#include "../../conectric/contiki-conf.h"
+#include "dev/gpio.h"
+#include "cc253x.h"
+/*---------------------------------------------------------------------------*/
+void
+gpio_arch_init(void)
+{
+  /* TODO initialize as output only
+   * GPIO should support input, output and tri-state
+   */
+  P0SEL &= ~(GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK);
+  P0DIR |= (GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK);
+  P2SEL &= ~GPIO5_MASK;
+  P2DIR |= GPIO5_MASK;
+  GPIO1_PIN = 0;
+  GPIO2_PIN = 0;
+  GPIO3_PIN = 0;
+  GPIO4_PIN = 0;
+  GPIO5_PIN = 0;
 }
-#endif
-
-#endif /* PROJECT_CONF_H_ */
+/*---------------------------------------------------------------------------*/
+unsigned char
+gpio_arch_get(void)
+{
+  return (unsigned char)((GPIO1_PIN) | (GPIO2_PIN << 1) |
+      (GPIO3_PIN << 2) | (GPIO4_PIN << 3) | GPIO5_PIN << 4);
+}
+/*---------------------------------------------------------------------------*/
+void
+gpio_arch_set(unsigned char gpio)
+{
+  GPIO1_PIN = (gpio & 0x01);
+  GPIO2_PIN = (gpio & 0x02) >> 1;
+  GPIO3_PIN = (gpio & 0x04) >> 2;
+  GPIO4_PIN = (gpio & 0x08) >> 3;
+  GPIO5_PIN = (gpio & 0x10) >> 4;
+}
+/*---------------------------------------------------------------------------*/

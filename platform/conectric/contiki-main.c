@@ -8,7 +8,6 @@
 #include "dev/gpio.h"
 #include "dev/leds.h"
 #include "dev/spi.h"
-#include "dev/io-arch.h"
 #include "dev/dma.h"
 #include "dev/cc2530-rf.h"
 #include "dev/radio.h"
@@ -18,19 +17,21 @@
 #include "dev/lpm.h"
 #include "lsm330dlc-sensor.h"
 #include "ad7689-sensor.h"
-#include "dev/button-sensor.h"
-#include "dev/adc-sensor.h"
-#include "dev/leds-arch.h"
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
-#include "debug.h"
 #include "cc253x.h"
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
 
 #include <stdio.h>
+
+#include "../conectric/debug.h"
+#include "../conectric/dev/adc-sensor.h"
+#include "../conectric/dev/button-sensor.h"
+#include "../conectric/dev/io-arch.h"
+#include "../conectric/dev/leds-arch.h"
 int mesh_is_connected(void); /* TODO clean up this function prototype */
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
