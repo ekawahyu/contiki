@@ -55,6 +55,10 @@
 
 #define rtimer_arch_now() (T1CNTL + (T1CNTH << 8))
 
+#if defined __IAR_SYSTEMS_ICC__
+__near_func __interrupt void rtimer_isr(void);
+#else
 void rtimer_isr(void) __interrupt(T1_VECTOR);
+#endif
 
 #endif /* RTIMER_ARCH_H_ */

@@ -48,7 +48,11 @@ void cc253x_p2_unregister_handler(struct cc253x_p2_handler *h);
 /* When the ISR is not needed, hide its prototype from the module containing
  * main() to prevent linking it */
 #if PORT_2_ISR_ENABLED
+#if defined __IAR_SYSTEMS_ICC__
+__near_func __interrupt void port_2_isr(void);
+#else
 void port_2_isr(void) __interrupt(P2INT_VECTOR);
+#endif
 #endif
 
 #define cc253x_p2_irq_disable(flag) do { flag = IEN2 & 0x2; IEN2 &= ~0x2; } while(0)

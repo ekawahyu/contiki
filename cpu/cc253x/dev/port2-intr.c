@@ -34,12 +34,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern struct cc253x_p2_handler *handlers;
 
 /* avoid referencing bits, we don't call code which use them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=P2INT_VECTOR
+__near_func __interrupt void port_2_isr(void)
+#else
 void
 port_2_isr(void) __interrupt(P2INT_VECTOR)
+#endif
 {
   struct cc253x_p2_handler *h;
   uint8_t handled = 0;
@@ -52,4 +59,6 @@ port_2_isr(void) __interrupt(P2INT_VECTOR)
     P2IF = 0;
   }
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif

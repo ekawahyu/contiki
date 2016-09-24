@@ -73,10 +73,20 @@ rtimer_arch_init(void)
 
   /* Timer 1, Channel 1. Compare Mode (0x04), Interrupt mask on (0x40) */
   T1CCTL1 = T1CCTL_MODE | T1CCTL_IM;
+#ifdef T1CH2_CONF_ENABLE
+  T1CCTL2 = T1CCTL_MODE | T1CCTL_IM;
+#endif
+#ifdef T1CH3_CONF_ENABLE
+  T1CCTL3 = T1CCTL_MODE | T1CCTL_IM;
+#endif
 
   /* Interrupt Mask Flags: No interrupt on overflow */
+#if defined __IAR_SYSTEMS_ICC__
+  T1OVFIM = 0;
+#else
   OVFIM = 0;
-
+#endif
+  
   /* Acknowledge Timer 1 Interrupts */
   T1IE = 1;
 }
@@ -96,24 +106,66 @@ rtimer_arch_schedule(rtimer_clock_t t)
   T1CCTL1 |= T1CCTL_IM;
 }
 /*---------------------------------------------------------------------------*/
+void
+rtimer_arch_halt(void)
+{
+  T1CTL &= ~(T1CTL_MODE1 | T1CTL_MODE0);
+}
+/*---------------------------------------------------------------------------*/
+void
+rtimer_arch_continue(void)
+{
+  T1CTL |= T1CTL_MODE0;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+pwm_arch_set_duty_cycle(uint8_t channel, uint8_t precentage)
+{
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
 /* avoid referencing bits, we don't call code which use them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
 #pragma exclude bits
 #endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=T1_VECTOR
+__near_func __interrupt void rtimer_isr(void)
+#else
 void
 rtimer_isr(void) __interrupt(T1_VECTOR)
+#endif
 {
   T1IE = 0; /* Ignore Timer 1 Interrupts */
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
 
-  /* No more interrupts from Channel 1 till next rtimer_arch_schedule() call */
-  T1STAT &= ~T1STAT_CH1IF;
-  T1CCTL1 &= ~T1CCTL_IM;
+  if (T1STAT & T1STAT_CH1IF) {
+    /* No more interrupts from Channel 1 till next rtimer_arch_schedule() call */
+    T1STAT &= ~T1STAT_CH1IF;
+    T1CCTL1 &= ~T1CCTL_IM;
 
-  rtimer_run_next();
+    rtimer_run_next();
+  }
+
+#ifdef T1CH2_CONF_ENABLE
+  if (T1STAT & T1STAT_CH2IF) {
+    /* do something here */
+    /* might need to check for overflow IM, potential conflict with CH1 */
+  }
+#endif
+#ifdef T1CH3_CONF_ENABLE
+  if (T1STAT & T1STAT_CH3IF) {
+    /* do something here */
+    /* might need to check for overflow IM, potential conflict with CH1 */
+  }
+#endif
 
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   T1IE = 1; /* Acknowledge Timer 1 Interrupts */
 }
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
+#endif

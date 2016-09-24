@@ -59,6 +59,8 @@
 #define PRINTF(...)
 #endif
 
+static int mesh_status;
+
 /*---------------------------------------------------------------------------*/
 static void
 data_packet_received(struct multihop_conn *multihop,
@@ -193,11 +195,13 @@ mesh_send(struct mesh_conn *c, const linkaddr_t *to)
 
   if(!could_send) {
     PRINTF("mesh_send: could not send\n");
+    mesh_status = 0;
     return 0;
   }
   if(c->cb->sent != NULL) {
     c->cb->sent(c);
   }
+  mesh_status = 1;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -207,5 +211,10 @@ mesh_ready(struct mesh_conn *c)
   return (c->queued_data == NULL);
 }
 
+int
+mesh_is_connected(void)
+{
+  return mesh_status;
+}
 
 /** @} */

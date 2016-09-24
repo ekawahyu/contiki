@@ -54,7 +54,7 @@
 #define PRINTF(...)
 #endif
 
-static struct rtimer *next_rtimer;
+static struct rtimer *next_rtimer = NULL;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -68,23 +68,87 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 	   rtimer_clock_t duration,
 	   rtimer_callback_t func, void *ptr)
 {
+  struct rtimer *t;
+  rtimer_clock_t rt_now, rt1, rt2;
   int first = 0;
+
+  rtimer_arch_halt();
 
   PRINTF("rtimer_set time %d\n", time);
 
-  if(next_rtimer == NULL) {
-    first = 1;
-  }
+  rt_now = RTIMER_NOW();
 
   rtimer->func = func;
   rtimer->ptr = ptr;
-
   rtimer->time = time;
-  next_rtimer = rtimer;
+  rtimer->next = NULL;
+
+  /* FIXME there can be only one rtimer value associated to one interrupt event.
+   * increment it by one for additional 64us to the assigned value.
+   */
+  t = next_rtimer;
+  while (t) {
+	  if (t->time == rtimer->time) rtimer->time++;
+	  t = t->next;
+  }
+
+  if(next_rtimer == NULL) {
+    first = 1;
+    next_rtimer = rtimer;
+  }
+  else {
+    t = next_rtimer;
+
+    /* if the new rtimer will occur earlier than the one currently running, schedule it */
+    if (rt_now > rtimer->time)
+      rt1 = rtimer->time + ~rt_now + 1;
+    else
+      rt1 = rtimer->time - rt_now;
+
+    if (rt_now > t->time)
+      rt2 = t->time + ~rt_now + 1;
+    else
+      rt2 = t->time - rt_now;
+
+    if (rt1 < rt2) {
+      first = 1;
+      rtimer->next = t;
+      next_rtimer = rtimer;
+    }
+
+    /* otherwise try to put it in order within the list */
+    else {
+      do {
+        rtimer->next = t->next;
+
+        if (rt_now > rtimer->time)
+          rt1 = rtimer->time + ~rt_now + 1;
+        else
+          rt1 = rtimer->time - rt_now;
+
+        if (rt_now > t->next->time)
+          rt2 = t->next->time + ~rt_now + 1;
+        else
+          rt2 = t->next->time - rt_now;
+
+        if ((rt1 < rt2) || (rtimer->next == NULL)) {
+          t->next = rtimer;
+          break;
+        }
+        else {
+          t = rtimer->next;
+        }
+      } while(rtimer->next);
+    }
+
+  }
 
   if(first == 1) {
-    rtimer_arch_schedule(time);
+    rtimer_arch_schedule(next_rtimer->time);
   }
+
+  rtimer_arch_continue();
+
   return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/
@@ -96,7 +160,7 @@ rtimer_run_next(void)
     return;
   }
   t = next_rtimer;
-  next_rtimer = NULL;
+  next_rtimer = t->next;
   t->func(t, t->ptr);
   if(next_rtimer != NULL) {
     rtimer_arch_schedule(next_rtimer->time);
@@ -104,5 +168,11 @@ rtimer_run_next(void)
   return;
 }
 /*---------------------------------------------------------------------------*/
-
+int
+rtimer_is_scheduled(void)
+{
+  if (next_rtimer == NULL) return 0;
+  else return 1;
+}
+/*---------------------------------------------------------------------------*/
 /** @}*/

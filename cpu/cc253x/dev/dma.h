@@ -143,7 +143,11 @@ void dma_reset(uint8_t c);
 
 /* Only link the ISR when DMA_ON is .... on */
 #if DMA_ON
+#if defined __IAR_SYSTEMS_ICC__
+__near_func __interrupt void dma_isr(void);
+#else
 void dma_isr(void) __interrupt(DMA_VECTOR);
+#endif
 #endif
 
 #endif /*__DMA_H*/

@@ -41,6 +41,10 @@
 #include "contiki-conf.h"
 #include "cc253x.h"
 
+#if defined __IAR_SYSTEMS_ICC__
+__near_func __interrupt void clock_isr(void);
+#else
 void clock_isr(void) __interrupt(ST_VECTOR);
+#endif
 
 #endif /* CLOCK_ISR_H_ */

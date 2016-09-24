@@ -30,29 +30,33 @@ uart0_init()
   PERCFG |= PERCFG_U0CFG;  /* alternative port 2 = P1.5-2 */
 #ifdef UART0_RTSCTS
   P1SEL |= 0x3C;    /* peripheral select for TX and RX, RTS, CTS */
+  P1DIR |= 0x08;    /* RTS out */
+  P1DIR &= 0x04;    /* CTS in */
 #else
   P1SEL |= 0x30;    /* peripheral select for TX and RX */
   P1 &= ~0x08;      /* RTS down */
 #endif
-  P1DIR |= 0x28;    /* RTS, TX out */
-  P1DIR &= ~0x14;   /* CTS & RX in */
+  P1DIR |= 0x20;    /* TX out */
+  P1DIR &= ~0x10;   /* RX in */
 #else
   PERCFG &= ~PERCFG_U0CFG; /* alternative port 1 = P0.5-2 */
 #ifdef UART0_RTSCTS
-  P0SEL |= 0x3C;    /* peripheral select for RTS and CTS, TX, RX */
+  P0SEL |= 0x3C;    /* peripheral select for TX and RX, RTS, CTS */
+  P0DIR |= 0x20;    /* RTS out */
+  P0DIR &= 0x10;    /* CTS in */
 #else
   P0SEL |= 0x0C;    /* peripheral select for TX and RX */
-  P0 &= ~0x20;    /* RTS down */
+  P0 &= ~0x20;      /* RTS down */
 #endif
-  P0DIR |= 0x28;    /* RTS, TX out */
-  P0DIR &= ~0x14;   /* CTS, RX in */
+  P0DIR |= 0x08;    /* TX out */
+  P0DIR &= ~0x04;   /* RX in */
 #endif
 
 
 #ifdef UART0_RTSCTS
-  U0UCR = 0x42; /*defaults: 8N1, RTS/CTS, high stop bit*/
+  U0UCR = 0x42; /* defaults: 8N1, RTS/CTS, high stop bit */
 #else
-  U0UCR = 0x02; /*defaults: 8N1, no flow control, high stop bit*/
+  U0UCR = 0x02; /* defaults: 8N1, no flow control, high stop bit */
 #endif
 
   U0CSR = UCSR_MODE; /* UART mode */
@@ -66,9 +70,9 @@ uart0_init()
 void
 uart0_writeb(uint8_t byte)
 {
-  UTX0IF = 0;
+  U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
   U0DBUF = byte;
-  while(!UTX0IF); /* Wait until byte has been transmitted. */
-  UTX0IF = 0;
+  while(!(U0CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
+  U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 }
 #endif

@@ -9,8 +9,13 @@
 #include "contiki-conf.h"
 #include "dev/io-arch.h"
 /*---------------------------------------------------------------------------*/
+#if defined __IAR_SYSTEMS_ICC__
+int
+putchar(int c)
+#else
 void
 putchar(char c)
+#endif
 {
 #if SLIP_ARCH_CONF_ENABLE
 #define SLIP_END     0300
@@ -34,5 +39,8 @@ putchar(char c)
     io_arch_writeb(SLIP_END);
     debug_frame = 0;
   }
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+  return c;
 #endif
 }

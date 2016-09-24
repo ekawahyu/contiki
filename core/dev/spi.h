@@ -34,10 +34,43 @@
  * \author
  *         Joakim Eriksson <joakime@sics.se>
  *         Niclas Finne <nfi@sics.se>
+ *         Ekawahyu Susilo <ekawahyu@yahoo.com>
  */
 
 #ifndef SPI_H_
 #define SPI_H_
+
+/* List of valid SPI mode */
+#define SPI_MODE0   0   /* CPOL = 0 CPHA = 0 */
+#define SPI_MODE1   1   /* CPOL = 0 CPHA = 1 */
+#define SPI_MODE2   2   /* CPOL = 1 CPHA = 0 */
+#define SPI_MODE3   3   /* CPOL = 1 CPHA = 1 */
+
+/* List of valid CS */
+#define SPI_CS1     0x01
+#define SPI_CS2     0x02
+#define SPI_CS3     0x04
+#define SPI_CS4     0x08
+#define SPI_CS5     0x10
+#define SPI_CS_ALL  (SPI_CS1 | SPI_CS2 | SPI_CS3 | SPI_CS4 | SPI_CS5)
+
+/* List of valid speed */
+#define SPI_ONE_HUNDRED_HZ    1
+#define SPI_FOUR_HUNDRED_HZ   2
+#define SPI_ONE_HUNDRED_KHZ   3
+#define SPI_FOUR_HUNDRED_KHZ  4
+#define SPI_ONE_MHZ           5
+#define SPI_TWO_MHZ           6
+#define SPI_FIVE_MHZ          7
+#define SPI_SIX_MHZ           8
+#define SPI_TEN_MHZ           9
+#define SPI_TWELVE_MHZ        10
+#define SPI_FIFTEEN_MHZ       11
+#define SPI_THIRTY_MHZ        12
+#define SPI_SIXTY_MHZ         13
+
+#define SPI_LSB_FIRST         0
+#define SPI_MSB_FIRST         1
 
 /* Define macros to use for checking SPI transmission status depending
    on if it is possible to wait for TX buffer ready. This is possible
@@ -55,6 +88,11 @@
 extern unsigned char spi_busy;
 
 void spi_init(void);
+void spi_select(unsigned char cs);
+void spi_deselect(unsigned char cs);
+void spi_write(unsigned char data);
+unsigned char spi_read(void);
+unsigned char spi_read_write(unsigned char data);
 
 /* Write one character to SPI */
 #define SPI_WRITE(data) \

@@ -87,6 +87,7 @@ struct rtimer {
   rtimer_clock_t time;
   rtimer_callback_t func;
   void *ptr;
+  struct rtimer *next;
 };
 
 enum {
@@ -123,6 +124,14 @@ int rtimer_set(struct rtimer *task, rtimer_clock_t time,
 void rtimer_run_next(void);
 
 /**
+ * \brief      Check for scheduled real-time timer, if any
+ *
+ *             This function returns 1 when at least one real-time timer is scheduled.
+ *
+ */
+int rtimer_is_scheduled(void);
+
+/**
  * \brief      Get the current clock time
  * \return     The current time
  *
@@ -148,6 +157,8 @@ void rtimer_run_next(void);
 #define RTIMER_TIME(task) ((task)->time)
 
 void rtimer_arch_init(void);
+void rtimer_arch_halt(void);
+void rtimer_arch_continue(void);
 void rtimer_arch_schedule(rtimer_clock_t t);
 /*rtimer_clock_t rtimer_arch_now(void);*/
 
