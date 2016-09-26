@@ -47,7 +47,7 @@
 #include "dev/uart1.h"
 
 #if defined __IAR_SYSTEMS_ICC__
-void putchar_iar(char c);
+int putchar(int c);
 #else
 void putchar(char c);
 #endif

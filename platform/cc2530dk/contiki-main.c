@@ -376,21 +376,6 @@ main(void) CC_NON_BANKED
       ENERGEST_IRQ_SAVE(irq_energest);
 
       ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
-
-#if (LPM_MODE==LPM_MODE_PM2)
-      SLEEPCMD &= ~SLEEP_OSC_PD;            /* Make sure both HS OSCs are on */
-      while(!(SLEEPCMD & SLEEP_XOSC_STB));  /* Wait for XOSC to be stable */
-      CLKCONCMD &= ~CLKCONCMD_OSC;              /* Switch to the XOSC */
-      /*
-       * On occasion the XOSC is reported stable when in reality it's not.
-       * We need to wait for a safeguard of 64us or more before selecting it
-       */
-      clock_delay_usec(65);
-      while(CLKCONCMD & CLKCONCMD_OSC);         /* Wait till it's happened */
-
-      ENERGEST_ON(ENERGEST_TYPE_CPU);
-      ENERGEST_OFF(ENERGEST_TYPE_LPM);
-
     }
 #endif /* LPM_MODE */
   }

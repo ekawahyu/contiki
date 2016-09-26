@@ -1,4 +1,7 @@
+DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 CONTIKI = ../..
+
+HAVE_BANKING=1
 
 all: example-abc example-mesh example-collect example-trickle example-polite \
      example-rudolph1 example-rudolph2 example-rucb \

@@ -380,8 +380,7 @@ main(void) CC_NON_BANKED
        */
       SLEEPCMD = (SLEEPCMD & 0xFC) | LPM_MODE;
 
-      ENERGEST_OFF(ENERGEST_TYPE_CPU);
-      ENERGEST_ON(ENERGEST_TYPE_LPM);
+      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
 
       /* We are only interested in IRQ energest while idle or in LPM */
       ENERGEST_IRQ_RESTORE(irq_energest);
@@ -404,8 +403,7 @@ main(void) CC_NON_BANKED
       /* Remember energest IRQ for next pass */
       ENERGEST_IRQ_SAVE(irq_energest);
 
-      ENERGEST_ON(ENERGEST_TYPE_CPU);
-      ENERGEST_OFF(ENERGEST_TYPE_LPM);
+      ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
     }
 #endif /* LPM_MODE */
   }
