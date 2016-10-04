@@ -54,6 +54,6 @@
 #define UIP_FALLBACK_INTERFACE slip_interface
 
 /* Change to 0 to build for the SmartRF + cc2530 EM */
-#define MODELS_CONF_CC2531_USB_STICK 1
+#define MODELS_CONF_CC2531_USB_STICK 0
 
 #endif /* PROJECT_CONF_H_ */

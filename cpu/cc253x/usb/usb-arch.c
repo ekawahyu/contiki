@@ -310,7 +310,11 @@ write_hw_buffer_dma(uint8_t __xdata * xptr, uint8_t fl, uint8_t fh,
 static void
 read_hw_buffer(uint8_t * to, uint8_t hw_ep, unsigned int len)
 {
+#if defined __IAR_SYSTEMS_ICC__
+  volatile uint8_t *from = &USBF0 + (hw_ep << 1);
+#else
   __xdata uint8_t *from = &USBF0 + (hw_ep << 1);
+#endif
 
 #if DMA_ON
   // For small transfers we use PIO
