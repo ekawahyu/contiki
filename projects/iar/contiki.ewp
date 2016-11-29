@@ -296,10 +296,11 @@
           <state>chip=cc2530</state>
           <state>AUTOSTART_ENABLE=1</state>
           <state>PROJECT_CONF_H="project-conf.h"</state>
-          <state>CONTIKI_WITH_RIME=1</state>
-          <state>NETSTACK_CONF_WITH_RIME=1</state>
+          <state>CONTIKI_WITH_RIME=0</state>
+          <state>NETSTACK_CONF_WITH_RIME=0</state>
           <state>CONTIKI_WITH_IPV6=1</state>
           <state>NETSTACK_CONF_WITH_IPV6=1</state>
+          <state>CONTIKI_WITH_RPL=1</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -1428,10 +1429,11 @@
           <state>chip=cc2530</state>
           <state>AUTOSTART_ENABLE=1</state>
           <state>PROJECT_CONF_H="project-conf.h"</state>
-          <state>CONTIKI_WITH_RIME=1</state>
-          <state>NETSTACK_CONF_WITH_RIME=1</state>
+          <state>CONTIKI_WITH_RIME=0</state>
+          <state>NETSTACK_CONF_WITH_RIME=0</state>
           <state>CONTIKI_WITH_IPV6=1</state>
           <state>NETSTACK_CONF_WITH_IPV6=1</state>
+          <state>CONTIKI_WITH_RPL=1</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -2560,10 +2562,11 @@
           <state>chip=cc2530</state>
           <state>AUTOSTART_ENABLE=1</state>
           <state>PROJECT_CONF_H="project-conf.h"</state>
-          <state>CONTIKI_WITH_RIME=1</state>
-          <state>NETSTACK_CONF_WITH_RIME=1</state>
+          <state>CONTIKI_WITH_RIME=0</state>
+          <state>NETSTACK_CONF_WITH_RIME=0</state>
           <state>CONTIKI_WITH_IPV6=1</state>
           <state>NETSTACK_CONF_WITH_IPV6=1</state>
+          <state>CONTIKI_WITH_RPL=1</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -3664,6 +3667,11 @@
       </group>
       <group>
         <name>rime</name>
+        <excluded>
+          <configuration>cc2530-cc2530dk-udp-ipv6-server</configuration>
+          <configuration>cc2530-cc2530dk-udp-ipv6-client</configuration>
+          <configuration>cc2530-cc2530dk-border-router</configuration>
+        </excluded>
         <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\abc.c</name>
         </file>
@@ -3723,14 +3731,6 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\rime.c</name>
-          <excluded>
-            <configuration>cc2530-cc2530dk-udp-ipv6-server</configuration>
-            <configuration>cc2530-cc2530dk-udp-ipv6-client</configuration>
-            <configuration>cc2530-cc2530dk-border-router</configuration>
-          </excluded>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\..\core\net\rime\rimestats.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\rmh.c</name>
@@ -3822,6 +3822,9 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\core\net\queuebuf.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\core\net\rime\rimestats.c</name>
       </file>
     </group>
     <group>
@@ -3989,7 +3992,7 @@
           <name>$PROJ_DIR$\..\..\examples\cc2530dk\BORDER-ROUTER\border-router.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\examples\cc2530dk\border-router\slip-bridge.c</name>
+          <name>$PROJ_DIR$\..\..\examples\cc2530dk\BORDER-ROUTER\slip-bridge.c</name>
         </file>
       </group>
       <group>
