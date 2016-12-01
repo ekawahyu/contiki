@@ -47,8 +47,8 @@
 
 /*
  * USARTs:
- *   u-mote RS232 -> USART0 / Alternative 1 (UART)
- *   u-mote SPI   -> USART1 / Alternative 2 (SPI)
+ *   conectric RS232 -> USART0 / Alternative 1 (UART)
+ *   conectric SPI   -> USART1 / Alternative 2 (SPI)
  */
 #define UART_ON_USART     0
 
@@ -72,10 +72,10 @@
 #endif
 
 #ifndef SPI1_CONF_ENABLE
-#define SPI1_CONF_ENABLE  1
+#define SPI1_CONF_ENABLE  0
 #endif
 
-#define UMOTE_SENSORS_ON_SPI        1
+#define CONECTRIC_SENSORS_ON_SPI        1
 
 /* USB output buffering enabled by default (relevant to cc2531 builds only) */
 #ifndef USB_SERIAL_CONF_BUFFERED
@@ -150,14 +150,6 @@
  * It is harmless to #define XYZ 1
  * even if the sensor is not present on our device
  */
-#ifndef LSM330DLC_SENSOR_CONF_ON
-#define LSM330DLC_SENSOR_CONF_ON    1
-#endif
-
-#ifndef AD7689_SENSOR_CONF_ON
-#define AD7689_SENSOR_CONF_ON       1
-#endif
-
 #ifndef BUTTON_SENSOR_CONF_ON
 #define BUTTON_SENSOR_CONF_ON   1  /* Buttons */
 #endif
@@ -165,14 +157,6 @@
 /* B2 on the cc2531 USB stick can be a reset button or a general-purpose one */
 #ifndef CC2531_CONF_B2_REBOOTS
 #define CC2531_CONF_B2_REBOOTS        0  /* General Purpose by default */
-#endif
-
-/* TODO This is a temporary workaround to disable ADC Sensor while button S1
- * is being used. There is a bug related unresponsiveness of button S1
- * when ADC_SENSOR_CONF_ON = 1
- */
-#if BUTTON_SENSOR_CONF_ON
-#define ADC_SENSOR_CONF_ON      0
 #endif
 
 /* ADC - Turning this off will disable everything below */
@@ -185,7 +169,7 @@
 
 /* Low Power Modes - We only support PM0/Idle and PM1 */
 #ifndef LPM_CONF_MODE
-#define LPM_CONF_MODE           2 /* 0: no LPM, 1: PM1, 2: PM2 */
+#define LPM_CONF_MODE           0 /* 0: no LPM, 1: PM1, 2: PM2 */
 #endif
 
 /* DMA Configuration */
@@ -214,7 +198,6 @@
 #endif
 
 #ifndef NETSTACK_CONF_RDC
-//#define NETSTACK_CONF_RDC     contikimac_driver
 #define NETSTACK_CONF_RDC     nullrdc_driver
 #define NULLRDC_802154_AUTOACK 1
 #define NULLRDC_802154_AUTOACK_HW 1
@@ -264,7 +247,7 @@
 #define UIP_CONF_ND6_SEND_RA                 0
 #define UIP_CONF_IP_FORWARD                  0
 #define RPL_CONF_STATS                       0
-#define RPL_CONF_MAX_DAG_ENTRIES             1
+
 #ifndef RPL_CONF_OF
 #define RPL_CONF_OF rpl_mrhof
 #endif
@@ -297,8 +280,8 @@
 /* Define our IPv6 prefixes/contexts here */
 #define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS    1
 #define SICSLOWPAN_CONF_ADDR_CONTEXT_0 { \
-  addr_contexts[0].prefix[0] = 0xaa; \
-  addr_contexts[0].prefix[1] = 0xaa; \
+  addr_contexts[0].prefix[0] = UIP_DS6_DEFAULT_PREFIX_0; \
+  addr_contexts[0].prefix[1] = UIP_DS6_DEFAULT_PREFIX_1; \
 }
 
 #define MAC_CONF_CHANNEL_CHECK_RATE          8

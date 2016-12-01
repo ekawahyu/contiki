@@ -34,10 +34,9 @@
  *
  */
 
-#include "dev/spi-arch.h"
-
 #include "contiki-conf.h"
 #include "dev/spi.h"
+#include "dev/spi-arch.h"
 #include "cc253x.h"
 
 void spi_arch_cs_init(void)

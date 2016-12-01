@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,63 +26,78 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
- *
  */
 
 /**
  * \file
- *         Testing the broadcast layer in Rime
+ *         Slip fallback interface
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
+ *         Joel Hoglund <joel@sics.se>
+ *         Nicolas Tsiftes <nvt@sics.se>
  */
 
-#include "contiki.h"
-#include "net/rime/rime.h"
-#include "random.h"
+#include "net/ip/uip.h"
+#include "net/ipv6/uip-ds6.h"
+#include "net/rpl/rpl.h"
+#include "dev/slip.h"
+#include <string.h>
 
-#include "dev/button-sensor.h"
+#define UIP_IP_BUF        ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 
-#include "dev/leds.h"
+#define DEBUG DEBUG_NONE
+#include "net/ip/uip-debug.h"
 
-#include <stdio.h>
-/*---------------------------------------------------------------------------*/
-PROCESS(example_broadcast_process, "Broadcast example");
-AUTOSTART_PROCESSES(&example_broadcast_process);
+void set_prefix_64(uip_ipaddr_t *);
+
+static uip_ipaddr_t last_sender;
 /*---------------------------------------------------------------------------*/
 static void
-broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
+slip_input_callback(void)
 {
-  printf("broadcast message received from %d.%d: '%s'\n",
-         from->u8[0], from->u8[1], (char *)packetbuf_dataptr());
-}
-static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
-static struct broadcast_conn broadcast;
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_broadcast_process, ev, data)
-{
-  static struct etimer et;
-  static int counter;
-
-  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
-
-  PROCESS_BEGIN();
-
-  broadcast_open(&broadcast, 129, &broadcast_call);
-
-  while(1) {
-
-    /* Delay 2-4 seconds */
-    //etimer_set(&et, CLOCK_SECOND * 4 + random_rand() % (CLOCK_SECOND * 4));
-    etimer_set(&et, CLOCK_SECOND);
-
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    packetbuf_copyfrom("Hello", 6);
-    broadcast_send(&broadcast);
-    printf("broadcast message sent (%i)\n", counter++);
+  PRINTF("SIN: %u\n", uip_len);
+  if((char)uip_buf[0] == '!') {
+    PRINTF("Got configuration message of type %c\n", uip_buf[1]);
+    uip_clear_buf();
+    if((char)uip_buf[1] == 'P') {
+      uip_ipaddr_t prefix;
+      /* Here we set a prefix !!! */
+      memset(&prefix, 0, 16);
+      memcpy(&prefix, &uip_buf[2], 8);
+      PRINTF("Setting prefix ");
+      PRINT6ADDR(&prefix);
+      PRINTF("\n");
+      set_prefix_64(&prefix);
+    }
   }
-
-  PROCESS_END();
+  /* Save the last sender received over SLIP to avoid bouncing the
+     packet back if no route is found */
+  uip_ipaddr_copy(&last_sender, &UIP_IP_BUF->srcipaddr);
 }
+/*---------------------------------------------------------------------------*/
+static void
+init(void)
+{
+  process_start(&slip_process, NULL);
+  slip_set_input_callback(slip_input_callback);
+}
+/*---------------------------------------------------------------------------*/
+static int
+output(void)
+{
+  if(uip_ipaddr_cmp(&last_sender, &UIP_IP_BUF->srcipaddr)) {
+    /* Do not bounce packets back over SLIP if the packet was received
+       over SLIP */
+    PRINTF("slip-bridge: Destination off-link but no route\n");
+  } else {
+    PRINTF("SUT: %u\n", uip_len);
+    slip_send();
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+struct uip_fallback_interface slip_interface = {
+  init, output
+};
 /*---------------------------------------------------------------------------*/

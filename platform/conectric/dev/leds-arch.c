@@ -36,53 +36,31 @@
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
-#include "dev/leds-arch.h"
-
 #include "contiki-conf.h"
 #include "dev/leds.h"
+#include "dev/leds-arch.h"
 #include "cc253x.h"
 /*---------------------------------------------------------------------------*/
 void
 leds_arch_init(void)
 {
-#if MODELS_CONF_CC2531_USB_STICK
   P1SEL &= ~LED1_MASK;
   P1DIR |= LED1_MASK;
-  P0SEL &= ~LED2_MASK;
-  P0DIR |= LED2_MASK;
-#elif MODELS_CONF_SOC_BB
-  P1SEL &= ~LED1_MASK;
-  P1DIR |= LED1_MASK;
-#else
-  P1SEL &= ~(LED1_MASK | LED2_MASK | LED3_MASK);
-  P1DIR |= (LED1_MASK | LED2_MASK | LED3_MASK);
-#endif
+  P0SEL &= ~(LED2_MASK | LED3_MASK);
+  P0DIR |= (LED2_MASK | LED3_MASK);
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
 leds_arch_get(void)
 {
-#if MODELS_CONF_CC2531_USB_STICK
-  return (unsigned char)(LED1_PIN | ((LED2_PIN ^ 0x01) << 1));
-#elif MODELS_CONF_SOC_BB
-  return (unsigned char)(LED1_PIN);
-#else
   return (unsigned char)(LED1_PIN | (LED2_PIN << 1) | (LED3_PIN << 2));
-#endif
 }
 /*---------------------------------------------------------------------------*/
 void
 leds_arch_set(unsigned char leds)
 {
-#if MODELS_CONF_CC2531_USB_STICK
-  LED1_PIN = leds & 0x01;
-  LED2_PIN = ((leds & 0x02) >> 1) ^ 0x01;
-#elif MODELS_CONF_SOC_BB
-  LED1_PIN = leds & 0x01;
-#else
   LED1_PIN = leds & 0x01;
   LED2_PIN = (leds & 0x02) >> 1;
   LED3_PIN = (leds & 0x04) >> 2;
-#endif
 }
 /*---------------------------------------------------------------------------*/

@@ -1,15 +1,14 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 
+# We need uIPv6, therefore we also need banking
 HAVE_BANKING=1
 
-PROJECT_SOURCEFILES += ping6.c
+PROJECT_SOURCEFILES += slip-bridge.c
 
-CONTIKI_PROJECT = client server
+CONTIKI_PROJECT = border-router
 
 all: $(CONTIKI_PROJECT) 
 
 CONTIKI = ../../..
 CONTIKI_WITH_IPV6 = 1
-# needed for rimestats
-CONTIKI_WITH_RIME = 1
 include $(CONTIKI)/Makefile.include

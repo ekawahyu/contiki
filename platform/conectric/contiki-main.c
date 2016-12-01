@@ -8,6 +8,7 @@
 #include "dev/gpio.h"
 #include "dev/leds.h"
 #include "dev/spi.h"
+#include "dev/io-arch.h"
 #include "dev/dma.h"
 #include "dev/cc2530-rf.h"
 #include "dev/radio.h"
@@ -15,24 +16,17 @@
 #include "dev/clock-isr.h"
 #include "dev/port2.h"
 #include "dev/lpm.h"
-#include "lsm330dlc-sensor.h"
-#include "ad7689-sensor.h"
+#include "dev/button-sensor.h"
+#include "dev/adc-sensor.h"
+#include "dev/leds-arch.h"
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
+#include "debug.h"
 #include "cc253x.h"
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-
-#include <stdio.h>
-
-#include "debug.h"
-#include "dev/adc-sensor.h"
-#include "dev/button-sensor.h"
-#include "dev/io-arch.h"
-#include "dev/leds-arch.h"
-int mesh_is_connected(void); /* TODO clean up this function prototype */
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
 PROCESS_NAME(viztool_process);
@@ -199,6 +193,8 @@ main(void) CC_NON_BANKED
   stack_poison();
 
   gpio_init();
+
+  /* Init LEDs here */
   leds_init();
   leds_off(LEDS_ALL);
   fade(LEDS_GREEN);
@@ -287,7 +283,7 @@ main(void) CC_NON_BANKED
   netstack_init();
   set_rf_params();
 
-#if BUTTON_SENSOR_ON || ADC_SENSOR_ON || LSM330DLC_SENSOR_ON
+#if BUTTON_SENSOR_ON || ADC_SENSOR_ON
   process_start(&sensors_process, NULL);
 #endif
 #if BUTTON_SENSOR_ON
@@ -295,12 +291,6 @@ main(void) CC_NON_BANKED
 #endif
 #if ADC_SENSOR_ON
   ADC_SENSOR_ACTIVATE();
-#endif
-#if LSM330DLC_SENSOR_ON
-  LSM330DLC_SENSOR_ACTIVATE();
-#endif
-#if AD7689_SENSOR_ON
-  AD7689_SENSOR_ACTIVATE();
 #endif
 
 #if NETSTACK_CONF_WITH_IPV6
@@ -322,8 +312,8 @@ main(void) CC_NON_BANKED
 
   fade(LEDS_YELLOW);
 
-  /* TODO not supposed to be here for RC2400HP */
-#if MODELS_CONF_RC2400HP_MODULE
+  /* TODO not supposed to be here for Anaren A2530E */
+#if MODELS_CONF_ANAREN_A2530E_MODULE
   RFC_OBS_CTRL0 = 0x68;
   OBSSEL1 = 0xFB;
   RFC_OBS_CTRL1 = 0x6A;
@@ -359,11 +349,9 @@ main(void) CC_NON_BANKED
         NETSTACK_RDC.input();
       }
     }
+
 #if LPM_MODE
-    if (rtimer_is_scheduled() || mesh_is_connected() == 0) {
-      /* keep the system awake */
-    }
-    else {
+    if (rtimer_is_scheduled() == 0) {
       /* Making sure that the next sleep timer interrupt happens at least 3ms
        * after sleep command is issued. Otherwise, the system will go to sleep
        * and never wake up again.
@@ -385,8 +373,7 @@ main(void) CC_NON_BANKED
        */
       SLEEPCMD = (SLEEPCMD & 0xFC) | LPM_MODE;
 
-      ENERGEST_OFF(ENERGEST_TYPE_CPU);
-      ENERGEST_ON(ENERGEST_TYPE_LPM);
+      ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
 
       /* We are only interested in IRQ energest while idle or in LPM */
       ENERGEST_IRQ_RESTORE(irq_energest);
@@ -404,13 +391,12 @@ main(void) CC_NON_BANKED
         ASM(nop)
       __asm_end;
 
-      //fade_fast(LEDS_RED);
+      //fade_fast(LEDS_GREEN);
 
       /* Remember energest IRQ for next pass */
       ENERGEST_IRQ_SAVE(irq_energest);
 
-      ENERGEST_ON(ENERGEST_TYPE_CPU);
-      ENERGEST_OFF(ENERGEST_TYPE_LPM);
+      ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
     }
 #endif /* LPM_MODE */
   }

@@ -43,8 +43,8 @@
 #ifndef ADC_SENSOR_H_
 #define ADC_SENSOR_H_
 
-#include "contiki-conf.h"
 #include "cc253x.h"
+#include "contiki-conf.h"
 #include "lib/sensors.h"
 
 /* ADC Sensor Types */

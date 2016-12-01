@@ -32,8 +32,8 @@
  * Machine dependent cc253x SLIP routines.
  */
 
-#include "dev/io-arch.h"
 #include "dev/slip.h"
+#include "dev/io-arch.h"
 /*---------------------------------------------------------------------------*/
 void
 slip_arch_writeb(unsigned char c)

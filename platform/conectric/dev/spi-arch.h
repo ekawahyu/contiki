@@ -43,10 +43,10 @@ extern "C" {
 
 #include "contiki-conf.h"
 
-#if (UMOTE_SENSORS_ON_SPI == 0)
+#if (CONECTRIC_SENSORS_ON_SPI == 0)
 #include "dev/spi0.h"
 #define SPI_ARCH_PREFIX spi0
-#elif (UMOTE_SENSORS_ON_SPI == 1)
+#elif (CONECTRIC_SENSORS_ON_SPI == 1)
 #include "dev/spi1.h"
 #define SPI_ARCH_PREFIX spi1
 #endif

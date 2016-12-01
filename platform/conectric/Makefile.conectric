@@ -15,7 +15,6 @@ CONTIKI_TARGET_SOURCEFILES += sensors.c conectric-sensors.c
 CONTIKI_TARGET_SOURCEFILES += button-sensor.c adc-sensor.c
 CONTIKI_TARGET_SOURCEFILES += serial-line.c slip-arch.c slip.c
 CONTIKI_TARGET_SOURCEFILES += putchar.c debug.c
-CONTIKI_TARGET_SOURCEFILES += usb-serial.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
@@ -27,7 +26,7 @@ endif
 
 FORCE:
 
-# .sensinode target so we can behave similar to other targets
+# .conectric target so we can behave similar to other targets
 %.$(TARGET): %.hex FORCE
 	cp $< $(<:.hex=.$(TARGET))
 	@echo "\nReport"
@@ -51,6 +50,3 @@ include $(CONTIKI_CPU)/Makefile.cc253x
 # Default modules
 MODULES += core/net core/net/mac \
            core/net/llsec
-
-# Additional modules
-MODULES += dev/lsm330dlc dev/ad7689

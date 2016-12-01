@@ -9,9 +9,8 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "debug.h"
-
 #include "8051def.h"
+#include "debug.h"
 
 static const char hexconv[] = "0123456789abcdef";
 static const char binconv[] = "01";

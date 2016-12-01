@@ -37,10 +37,8 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "dev/adc-sensor.h"
 #include "dev/button-sensor.h"
-#include "lsm330dlc-sensor.h"
-#include "ad7689-sensor.h"
+#include "dev/adc-sensor.h"
 #include "sys/energest.h"
 
 const struct sensors_sensor *sensors[] = {
@@ -49,15 +47,6 @@ const struct sensors_sensor *sensors[] = {
 #endif
 #if BUTTON_SENSOR_ON
   &button_1_sensor,
-#if MODELS_CONF_CC2531_USB_STICK
-  &button_2_sensor,
-#endif
-#if LSM330DLC_SENSOR_ON
-  &lsm330dlc_sensor,
-#endif
-#if AD7689_SENSOR_ON
-  &ad7689_sensor,
-#endif
 #endif
   0
 };

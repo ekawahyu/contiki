@@ -38,7 +38,6 @@
  */
 
 #include "net/ip/uip-debug.h"
-
 #include "debug.h"
 /*---------------------------------------------------------------------------*/
 void
@@ -67,17 +66,5 @@ uip_debug_ipaddr_print(const uip_ipaddr_t *addr)
 #else /* NETSTACK_CONF_WITH_IPV6 */
   PRINTA("%u.%u.%u.%u", addr->u8[0], addr->u8[1], addr->u8[2], addr->u8[3]);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-}
-/*---------------------------------------------------------------------------*/
-void
-uip_debug_lladdr_print(const uip_lladdr_t *addr)
-{
-  unsigned int i;
-  for(i = 0; i < sizeof(uip_lladdr_t); i++) {
-    if(i > 0) {
-      putstring(":");
-    }
-    puthex(addr->addr[i]);
-  }
 }
 /*---------------------------------------------------------------------------*/

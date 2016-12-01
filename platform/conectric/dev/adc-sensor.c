@@ -36,10 +36,9 @@
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
-#include "dev/adc-sensor.h"
-
 #include "sfr-bits.h"
 #include "cc253x.h"
+#include "adc-sensor.h"
 
 #if ADC_SENSOR_ON
 /*---------------------------------------------------------------------------*/

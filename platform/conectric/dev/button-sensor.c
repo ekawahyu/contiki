@@ -32,9 +32,8 @@
 /*
  * This file contains ISRs: Keep it in the HOME bank.
  */
-#include "dev/button-sensor.h"
-
 #include "dev/port.h"
+#include "dev/button-sensor.h"
 #include "dev/watchdog.h"
 /*---------------------------------------------------------------------------*/
 static CC_AT_DATA struct timer debouncetimer;
