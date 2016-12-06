@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\projects\iar\settings\contiki.cc2530-cc2530dk-udp-ipv6-client.general.xcl" --backend -f "F:\projects\iar\settings\contiki.cc2530-cc2530dk-udp-ipv6-client.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\Dropbox\foss\contiki\projects\iar\settings\cc2530dk-udp-ipv6-client.Release.general.xcl" --backend -f "F:\Dropbox\foss\contiki\projects\iar\settings\cc2530dk-udp-ipv6-client.Release.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\projects\iar\settings\contiki.cc2530-cc2530dk-udp-ipv6-client.general.xcl" "--debug_file=%~1" --backend -f "F:\projects\iar\settings\contiki.cc2530-cc2530dk-udp-ipv6-client.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\Dropbox\foss\contiki\projects\iar\settings\cc2530dk-udp-ipv6-client.Release.general.xcl" "--debug_file=%~1" --backend -f "F:\Dropbox\foss\contiki\projects\iar\settings\cc2530dk-udp-ipv6-client.Release.driver.xcl" 
 
 @echo off 
 :end
