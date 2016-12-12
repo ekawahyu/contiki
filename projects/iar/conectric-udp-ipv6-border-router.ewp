@@ -143,20 +143,20 @@
         <option>
           <name>Input variant</name>
           <version>2</version>
-          <state>6</state>
+          <state>3</state>
         </option>
         <option>
           <name>Input description</name>
-          <state>No specifier n, no float or long long, no scan set, no assignment suppressing.</state>
+          <state>No specifier n, no float or long long.</state>
         </option>
         <option>
           <name>Output variant</name>
           <version>2</version>
-          <state>8</state>
+          <state>3</state>
         </option>
         <option>
           <name>Output description</name>
-          <state>No specifier a or A, no specifier n, no float or long long, no flags.</state>
+          <state>No specifier a or A.</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -176,7 +176,7 @@
         </option>
         <option>
           <name>General Xdata Stack Size</name>
-          <state>0x1E0</state>
+          <state>0x1FF</state>
         </option>
         <option>
           <name>General Ext Stack Size</name>
@@ -525,7 +525,7 @@
         <option>
           <name>CCOptStrategy</name>
           <version>0</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>CCOptLevelSlave</name>
@@ -763,7 +763,7 @@
         </option>
         <option>
           <name>OutputFile</name>
-          <state>conectric-udp-ipv6-client.d51</state>
+          <state>conectric-udp-ipv6-border-router.d51</state>
         </option>
         <option>
           <name>OutputFormat</name>
@@ -965,7 +965,7 @@
         </option>
         <option>
           <name>ExtraOutputFile</name>
-          <state>conectric-udp-ipv6-client.sim</state>
+          <state>conectric-udp-ipv6-border-router.sim</state>
         </option>
         <option>
           <name>ExtraOutputFormat</name>
@@ -1709,9 +1709,6 @@
       <name>conectric</name>
       <group>
         <name>border-router</name>
-        <excluded>
-          <configuration>Release</configuration>
-        </excluded>
         <file>
           <name>$PROJ_DIR$\..\..\examples\conectric\border-router\border-router.c</name>
         </file>
@@ -1721,17 +1718,20 @@
       </group>
       <group>
         <name>udp-ipv6</name>
+        <excluded>
+          <configuration>Release</configuration>
+        </excluded>
         <file>
           <name>$PROJ_DIR$\..\..\examples\conectric\udp-ipv6\client.c</name>
+          <excluded>
+            <configuration>Release</configuration>
+          </excluded>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\examples\conectric\udp-ipv6\ping6.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\examples\conectric\udp-ipv6\server.c</name>
-          <excluded>
-            <configuration>Release</configuration>
-          </excluded>
         </file>
       </group>
       <file>

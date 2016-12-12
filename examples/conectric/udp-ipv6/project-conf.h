@@ -47,4 +47,6 @@
 #define RIMESTATS_CONF_ENABLED  1
 #define UIP_CONF_ND6_SEND_NA    1
 
+#define UIP_CONF_BUFFER_SIZE    120
+
 #endif /* PROJECT_CONF_H_ */

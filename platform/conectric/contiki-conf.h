@@ -11,11 +11,11 @@
 #endif /* PROJECT_CONF_H */
 
 /*
- * Build for SmartRF05EB+CC2530EM by default.
+ * Build for Conectric with PA/LNA (Anaren A2530E) by default.
  * This define needs to have its final value before inclusion of models.h
  */
-#ifndef MODELS_CONF_CC2531_USB_STICK
-#define MODELS_CONF_CC2531_USB_STICK 0
+#ifndef MODELS_CONF_ANAREN_A2530E_MODULE
+#define MODELS_CONF_ANAREN_A2530E_MODULE 1
 #endif
 
 #include "models.h"
