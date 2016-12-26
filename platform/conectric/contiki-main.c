@@ -50,6 +50,7 @@ extern volatile uint8_t sleep_flag;
 /*---------------------------------------------------------------------------*/
 extern linkaddr_t linkaddr_node_addr;
 static CC_AT_DATA uint16_t len;
+volatile uint8_t sleep_requested = 0;
 /*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
 static unsigned long irq_energest = 0;
@@ -351,6 +352,7 @@ main(void) CC_NON_BANKED
     }
 
 #if LPM_MODE
+    if (sleep_requested) {
     if (rtimer_is_scheduled() == 0) {
       /* Making sure that the next sleep timer interrupt happens at least 3ms
        * after sleep command is issued. Otherwise, the system will go to sleep
@@ -397,6 +399,8 @@ main(void) CC_NON_BANKED
       ENERGEST_IRQ_SAVE(irq_energest);
 
       ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
+    }
+    sleep_requested = 0;
     }
 #endif /* LPM_MODE */
   }

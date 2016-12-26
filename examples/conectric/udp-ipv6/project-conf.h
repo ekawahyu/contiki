@@ -49,4 +49,9 @@
 
 #define UIP_CONF_BUFFER_SIZE    120
 
+#define RPL_CONF_LEAF_ONLY      0
+#define LPM_CONF_MODE           0
+
+extern volatile uint8_t sleep_requested;
+
 #endif /* PROJECT_CONF_H_ */
