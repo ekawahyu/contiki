@@ -41,6 +41,7 @@
 #endif /* DEBUG */
 
 /*---------------------------------------------------------------------------*/
+#if !NETSTACK_CONF_SHORTCUTS
 void
 mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
 {
@@ -64,4 +65,5 @@ mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
     sent(ptr, status, num_tx);
   }
 }
+#endif
 /*---------------------------------------------------------------------------*/

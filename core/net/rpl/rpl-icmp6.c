@@ -91,6 +91,15 @@ void RPL_DEBUG_DAO_OUTPUT(rpl_parent_t *);
 #endif
 
 static uint8_t dao_sequence = RPL_LOLLIPOP_INIT;
+static rpl_dio_t dio;
+static uip_ipaddr_t from;
+static uip_ipaddr_t dao_sender_addr;
+static uip_ipaddr_t dao_parent_addr;
+static uip_ipaddr_t prefix;
+
+#if !RPL_LEAF_ONLY
+static uip_ipaddr_t addr;
+#endif /* !RPL_LEAF_ONLY */
 
 #if RPL_WITH_MULTICAST
 static uip_mcast6_route_t *mcast_group;
@@ -258,7 +267,7 @@ void
 dis_output(uip_ipaddr_t *addr)
 {
   unsigned char *buffer;
-  uip_ipaddr_t tmpaddr;
+  static uip_ipaddr_t tmpaddr;
 
   /*
    * DAG Information Solicitation  - 2 bytes reserved
@@ -289,11 +298,9 @@ dio_input(void)
 {
   unsigned char *buffer;
   uint8_t buffer_length;
-  rpl_dio_t dio;
   uint8_t subopt_type;
   int i;
   int len;
-  uip_ipaddr_t from;
 
   memset(&dio, 0, sizeof(dio));
 
@@ -478,12 +485,9 @@ void
 dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 {
   unsigned char *buffer;
-  int pos;
-  int is_root;
+  static int pos;
+  static int is_root;
   rpl_dag_t *dag = instance->current_dag;
-#if !RPL_LEAF_ONLY
-  uip_ipaddr_t addr;
-#endif /* !RPL_LEAF_ONLY */
 
 #if RPL_LEAF_ONLY
   /* In leaf mode, we only send DIO messages as unicasts in response to
@@ -634,24 +638,22 @@ static void
 dao_input_storing(void)
 {
 #if RPL_WITH_STORING
-  uip_ipaddr_t dao_sender_addr;
   rpl_dag_t *dag;
   rpl_instance_t *instance;
   unsigned char *buffer;
-  uint16_t sequence;
-  uint8_t instance_id;
-  uint8_t lifetime;
-  uint8_t prefixlen;
+  static uint16_t sequence;
+  static uint8_t instance_id;
+  static uint8_t lifetime;
+  static uint8_t prefixlen;
   uint8_t flags;
   uint8_t subopt_type;
   /*
   uint8_t pathcontrol;
   uint8_t pathsequence;
   */
-  uip_ipaddr_t prefix;
   uip_ds6_route_t *rep;
-  uint8_t buffer_length;
-  int pos;
+  static uint8_t buffer_length;
+  static int pos;
   int len;
   int i;
   int learned_from;
@@ -901,20 +903,17 @@ static void
 dao_input_nonstoring(void)
 {
 #if RPL_WITH_NON_STORING
-  uip_ipaddr_t dao_sender_addr;
-  uip_ipaddr_t dao_parent_addr;
   rpl_dag_t *dag;
   rpl_instance_t *instance;
   unsigned char *buffer;
-  uint16_t sequence;
-  uint8_t instance_id;
-  uint8_t lifetime;
-  uint8_t prefixlen;
+  static uint16_t sequence;
+  static uint8_t instance_id;
+  static uint8_t lifetime;
+  static uint8_t prefixlen;
   uint8_t flags;
   uint8_t subopt_type;
-  uip_ipaddr_t prefix;
-  uint8_t buffer_length;
-  int pos;
+  static uint8_t buffer_length;
+  static int pos;
   int len;
   int i;
 
@@ -1089,7 +1088,6 @@ void
 dao_output(rpl_parent_t *parent, uint8_t lifetime)
 {
   /* Destination Advertisement Object */
-  uip_ipaddr_t prefix;
 
   if(get_global_addr(&prefix) == 0) {
     PRINTF("RPL: No global address set for this node - suppressing DAO\n");

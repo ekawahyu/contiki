@@ -60,6 +60,10 @@
 rpl_stats_t rpl_stats;
 #endif
 
+static uip_ipaddr_t ipaddr;
+static rpl_parent_t *p;
+static rpl_parent_t *parent;
+
 static enum rpl_mode mode = RPL_MODE_MESH;
 /*---------------------------------------------------------------------------*/
 enum rpl_mode
@@ -252,8 +256,6 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
 void
 rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
 {
-  uip_ipaddr_t ipaddr;
-  rpl_parent_t *parent;
   rpl_instance_t *instance;
   rpl_instance_t *end;
 
@@ -275,7 +277,6 @@ rpl_link_neighbor_callback(const linkaddr_t *addr, int status, int numtx)
 void
 rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
 {
-  rpl_parent_t *p;
   rpl_instance_t *instance;
   rpl_instance_t *end;
 

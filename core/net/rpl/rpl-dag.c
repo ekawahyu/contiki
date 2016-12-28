@@ -739,7 +739,8 @@ find_parent_dag(rpl_instance_t *instance, uip_ipaddr_t *addr)
 rpl_parent_t *
 rpl_find_parent_any_dag(rpl_instance_t *instance, uip_ipaddr_t *addr)
 {
-  rpl_parent_t *p = find_parent_any_dag_any_instance(addr);
+  static rpl_parent_t *p;
+  p = find_parent_any_dag_any_instance(addr);
   if(p && p->dag && p->dag->instance == instance) {
     return p;
   } else {
@@ -750,9 +751,9 @@ rpl_find_parent_any_dag(rpl_instance_t *instance, uip_ipaddr_t *addr)
 rpl_dag_t *
 rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
 {
-  rpl_parent_t *last_parent;
-  rpl_dag_t *dag, *end, *best_dag;
-  rpl_rank_t old_rank;
+  static rpl_parent_t *last_parent;
+  static rpl_dag_t *dag, *end, *best_dag;
+  static rpl_rank_t old_rank;
 
   old_rank = instance->current_dag->rank;
   last_parent = instance->current_dag->preferred_parent;

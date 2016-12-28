@@ -88,6 +88,8 @@ typedef struct {
   uint8_t aux_sec_len;     /**<  Length (in bytes) of aux security header field */
 } field_length_t;
 
+static field_length_t flen;
+static frame802154_fcf_t fcf;
 /*----------------------------------------------------------------------------*/
 CC_INLINE static uint8_t
 addr_len(uint8_t mode)
@@ -336,7 +338,6 @@ field_len(frame802154_t *p, field_length_t *flen)
 int
 frame802154_hdrlen(frame802154_t *p)
 {
-  field_length_t flen;
   field_len(p, &flen);
   return 2 + flen.seqno_len + flen.dest_pid_len + flen.dest_addr_len +
          flen.src_pid_len + flen.src_addr_len + flen.aux_sec_len;
@@ -357,7 +358,6 @@ int
 frame802154_create(frame802154_t *p, uint8_t *buf)
 {
   int c;
-  field_length_t flen;
   uint8_t pos;
 #if LLSEC802154_USES_EXPLICIT_KEYS
   uint8_t key_id_mode;
@@ -453,7 +453,6 @@ int
 frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
 {
   uint8_t *p;
-  frame802154_fcf_t fcf;
   int c;
   int has_src_panid;
   int has_dest_panid;
@@ -467,6 +466,7 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
 
   p = data;
 
+  memset(&fcf, 0, sizeof(fcf));
   /* decode the FCF */
   fcf.frame_type = p[0] & 7;
   fcf.security_enabled = (p[0] >> 3) & 1;

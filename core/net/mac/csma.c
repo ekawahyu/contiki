@@ -132,6 +132,17 @@ LIST(neighbor_list);
 
 static void packet_sent(void *ptr, int status, int num_transmissions);
 static void transmit_packet_list(void *ptr);
+
+/* This shortcut is only meant to be used with sicslowmac and null RDC */
+#ifndef CSMA_SHORTCUT
+#define CSMA_SHORTCUT NETSTACK_CONF_SHORTCUTS
+#endif
+
+#if CSMA_SHORTCUT
+static void packet_sent_cb(void *ptr, int status, int num_transmissions);
+static int mac_status;
+static int mac_num_transmissions;
+#endif
 /*---------------------------------------------------------------------------*/
 static struct neighbor_queue *
 neighbor_queue_from_addr(const linkaddr_t *addr)
@@ -174,6 +185,9 @@ transmit_packet_list(void *ptr)
           list_length(n->queued_packet_list));
       /* Send packets in the neighbor's list */
       NETSTACK_RDC.send_list(packet_sent, n, q);
+#if CSMA_SHORTCUT
+      packet_sent_cb(n, mac_status, mac_num_transmissions);
+#endif
     }
   }
 }
@@ -313,8 +327,23 @@ tx_ok(struct rdc_buf_list *q, struct neighbor_queue *n, int num_transmissions)
   tx_done(MAC_TX_OK, q, n);
 }
 /*---------------------------------------------------------------------------*/
+#if CSMA_SHORTCUT
+/* Rename and redefine the original callback and hook our own to the driver
+ * The original will get called by send_packet to reduce stack depth */
 static void
 packet_sent(void *ptr, int status, int num_transmissions)
+{
+  mac_status = status;
+  mac_num_transmissions = num_transmissions;
+  return;
+}
+/*---------------------------------------------------------------------------*/
+static void
+packet_sent_cb(void *ptr, int status, int num_transmissions)
+#else
+static void
+packet_sent(void *ptr, int status, int num_transmissions)
+#endif
 {
   struct neighbor_queue *n;
   struct rdc_buf_list *q;
@@ -367,7 +396,8 @@ send_packet(mac_callback_t sent, void *ptr)
   struct neighbor_queue *n;
   static uint8_t initialized = 0;
   static uint16_t seqno;
-  const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+  static const linkaddr_t *addr;
+  addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
   if(!initialized) {
     initialized = 1;

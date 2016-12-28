@@ -367,7 +367,7 @@ eventhandler(process_event_t ev, process_data_t data)
   unsigned char i;
   register struct listenport *l;
 #endif /*UIP_TCP*/
-  struct process *p;
+  static struct process *p;
 
   switch(ev) {
   case PROCESS_EVENT_EXITED:
@@ -521,7 +521,15 @@ eventhandler(process_event_t ev, process_data_t data)
 void
 tcpip_input(void)
 {
+#if NETSTACK_CONF_SHORTCUTS
+/* calling process_post_sync, adds many bytes onto stack with the
+ * only affect being process.c::process_current modified and restored
+ * this is unnessary overhead, since it always leads to packet_input
+ */
+  packet_input();
+#else
   process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
+#endif
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
@@ -529,8 +537,8 @@ tcpip_input(void)
 void
 tcpip_ipv6_output(void)
 {
-  uip_ds6_nbr_t *nbr = NULL;
-  uip_ipaddr_t *nexthop = NULL;
+  static uip_ds6_nbr_t *nbr = NULL;
+  static uip_ipaddr_t *nexthop = NULL;
 
   if(uip_len == 0) {
     return;
@@ -767,7 +775,7 @@ tcpip_poll_tcp(struct uip_conn *conn)
 void
 tcpip_uipcall(void)
 {
-  uip_udp_appstate_t *ts;
+  static uip_udp_appstate_t *ts;
 
 #if UIP_UDP
   if(uip_conn != NULL) {
@@ -805,7 +813,12 @@ tcpip_uipcall(void)
 #endif /* UIP_TCP */
 
   if(ts->p != NULL) {
+#if NETSTACK_CONF_SHORTCUTS
+    /* Directly invoke the relevant thread to reduce stack usage by 15 bytes */
+    ts->p->thread(&ts->p->pt, tcpip_event, ts->state);
+#else
     process_post_synch(ts->p, tcpip_event, ts->state);
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/

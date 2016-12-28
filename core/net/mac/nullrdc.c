@@ -113,8 +113,14 @@
 static int
 send_one_packet(mac_callback_t sent, void *ptr)
 {
-  int ret;
-  int last_sent_ok = 0;
+  uint8_t ret;
+  uint8_t last_sent_ok = 0;
+#if NULLRDC_802154_AUTOACK
+  static int is_broadcast;
+  static uint8_t dsn;
+  static rtimer_clock_t wt;
+  static uint8_t ackbuf[ACK_LEN];
+#endif
 
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
 #if NULLRDC_802154_AUTOACK || NULLRDC_802154_AUTOACK_HW
@@ -127,8 +133,6 @@ send_one_packet(mac_callback_t sent, void *ptr)
     ret = MAC_TX_ERR_FATAL;
   } else {
 #if NULLRDC_802154_AUTOACK
-    int is_broadcast;
-    uint8_t dsn;
     dsn = ((uint8_t *)packetbuf_hdrptr())[2] & 0xff;
 
     NETSTACK_RADIO.prepare(packetbuf_hdrptr(), packetbuf_totlen());
@@ -152,7 +156,6 @@ send_one_packet(mac_callback_t sent, void *ptr)
         if(is_broadcast) {
           ret = MAC_TX_OK;
         } else {
-          rtimer_clock_t wt;
 
           /* Check for ack */
           wt = RTIMER_NOW();
@@ -168,8 +171,7 @@ send_one_packet(mac_callback_t sent, void *ptr)
           if(NETSTACK_RADIO.receiving_packet() ||
              NETSTACK_RADIO.pending_packet() ||
              NETSTACK_RADIO.channel_clear() == 0) {
-            int len;
-            uint8_t ackbuf[ACK_LEN];
+            uint8_t len;
 
             if(AFTER_ACK_DETECTED_WAIT_TIME > 0) {
               wt = RTIMER_NOW();
@@ -247,7 +249,7 @@ send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
     /* We backup the next pointer, as it may be nullified by
      * mac_call_sent_callback() */
     struct rdc_buf_list *next = buf_list->next;
-    int last_sent_ok;
+    uint8_t last_sent_ok;
 
     queuebuf_to_packetbuf(buf_list->buf);
     last_sent_ok = send_one_packet(sent, ptr);

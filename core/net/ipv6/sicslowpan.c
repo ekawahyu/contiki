@@ -533,6 +533,15 @@ const uint8_t llprefix[] = {0xfe, 0x80};
 static const uint8_t ttl_values[] = {0, 1, 64, 255};
 
 /*--------------------------------------------------------------------*/
+#if SICSLOWPAN_CONF_FRAG
+/* UGH - Horrid fix to reduce 8051 stack depth */
+void
+dummy()
+{
+  return;
+}
+#endif
+/*--------------------------------------------------------------------*/
 /** \name IPHC related functions
  * @{                                                                 */
 /*--------------------------------------------------------------------*/
@@ -1278,7 +1287,11 @@ output(const uip_lladdr_t *localdest)
   int max_payload;
 
   /* The MAC address of the destination of the packet */
-  linkaddr_t dest;
+  static linkaddr_t dest;
+#if SICSLOWPAN_CONF_FRAG
+  /* Number of bytes processed. */
+  static uint16_t processed_ip_out_len;
+#endif
 
   /* init */
   uncomp_hdr_len = 0;
@@ -1354,9 +1367,6 @@ output(const uip_lladdr_t *localdest)
   max_payload = MAC_MAX_PAYLOAD - framer_hdrlen;
   if((int)uip_len - (int)uncomp_hdr_len > max_payload - (int)packetbuf_hdr_len) {
 #if SICSLOWPAN_CONF_FRAG
-    /* Number of bytes processed. */
-    uint16_t processed_ip_out_len;
-
     struct queuebuf *q;
     uint16_t frag_tag;
 
@@ -1393,7 +1403,7 @@ output(const uip_lladdr_t *localdest)
 /*     PACKETBUF_FRAG_BUF->dispatch_size = */
 /*       uip_htons((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len); */
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE,
-          ((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len));
+          ((uint16_t)((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len)));
     frag_tag = my_tag++;
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_TAG, frag_tag);
 
@@ -1434,7 +1444,7 @@ output(const uip_lladdr_t *localdest)
 /*     PACKETBUF_FRAG_BUF->dispatch_size = */
 /*       uip_htons((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len); */
     SET16(PACKETBUF_FRAG_PTR, PACKETBUF_FRAG_DISPATCH_SIZE,
-          ((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len));
+          ((uint16_t)((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len)));
     packetbuf_payload_len = (max_payload - packetbuf_hdr_len) & 0xfffffff8;
     while(processed_ip_out_len < uip_len) {
       PRINTFO("sicslowpan output: fragment ");
@@ -1474,7 +1484,10 @@ output(const uip_lladdr_t *localdest)
     return 0;
 #endif /* SICSLOWPAN_CONF_FRAG */
   } else {
-
+    /* Ugly 8051 stack depth fix */
+#if SICSLOWPAN_CONF_FRAG
+    dummy();
+#endif
     /*
      * The packet does not need to be fragmented
      * copy "payload" and send
@@ -1509,12 +1522,18 @@ input(void)
   uint8_t *buffer;
 
 #if SICSLOWPAN_CONF_FRAG
-  uint8_t is_fragment = 0;
-  int8_t frag_context = 0;
+  static uint8_t is_fragment;
+  static int8_t frag_context;
+  is_fragment = 0;
+  frag_context = 0;
 
   /* tag of the fragment */
-  uint16_t frag_tag = 0;
-  uint8_t first_fragment = 0, last_fragment = 0;
+  static uint16_t frag_tag;
+  static uint8_t first_fragment;
+  static last_fragment;
+  frag_tag = 0;
+  first_fragment = 0;
+  last_fragment = 0;
 #endif /*SICSLOWPAN_CONF_FRAG*/
 
   /* Update link statistics */
@@ -1608,6 +1627,8 @@ input(void)
     /* this is a FRAGN, skip the header compression dispatch section */
     goto copypayload;
   }
+  /* Ugly 8051 stack depth fix */
+  dummy();
 #endif /* SICSLOWPAN_CONF_FRAG */
 
   /* Process next dispatch and headers */

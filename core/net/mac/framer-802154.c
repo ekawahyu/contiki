@@ -62,13 +62,13 @@ static uint8_t mac_dsn;
 
 static uint8_t initialized = 0;
 
+static frame802154_t frame;
+static frame802154_t params;
+static int hdr_len;
 /*---------------------------------------------------------------------------*/
 static int
 create_frame(int type, int do_create)
 {
-  frame802154_t params;
-  int hdr_len;
-
   if(frame802154_get_pan_id() == 0xffff) {
     return -1;
   }
@@ -210,9 +210,6 @@ create(void)
 static int
 parse(void)
 {
-  frame802154_t frame;
-  int hdr_len;
-
   hdr_len = frame802154_parse(packetbuf_dataptr(), packetbuf_datalen(), &frame);
 
   if(hdr_len && packetbuf_hdrreduce(hdr_len)) {
