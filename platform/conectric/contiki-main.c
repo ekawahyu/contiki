@@ -51,6 +51,7 @@ extern volatile uint8_t sleep_flag;
 extern linkaddr_t linkaddr_node_addr;
 static CC_AT_DATA uint16_t len;
 volatile uint8_t sleep_requested = 0;
+void acquired_sensor(void);
 /*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
 static unsigned long irq_energest = 0;
@@ -351,6 +352,8 @@ main(void) CC_NON_BANKED
       }
     }
 
+    acquired_sensor();
+
 #if LPM_MODE
     if (sleep_requested) {
     if (rtimer_is_scheduled() == 0) {
@@ -367,7 +370,7 @@ main(void) CC_NON_BANKED
        * for the moment is to skip ahead one ISR and manually adjust the systick
        * ahead of time. One tick adjustment is equivalent to adding 7.8ms
        */
-      clock_adjust_systick_ahead_by(1*CLOCK_SECOND);
+      clock_adjust_systick_ahead_by(CLOCK_SECOND/64);
 
       /*
        * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM

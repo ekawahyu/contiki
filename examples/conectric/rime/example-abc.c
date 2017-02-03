@@ -43,10 +43,15 @@
 
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
+#include "netstack.h"
 
 #include "dev/leds.h"
 
 #include <stdio.h>
+
+static char message[30];
+extern volatile uint8_t sleep_requested;
+
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ABC example");
 AUTOSTART_PROCESSES(&example_abc_process);
@@ -54,7 +59,9 @@ AUTOSTART_PROCESSES(&example_abc_process);
 static void
 abc_recv(struct abc_conn *c)
 {
-  printf("abc message received '%s'\n", (char *)packetbuf_dataptr());
+  memset(message, 0, strlen(message));
+  memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
+  printf("abc message received '%s'\n", message);
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -67,29 +74,54 @@ PROCESS_THREAD(example_abc_process, ev, data)
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
+  SENSORS_ACTIVATE(sht21_sensor);
 
   abc_open(&abc, 128, &abc_call);
 
   while(1) {
 
-    /* Delay 2-4 seconds */
-    //etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
-    etimer_set(&et, CLOCK_SECOND);
+    /*etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    SENSORS_ACTIVATE(sht21_sensor);
-    temp = sht21_sensor.value(SHT21_SENSOR_TEMP);
-    printf("temp=%i\n", temp);
-    //humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY);
-    //printf("humid=%i\n", humid);
-    SENSORS_DEACTIVATE(sht21_sensor);
-
     packetbuf_copyfrom("Hello", 6);
     abc_send(&abc);
-    printf("abc message sent\n");
+    printf("abc message sent\n");*/
+
+    PROCESS_WAIT_EVENT();
+
+    NETSTACK_RADIO.off();
+    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
+
+    PROCESS_WAIT_EVENT();
+
+    NETSTACK_RADIO.off();
+    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
+
+    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_ACQ);
+
+    PROCESS_WAIT_EVENT();
+
+    NETSTACK_RADIO.off();
+    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
+
+    memset(message, 0, strlen(message));
+    sprintf(message, "T=%i\tRH=%i", temp, humid);
+
+    packetbuf_copyfrom(message, strlen(message));
+    abc_send(&abc);
+    //printf("abc message sent\n");
   }
 
+  SENSORS_DEACTIVATE(sht21_sensor);
+
   PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+void acquired_sensor(void)
+{
+  process_post_synch(&example_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+
+  sleep_requested = 1;
 }
 /*---------------------------------------------------------------------------*/

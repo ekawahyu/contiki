@@ -48,9 +48,10 @@
 
 extern const struct sensors_sensor sht21_sensor;
 
-#define SHT21_SENSOR_TEMP              0
-#define SHT21_SENSOR_HUMIDITY          1
-#define SHT21_SENSOR_BATTERY_INDICATOR 2
-
+#define SHT21_SENSOR_TEMP_ACQ               0
+#define SHT21_SENSOR_TEMP_RESULT            1
+#define SHT21_SENSOR_HUMIDITY_ACQ           2
+#define SHT21_SENSOR_HUMIDITY_RESULT        3
+#define SHT21_SENSOR_BATTERY_INDICATOR      4
 
 #endif /* SHT21-SENSOR_H_ */

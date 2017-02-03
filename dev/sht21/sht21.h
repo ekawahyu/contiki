@@ -40,8 +40,11 @@
 void sht21_init(void);
 void sht21_off(void);
 
-unsigned int sht21_temp(void);
-unsigned int sht21_humidity(void);
+unsigned int sht21_temp_acq(void);
+unsigned int sht21_temp_result(void);
+unsigned int sht21_humidity_acq(void);
+unsigned int sht21_humidity_result(void);
+unsigned int sht21_user_reg(void);
 
 /*
  * Relative Humidity in percent (h in 12 bits resolution)

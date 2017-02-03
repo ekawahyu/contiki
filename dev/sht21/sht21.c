@@ -81,14 +81,11 @@
 #define SHT2x_I2C_ADR_W       0x80
 #define SHT2x_I2C_ADR_R       0x81
 
-//#define delay_sht21(x)
 /*---------------------------------------------------------------------------*/
 static void
 delay_sht21(void)
 {
-  __asm_begin
-    ASM(nop)
-  __asm_end;
+  clock_delay_usec(1);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -267,32 +264,28 @@ sht21_off(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Only commands MEASURE_HUMI or MEASURE_TEMP!
- */
 static unsigned int
 scmd(unsigned cmd)
 {
-  unsigned int n;
-
-  if(cmd != SHT2x_TRIG_T_MEASUREMENT_POLL && cmd != SHT2x_TRIG_RH_MEASUREMENT_POLL) {
+  /*if(cmd != SHT2x_TRIG_T_MEASUREMENT_POLL && cmd != SHT2x_TRIG_RH_MEASUREMENT_POLL) {
     PRINTF("Illegal command: %d\n", cmd);
     return -1;
-  }
+  }*/
 
-  sstart();			/* Start transmission */
+  sstart();
 
   if(swrite(SHT2x_I2C_ADR_W)) {
     PRINTF("SHT21: scmd - swrite failed 1\n");
-    goto fail;
+    return -1;
   }
 
   if(swrite(cmd)) {
     PRINTF("SHT21: scmd - swrite failed 2\n");
-    goto fail;
+    return -1;
   }
 
   sstop();
+
   return 0;
 
 /*  for(n = 0; n < 20000; n++) {
@@ -320,44 +313,74 @@ scmd(unsigned cmd)
     // short wait before next loop
     clock_wait(1);
   }*/
- fail:
-  sreset();
-  return -1;
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Call may take up to 210ms.
- */
 unsigned int
-sht21_temp(void)
+sht21_temp_acq(void)
 {
-  static flag = 1;
+  return scmd(SHT2x_TRIG_T_MEASUREMENT_POLL);
+}
+/*---------------------------------------------------------------------------*/
+unsigned int
+sht21_temp_result(void)
+{
   unsigned t0, t1, rcrc;
 
-  if (flag) {
-    flag = 0;
-    scmd(SHT2x_TRIG_T_MEASUREMENT_POLL);
-    return 0;
-  }
-  else {
-    flag = 1;
-    sstart();
-    swrite(SHT2x_I2C_ADR_R);
-    t0 = sread(1);
-    t1 = sread(1);
-    rcrc = sread(0);
-    sstop();
-    PRINTF("SHT21: scmd - read %d, %d\n", t0, t1);
-    return (t0 << 8) | t1;
-  }
+  sstart();
+  swrite(SHT2x_I2C_ADR_R);
+  t0 = sread(1);
+  t1 = sread(1);
+  rcrc = sread(0);
+  sstop();
+  if (t1 & 0x02)
+    PRINTF("SHT21: scmd - read RH %d, %d\n", t0, t1);
+  else
+    PRINTF("SHT21: scmd - read T %d, %d\n", t0, t1);
+  return (t0 << 8) | t1;
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Call may take up to 210ms.
- */
 unsigned int
-sht21_humidity(void)
+sht21_humidity_acq(void)
 {
   return scmd(SHT2x_TRIG_RH_MEASUREMENT_POLL);
+}
+/*---------------------------------------------------------------------------*/
+unsigned int
+sht21_humidity_result(void)
+{
+  unsigned t0, t1, rcrc;
+
+  sstart();
+  swrite(SHT2x_I2C_ADR_R);
+  t0 = sread(1);
+  t1 = sread(1);
+  rcrc = sread(0);
+  sstop();
+  if (t1 & 0x02)
+    PRINTF("SHT21: scmd - read RH %d, %d\n", t0, t1);
+  else
+    PRINTF("SHT21: scmd - read T %d, %d\n", t0, t1);
+  return (t0 << 8) | t1;
+}
+/*---------------------------------------------------------------------------*/
+unsigned int
+sht21_user_reg(void)
+{
+  unsigned user_reg;
+
+  sstart();
+  swrite(SHT2x_I2C_ADR_W);
+  swrite(SHT2x_USER_REG_R);
+  sstart();
+  swrite(SHT2x_I2C_ADR_R);
+  user_reg = sread(0);
+  PRINTF("SHT21: user_reg read %d\n", user_reg);
+  sstart();
+  swrite(SHT2x_I2C_ADR_W);
+  swrite(SHT2x_USER_REG_W);
+  swrite(user_reg | 0x81); /* 11-bit RHT */
+  sstop();
+
+  return 0;
 }
 /*---------------------------------------------------------------------------*/

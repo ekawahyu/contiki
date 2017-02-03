@@ -54,13 +54,18 @@ static int
 value(int type)
 {
   switch(type) {
-    /* Photosynthetically Active Radiation. */
-  case SHT21_SENSOR_TEMP:
-    return sht21_temp();;
 
-    /* Total Solar Radiation. */
-  case SHT21_SENSOR_HUMIDITY:
-    return sht21_humidity();
+  case SHT21_SENSOR_TEMP_ACQ:
+    return sht21_temp_acq();
+
+  case SHT21_SENSOR_TEMP_RESULT:
+    return sht21_temp_result();
+
+  case SHT21_SENSOR_HUMIDITY_ACQ:
+    return sht21_humidity_acq();
+
+  case SHT21_SENSOR_HUMIDITY_RESULT:
+    return sht21_humidity_result();
 
   case SHT21_SENSOR_BATTERY_INDICATOR:
     //return sht21_sreg() & 0x40? 1: 0;
@@ -92,9 +97,10 @@ configure(int type, int c)
         sht21_init();
         state = ON;
 
-        /* For for about 11 ms before the SHT11 can be used. */
+        /* For for about 15 ms before the SHT21 can be used. */
         t0 = RTIMER_NOW();
-        while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RTIMER_SECOND / 100));
+        while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RTIMER_SECOND / 65));
+        sht21_user_reg();
       }
     } else {
       sht21_off();
