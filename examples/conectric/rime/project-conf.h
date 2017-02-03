@@ -44,6 +44,7 @@ extern "C" {
 #define STARTUP_CONF_VERBOSE                  1
 #define CC2530_CONF_MAC_FROM_PRIMARY          1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      0
+#define CC2530_RF_CONF_CHANNEL                16
 #define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
 #define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
 #define LPM_CONF_MODE                         2

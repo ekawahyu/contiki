@@ -43,6 +43,7 @@
 
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
+#include "dev/adc-sensor.h"
 #include "netstack.h"
 
 #include "dev/leds.h"
@@ -69,7 +70,7 @@ static struct abc_conn abc;
 PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
-  static unsigned int temp, humid;
+  static unsigned int batt, temp, humid;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -91,6 +92,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     NETSTACK_RADIO.off();
+    //batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
 
     PROCESS_WAIT_EVENT();
@@ -106,8 +108,9 @@ PROCESS_THREAD(example_abc_process, ev, data)
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
 
     memset(message, 0, strlen(message));
-    sprintf(message, "T=%i\tRH=%i", temp, humid);
+    sprintf(message, "B=%i\tT=%i\tRH=%i", batt, temp, humid);
 
+    NETSTACK_RADIO.on();
     packetbuf_copyfrom(message, strlen(message));
     abc_send(&abc);
     //printf("abc message sent\n");
