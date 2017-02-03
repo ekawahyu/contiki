@@ -151,7 +151,7 @@
  * even if the sensor is not present on our device
  */
 #ifndef BUTTON_SENSOR_CONF_ON
-#define BUTTON_SENSOR_CONF_ON   1  /* Buttons */
+#define BUTTON_SENSOR_CONF_ON   0  /* Buttons */
 #endif
 
 /* B2 on the cc2531 USB stick can be a reset button or a general-purpose one */
@@ -163,7 +163,7 @@
 #ifndef ADC_SENSOR_CONF_ON
 #define ADC_SENSOR_CONF_ON      1
 #endif
-#define TEMP_SENSOR_CONF_ON     1  /* Temperature */
+#define TEMP_SENSOR_CONF_ON     0  /* Temperature */
 #define VDD_SENSOR_CONF_ON      1  /* Supply Voltage */
 #define BATTERY_SENSOR_CONF_ON  0  /* Battery */
 

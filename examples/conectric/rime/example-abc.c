@@ -92,7 +92,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     NETSTACK_RADIO.off();
-    //batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+    batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
 
     PROCESS_WAIT_EVENT();
