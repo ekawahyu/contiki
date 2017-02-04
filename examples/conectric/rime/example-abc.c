@@ -45,12 +45,13 @@
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 #include "netstack.h"
+#include "cc2530-rf.h"
 
 #include "dev/leds.h"
 
 #include <stdio.h>
 
-static char message[30];
+static char message[40];
 extern volatile uint8_t sleep_requested;
 
 /*---------------------------------------------------------------------------*/
@@ -62,7 +63,7 @@ abc_recv(struct abc_conn *c)
 {
   memset(message, 0, strlen(message));
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  printf("abc message received '%s'\n", message);
+  printf("abc message received (%d) '%s'\n", strlen(message), message);
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -107,11 +108,22 @@ PROCESS_THREAD(example_abc_process, ev, data)
     NETSTACK_RADIO.off();
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
 
-    memset(message, 0, strlen(message));
-    sprintf(message, "B=%i\tT=%i\tRH=%i", batt, temp, humid);
+    memset(message, 0, 40);
+    //sprintf(message, "CH=%i\tB=%i\tT=%i\tRH=%i", CC2530_RF_CHANNEL, batt, temp, humid);
+    message[0] = 0;
+    message[1] = 0;
+    message[2] = 0xFF;
+    message[3] = 0xFF;
+    message[4] = 0x10;
+    message[5] = 0xAA;
+    message[6] = 0xBB;
+    message[7] = 0xDE;
+    message[8] = 0xAD;
+    message[9] = 0xBE;
+    message[10]= 0xEF;
 
     NETSTACK_RADIO.on();
-    packetbuf_copyfrom(message, strlen(message));
+    packetbuf_copyfrom(message, 11);
     abc_send(&abc);
     //printf("abc message sent\n");
   }
