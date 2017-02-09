@@ -3,10 +3,10 @@ CONTIKI = ../../../
 
 HAVE_BANKING=1
 
-all: example-abc
+all: pir
 
 CONTIKI_WITH_RIME = 1
 include $(CONTIKI)/Makefile.include
 
 flash: all
-	cc-tool -ew example-abc.hex
+	cc-tool -ew pir.hex

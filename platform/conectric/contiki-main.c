@@ -51,7 +51,7 @@ extern volatile uint8_t sleep_flag;
 extern linkaddr_t linkaddr_node_addr;
 static CC_AT_DATA uint16_t len;
 volatile uint8_t sleep_requested = 0;
-void acquired_sensor(void);
+void invoke_process_before_sleep(void);
 /*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
 static unsigned long irq_energest = 0;
@@ -352,7 +352,7 @@ main(void) CC_NON_BANKED
       }
     }
 
-    acquired_sensor();
+    invoke_process_before_sleep();
 
 #if LPM_MODE
     if (sleep_requested) {
@@ -361,16 +361,17 @@ main(void) CC_NON_BANKED
        * after sleep command is issued. Otherwise, the system will go to sleep
        * and never wake up again.
        *
-       * If the system runs on 32kHz --> 96 counts ~3ms
-       * If the system runs on 32.768kHz ---> 98 counts ~3ms
-       * CLOCK_SECOND = 128 counts (see TICK_VAL as well)
+       * If the system runs on 32kHz --> 96 sleep timer counts ~3ms
+       * If the system runs on 32.768kHz ---> 98 sleep timer counts ~3ms
+       * CLOCK_SECOND = 128 ticks (see TICK_VAL = 256)
+       * So adjusting the sleep timer ahead by 1 tick is equal to adding 7.8ms
        *
        * The sleep timer is being used as a systick, therefore, adding a new
        * value to it may affect every thread running with etimer. The workaround
        * for the moment is to skip ahead one ISR and manually adjust the systick
        * ahead of time. One tick adjustment is equivalent to adding 7.8ms
        */
-      clock_adjust_systick_ahead_by(CLOCK_SECOND/64);
+      clock_adjust_systick_ahead_by(CLOCK_SECOND);
 
       /*
        * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM

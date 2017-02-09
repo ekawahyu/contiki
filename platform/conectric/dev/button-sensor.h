@@ -35,6 +35,7 @@
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         Ekawahyu Susilo - <ekawahyu@yahoo.com>
  */
 
 #ifndef BUTTON_SENSOR_H_
@@ -45,58 +46,28 @@
 
 #define BUTTON_SENSOR "Button"
 
-/*
- * SmartRF Buttons
- * B1: P0_1, B2: Not Connected
- *
- * USB Dongle Buttons
- * B1: P1_2
- * B2: P1_3
- *
- */
-#if MODELS_CONF_CC2531_USB_STICK
-#define BUTTON1_PORT 1
-#define BUTTON1_PIN  2
-#define BUTTON2_PORT 1
+#define BUTTON1_PORT 2
+#define BUTTON1_PIN  0
+#define BUTTON2_PORT 2
 #define BUTTON2_PIN  3
-#else
-#define BUTTON1_PORT 0
-#define BUTTON1_PIN  1
-#endif
 
 #ifdef BUTTON_SENSOR_CONF_ON
 #define BUTTON_SENSOR_ON BUTTON_SENSOR_CONF_ON
 #endif /* BUTTON_SENSOR_CONF_ON */
 
-#define button_sensor button_1_sensor
 extern const struct sensors_sensor button_1_sensor;
 extern const struct sensors_sensor button_2_sensor;
 
 #if BUTTON_SENSOR_ON
-#if MODELS_CONF_CC2531_USB_STICK
-/* USB Dongle */
-/* Buttons: P1_2 & P1_3 - Port 1 ISR needed */
 #if defined __IAR_SYSTEMS_ICC__
-__near_func __interrupt void port_1_isr(void);
+__near_func __interrupt void port_2_isr(void);
 #else
-void port_1_isr(void) __interrupt(P1INT_VECTOR);
+void port_2_isr(void) __interrupt(P2INT_VECTOR);
 #endif
 #define   BUTTON_SENSOR_ACTIVATE() do { \
     button_1_sensor.configure(SENSORS_ACTIVE, 1); \
     button_2_sensor.configure(SENSORS_ACTIVE, 1); \
 } while(0)
-
-#else /* MODELS_CONF_CC2531_USB_STICK */
-/* SmartRF */
-/* Button 1: P0_1 - Port 0 ISR needed */
-#if defined __IAR_SYSTEMS_ICC__
-__near_func __interrupt void port_0_isr(void);
-#else
-void port_0_isr(void) __interrupt(P0INT_VECTOR);
-#endif
-#define   BUTTON_SENSOR_ACTIVATE() button_sensor.configure(SENSORS_ACTIVE, 1)
-#endif /* MODELS_CONF_CC2531_USB_STICK */
-
 #else /* BUTTON_SENSOR_ON */
 #define   BUTTON_SENSOR_ACTIVATE()
 #endif /* BUTTON_SENSOR_ON */
@@ -105,6 +76,7 @@ void port_0_isr(void) __interrupt(P0INT_VECTOR);
 #define BUTTON_READ(b)           PORT_READ(BUTTON##b##_PORT, BUTTON##b##_PIN)
 #define BUTTON_FUNC_GPIO(b)      PORT_FUNC_GPIO(BUTTON##b##_PORT, BUTTON##b##_PIN)
 #define BUTTON_DIR_INPUT(b)      PORT_DIR_INPUT(BUTTON##b##_PORT, BUTTON##b##_PIN)
+#define BUTTON_PULLUPDOWN_3STATE(b) PORT_PULLUPDOWN_3STATE(BUTTON##b##_PORT, BUTTON##b##_PIN)
 #define BUTTON_IRQ_ENABLED(b)    PORT_IRQ_ENABLED(BUTTON##b##_PORT, BUTTON##b##_PIN)
 #define BUTTON_IRQ_CHECK(b)      PORT_IRQ_CHECK(BUTTON##b##_PORT, BUTTON##b##_PIN)
 #define BUTTON_IRQ_ENABLE(b)     PORT_IRQ_ENABLE(BUTTON##b##_PORT, BUTTON##b##_PIN)

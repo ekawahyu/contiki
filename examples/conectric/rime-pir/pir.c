@@ -39,24 +39,27 @@
 
 #include "contiki.h"
 #include "net/rime/rime.h"
+#include "net/netstack.h"
 #include "random.h"
 
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
-#include "netstack.h"
-#include "cc2530-rf.h"
-
 #include "dev/leds.h"
 
 #include <stdio.h>
 
-static char message[40];
+static uint8_t message[40];
 extern volatile uint8_t sleep_requested;
 
 /*---------------------------------------------------------------------------*/
-PROCESS(example_abc_process, "ABC example");
-AUTOSTART_PROCESSES(&example_abc_process);
+PROCESS(pir_abc_process, "PIR Sensor");
+#if BUTTON_SENSOR_ON
+PROCESS(buttons_test_process, "Button Test Process");
+AUTOSTART_PROCESSES(&pir_abc_process, &buttons_test_process);
+#else
+AUTOSTART_PROCESSES(&pir_abc_process);
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv(struct abc_conn *c)
@@ -68,75 +71,92 @@ abc_recv(struct abc_conn *c)
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_abc_process, ev, data)
+PROCESS_THREAD(pir_abc_process, ev, data)
 {
-  static struct etimer et;
-  static unsigned int batt, temp, humid;
+  static unsigned int batt;
+  static uint8_t counter;
+  static float sane;
+  static int dec;
+  static float frac;
+  static uint8_t *sensor_data;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
-  SENSORS_ACTIVATE(sht21_sensor);
 
   abc_open(&abc, 128, &abc_call);
 
   while(1) {
 
-    /*etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
 
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    packetbuf_copyfrom("Hello", 6);
-    abc_send(&abc);
-    printf("abc message sent\n");*/
-
-    PROCESS_WAIT_EVENT();
-
-    NETSTACK_RADIO.off();
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
-
-    PROCESS_WAIT_EVENT();
-
-    NETSTACK_RADIO.off();
-    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
-
-    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_ACQ);
-
-    PROCESS_WAIT_EVENT();
-
-    NETSTACK_RADIO.off();
-    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
+    sane = batt * 3 * 1.15 / 2047;
+    dec = sane;
+    frac = sane - dec;
+    sensor_data = (uint8_t*)data;
 
     memset(message, 0, 40);
-    //sprintf(message, "CH=%i\tB=%i\tT=%i\tRH=%i", CC2530_RF_CHANNEL, batt, temp, humid);
     message[0] = 0;
     message[1] = 0;
     message[2] = 0xFF;
     message[3] = 0xFF;
-    message[4] = 0x10;
-    message[5] = 0xAA;
-    message[6] = 0xBB;
-    message[7] = 0xDE;
-    message[8] = 0xAD;
-    message[9] = 0xBE;
-    message[10]= 0xEF;
+    message[4] = 0x50;
+    message[5] = counter++;
+    message[6] = (char)(dec*10)+(char)(frac*10);
+    message[7] = *sensor_data;
 
-    NETSTACK_RADIO.on();
-    packetbuf_copyfrom(message, 11);
+    packetbuf_copyfrom(message, 8);
     abc_send(&abc);
-    //printf("abc message sent\n");
   }
-
-  SENSORS_DEACTIVATE(sht21_sensor);
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-void acquired_sensor(void)
+#if BUTTON_SENSOR_ON
+PROCESS_THREAD(buttons_test_process, ev, data)
 {
-  process_post_synch(&example_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+  struct sensors_sensor *sensor;
+  static struct etimer et;
+  static uint8_t counter;
+  static uint8_t button;
 
+  PROCESS_BEGIN();
+
+  etimer_set(&et, CLOCK_SECOND * 10);
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
+
+    if (etimer_expired(&et)) {
+
+      sensor = (struct sensors_sensor *)data;
+      if(sensor == &button_1_sensor) {
+        button = 0x51;
+        leds_on(LEDS_GREEN);
+        process_post_synch(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+        leds_off(LEDS_GREEN);
+      }
+      if(sensor == &button_2_sensor) {
+        button = 0x52;
+        leds_on(LEDS_RED);
+        process_post_synch(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+        leds_off(LEDS_RED);
+      }
+      etimer_restart(&et);
+    }
+    else {
+      etimer_restart(&et);
+    }
+  }
+
+  PROCESS_END();
+}
+#endif
+/*---------------------------------------------------------------------------*/
+void invoke_process_before_sleep(void)
+{
   sleep_requested = 1;
 }
 /*---------------------------------------------------------------------------*/

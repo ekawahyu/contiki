@@ -47,6 +47,7 @@ const struct sensors_sensor *sensors[] = {
 #endif
 #if BUTTON_SENSOR_ON
   &button_1_sensor,
+  &button_2_sensor,
 #endif
   0
 };

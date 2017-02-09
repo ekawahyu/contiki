@@ -38,8 +38,6 @@
 /*---------------------------------------------------------------------------*/
 static CC_AT_DATA struct timer debouncetimer;
 /*---------------------------------------------------------------------------*/
-/* Button 1 - SmartRF and cc2531 USB Dongle */
-/*---------------------------------------------------------------------------*/
 static int
 value_b1(int type)
 {
@@ -63,9 +61,6 @@ configure_b1(int type, int value)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-#if !MODELS_CONF_CC2531_USB_STICK
-    P0INP |= 2; /* Tri-state */
-#endif
     BUTTON_IRQ_ON_PRESS(1);
     BUTTON_FUNC_GPIO(1);
     BUTTON_DIR_INPUT(1);
@@ -85,9 +80,6 @@ configure_b1(int type, int value)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-/* Button 2 - cc2531 USb Dongle only */
-/*---------------------------------------------------------------------------*/
-#if MODELS_CONF_CC2531_USB_STICK
 static int
 value_b2(int type)
 {
@@ -129,7 +121,6 @@ configure_b2(int type, int value)
   }
   return 0;
 }
-#endif
 /*---------------------------------------------------------------------------*/
 /* ISRs */
 /*---------------------------------------------------------------------------*/
@@ -140,13 +131,12 @@ configure_b2(int type, int value)
 #pragma exclude bits
 #endif
 #endif
-#if MODELS_CONF_CC2531_USB_STICK
 #if defined __IAR_SYSTEMS_ICC__
-#pragma vector=P1INT_VECTOR
-__near_func __interrupt void port_1_isr(void)
+#pragma vector=P2INT_VECTOR
+__near_func __interrupt void port_2_isr(void)
 #else
 void
-port_1_isr(void) __interrupt(P1INT_VECTOR)
+port_2_isr(void) __interrupt(P2INT_VECTOR)
 #endif
 {
   EA = 0;
@@ -163,11 +153,7 @@ port_1_isr(void) __interrupt(P1INT_VECTOR)
   if(BUTTON_IRQ_CHECK(2)) {
     if(timer_expired(&debouncetimer)) {
       timer_set(&debouncetimer, CLOCK_SECOND / 8);
-#if CC2531_CONF_B2_REBOOTS
-      watchdog_reboot();
-#else /* General Purpose */
       sensors_changed(&button_2_sensor);
-#endif
     }
   }
 
@@ -177,38 +163,9 @@ port_1_isr(void) __interrupt(P1INT_VECTOR)
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   EA = 1;
 }
-#else
-#if defined __IAR_SYSTEMS_ICC__
-#pragma vector=P0INT_VECTOR
-__near_func __interrupt void port_0_isr(void)
-#else
-void
-port_0_isr(void) __interrupt(P0INT_VECTOR)
-#endif
-{
-  EA = 0;
-  ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
-  /* This ISR is for the entire port. Check if the interrupt was caused by our
-   * button's pin. */
-  if(BUTTON_IRQ_CHECK(1)) {
-    if(timer_expired(&debouncetimer)) {
-      timer_set(&debouncetimer, CLOCK_SECOND / 8);
-      sensors_changed(&button_sensor);
-    }
-  }
-
-  BUTTON_IRQ_FLAG_OFF(1);
-
-  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
-  EA = 1;
-}
-#endif
 #if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
 #endif
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(button_1_sensor, BUTTON_SENSOR, value_b1, configure_b1, status_b1);
-#if MODELS_CONF_CC2531_USB_STICK
 SENSORS_SENSOR(button_2_sensor, BUTTON_SENSOR, value_b2, configure_b2, status_b2);
-#endif

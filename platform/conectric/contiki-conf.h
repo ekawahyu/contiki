@@ -151,7 +151,7 @@
  * even if the sensor is not present on our device
  */
 #ifndef BUTTON_SENSOR_CONF_ON
-#define BUTTON_SENSOR_CONF_ON   0  /* Buttons */
+#define BUTTON_SENSOR_CONF_ON   1  /* Buttons */
 #endif
 
 /* B2 on the cc2531 USB stick can be a reset button or a general-purpose one */

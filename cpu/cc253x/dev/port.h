@@ -55,6 +55,8 @@
 #define PORT_WRITE(port,pin,v)       PORT_WRITE_X(port,pin,v)
 #define PORT_DIR_OUTPUT(port,pin)    PORT_DIR_OUTPUT_X(port,pin)
 #define PORT_DIR_INPUT(port,pin)     PORT_DIR_INPUT_X(port,pin)
+#define PORT_PULLUPDOWN(port,pin)    PORT_PULLUPDOWN_X(port,pin)
+#define PORT_PULLUPDOWN_3STATE(port,pin) PORT_PULLUPDOWN_3STATE_X(port,pin)
 #define PORT_IRQ_ENABLE(port,pin)    PORT_IRQ_ENABLE_X(port,pin)
 #define PORT_IRQ_DISABLE(port,pin)   PORT_IRQ_DISABLE_X(port,pin)
 #define PORT_IRQ_ENABLED(port,pin)   PORT_IRQ_ENABLED_X(port,pin)
@@ -65,6 +67,8 @@
 /*---------------------------------------------------------------------------*/
 /* Second Round of Macro Substitutions. Normally, you can stop reading here */
 /*---------------------------------------------------------------------------*/
+#define PORT_PULLUPDOWN_X(port,pin)    do { P##port##INP &= ~(1 << pin); } while(0)
+#define PORT_PULLUPDOWN_3STATE_X(port,pin) do { P##port##INP |= 1 << pin; } while(0)
 #define PORT_FUNC_GPIO_X(port,pin)     do { P##port##SEL &= ~(1 << pin); } while(0)
 #define PORT_FUNC_PER_X(port,pin)      do { P##port##SEL |= 1 << pin; } while(0)
 #define PORT0_ANALOG_IO_X(port,pin)    do { APCFG |= 1 << pin; } while(0)
