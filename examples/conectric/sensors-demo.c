@@ -76,6 +76,8 @@
 #define PRINTF(...)
 #endif /* DEBUG */
 /*---------------------------------------------------------------------------*/
+extern volatile uint8_t sleep_requested;
+/*---------------------------------------------------------------------------*/
 PROCESS(sensors_test_process, "Sensor Test Process");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
@@ -189,5 +191,10 @@ PROCESS_THREAD(sensors_test_process, ev, data)
     etimer_reset(&et);
   }
   PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+void invoke_process_before_sleep(void)
+{
+  sleep_requested = 1;
 }
 /*---------------------------------------------------------------------------*/

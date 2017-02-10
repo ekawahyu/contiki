@@ -140,6 +140,12 @@ void clock_delay_usec(uint16_t dt);
 void clock_adjust_systick_ahead_by(unsigned int tick);
 
 /**
+ * Set system sleep in seconds.
+ *
+ * \param sec   The time to sleep.
+ */
+void clock_sleep_seconds(unsigned int sec);
+/**
  * Deprecated platform-specific routines.
  *
  */

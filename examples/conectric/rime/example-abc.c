@@ -39,92 +39,51 @@
 
 #include "contiki.h"
 #include "net/rime/rime.h"
-#include "net/netstack.h"
 #include "random.h"
 
 #include "dev/button-sensor.h"
-#include "dev/sht21/sht21-sensor.h"
-#include "dev/adc-sensor.h"
+
+#include "dev/leds.h"
 
 #include <stdio.h>
-
-static uint8_t message[40];
-extern volatile uint8_t sleep_requested;
-
 /*---------------------------------------------------------------------------*/
-PROCESS(rht_abc_process, "RHT Sensor");
-AUTOSTART_PROCESSES(&rht_abc_process);
+PROCESS(example_abc_process, "ABC example");
+AUTOSTART_PROCESSES(&example_abc_process);
 /*---------------------------------------------------------------------------*/
-static const struct abc_callbacks abc_call = {NULL};
+static void
+abc_recv(struct abc_conn *c)
+{
+  printf("abc message received '%s'\n", (char *)packetbuf_dataptr());
+}
+static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(rht_abc_process, ev, data)
+PROCESS_THREAD(example_abc_process, ev, data)
 {
-  static unsigned int batt, temp, humid;
-  static uint8_t counter;
-  static float sane;
-  static int dec;
-  static float frac;
+  static struct etimer et;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
-  SENSORS_ACTIVATE(sht21_sensor);
 
   abc_open(&abc, 128, &abc_call);
 
-  sleep_requested = 1;
-
   while(1) {
 
-    PROCESS_WAIT_EVENT();
+    /* Delay 2-4 seconds */
+    etimer_set(&et, CLOCK_SECOND * 2 + random_rand() % (CLOCK_SECOND * 2));
 
-    NETSTACK_MAC.off(0);
-    batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-    sane = batt * 3 * 1.15 / 2047;
-    dec = sane;
-    frac = sane - dec;
-    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
-    sleep_requested = 1;
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    PROCESS_WAIT_EVENT();
-
-    NETSTACK_MAC.off(0);
-    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
-    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_ACQ);
-    sleep_requested = 1;
-
-    PROCESS_WAIT_EVENT();
-
-    NETSTACK_MAC.off(0);
-    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
-
-    memset(message, 0, 40);
-    message[0] = 0;
-    message[1] = 0;
-    message[2] = 0xFF;
-    message[3] = 0xFF;
-    message[4] = 0x10;
-    message[5] = counter++;
-    message[6] = (char)(dec*10)+(char)(frac*10);
-    message[7] = (char)(temp >> 8);
-    message[8] = (char)(temp & 0xFC);
-    message[9] = (char)(humid >> 8);
-    message[10]= (char)(humid & 0xFC);
-
-    NETSTACK_MAC.on();
-    packetbuf_copyfrom(message, 11);
+    packetbuf_copyfrom("Hello", 6);
     abc_send(&abc);
-    sleep_requested = 58;
+    printf("abc message sent\n");
   }
-
-  SENSORS_DEACTIVATE(sht21_sensor);
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 void invoke_process_before_sleep(void)
 {
-  process_post_synch(&rht_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+
 }
-/*---------------------------------------------------------------------------*/

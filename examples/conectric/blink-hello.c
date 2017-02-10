@@ -16,6 +16,7 @@ static struct etimer et_hello;
 static struct etimer et_blink;
 static uint16_t count;
 static uint8_t blinks;
+extern volatile uint8_t sleep_requested;
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
 PROCESS(blink_process, "LED blink process");
@@ -60,5 +61,10 @@ PROCESS_THREAD(blink_process, ev, data)
   }
 
   PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+void invoke_process_before_sleep(void)
+{
+  sleep_requested = 1;
 }
 /*---------------------------------------------------------------------------*/

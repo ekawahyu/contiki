@@ -58,6 +58,12 @@ watchdog_start(void)
 }
 /*---------------------------------------------------------------------------*/
 void
+watchdog_stop(void)
+{
+  WDCTL &= ~WDCTL_MODE1; /* Stop in Watchdog mode */
+}
+/*---------------------------------------------------------------------------*/
+void
 watchdog_periodic(void)
 {
   /* Write the 'clear' sequence while maintaining mode and interval setting */

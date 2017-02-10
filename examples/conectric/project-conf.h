@@ -44,7 +44,7 @@ extern "C" {
 #define STARTUP_CONF_VERBOSE                  0
 #define CC2530_CONF_MAC_FROM_PRIMARY          1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
-#define LPM_CONF_MODE                         0
+#define LPM_CONF_MODE                         2
 #define BUTTON_SENSOR_CONF_ON                 0
 
 #ifdef __cplusplus

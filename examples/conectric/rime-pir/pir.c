@@ -135,13 +135,13 @@ PROCESS_THREAD(buttons_test_process, ev, data)
       if(sensor == &button_1_sensor) {
         button = 0x51;
         leds_on(LEDS_GREEN);
-        process_post_synch(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+        process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
         leds_off(LEDS_GREEN);
       }
       if(sensor == &button_2_sensor) {
         button = 0x52;
         leds_on(LEDS_RED);
-        process_post_synch(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+        process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
         leds_off(LEDS_RED);
       }
       etimer_restart(&et);
@@ -157,6 +157,6 @@ PROCESS_THREAD(buttons_test_process, ev, data)
 /*---------------------------------------------------------------------------*/
 void invoke_process_before_sleep(void)
 {
-  sleep_requested = 1;
+  sleep_requested = 10;
 }
 /*---------------------------------------------------------------------------*/

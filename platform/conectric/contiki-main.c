@@ -371,7 +371,10 @@ main(void) CC_NON_BANKED
        * for the moment is to skip ahead one ISR and manually adjust the systick
        * ahead of time. One tick adjustment is equivalent to adding 7.8ms
        */
-      clock_adjust_systick_ahead_by(CLOCK_SECOND);
+      leds_on(LEDS_GREEN);
+      //clock_adjust_systick_ahead_by(CLOCK_SECOND * sleep_requested);
+      clock_sleep_seconds(CLOCK_SECOND * sleep_requested);
+      leds_off(LEDS_GREEN);
 
       /*
        * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM

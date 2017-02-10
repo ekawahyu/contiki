@@ -117,6 +117,25 @@ clock_adjust_systick_ahead_by(unsigned int tick)
     }
     --tick;
   }
+  //timer_value = TICK_VAL * tick;
+  //seconds += tick / CLOCK_CONF_SECOND;
+  ST2 = (unsigned char)(timer_value >> 16);
+  ST1 = (unsigned char)(timer_value >> 8);
+  ST0 = (unsigned char)timer_value;
+
+  ENABLE_INTERRUPTS();
+}
+/*---------------------------------------------------------------------------*/
+void
+clock_sleep_seconds(unsigned int sec)
+{
+  DISABLE_INTERRUPTS();
+
+  timer_value = ST0;
+  timer_value += ((unsigned long int)ST1) << 8;
+  timer_value += ((unsigned long int)ST2) << 16;
+  timer_value += (TICK_VAL * sec);
+  seconds += (sec / CLOCK_CONF_SECOND);
   ST2 = (unsigned char)(timer_value >> 16);
   ST1 = (unsigned char)(timer_value >> 8);
   ST0 = (unsigned char)timer_value;
