@@ -102,39 +102,25 @@ clock_seconds(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-clock_adjust_systick_ahead_by(unsigned int tick)
-{
-  DISABLE_INTERRUPTS();
-
-  timer_value = ST0;
-  timer_value += ((unsigned long int)ST1) << 8;
-  timer_value += ((unsigned long int)ST2) << 16;
-  while (tick) {
-    timer_value += TICK_VAL;
-    ++count;
-    if(count % CLOCK_CONF_SECOND == 0) {
-      ++seconds;
-    }
-    --tick;
-  }
-  //timer_value = TICK_VAL * tick;
-  //seconds += tick / CLOCK_CONF_SECOND;
-  ST2 = (unsigned char)(timer_value >> 16);
-  ST1 = (unsigned char)(timer_value >> 8);
-  ST0 = (unsigned char)timer_value;
-
-  ENABLE_INTERRUPTS();
-}
-/*---------------------------------------------------------------------------*/
-void
 clock_sleep_seconds(unsigned int sec)
 {
   DISABLE_INTERRUPTS();
 
+  /*
+   * Wait for a positive transition on the 32-kHz clock
+   */
+  while((SLEEPSTA & SLEEP_CLK32K));
+  while(!(SLEEPSTA & SLEEP_CLK32K));
+
+  /*
+   * Read value of the ST0:ST1:ST2, add TICK_VAL and write it back.
+   * Next interrupt occurs after the current time + TICK_VAL * sec
+   */
   timer_value = ST0;
   timer_value += ((unsigned long int)ST1) << 8;
   timer_value += ((unsigned long int)ST2) << 16;
   timer_value += (TICK_VAL * sec);
+  count += sec;
   seconds += (sec / CLOCK_CONF_SECOND);
   ST2 = (unsigned char)(timer_value >> 16);
   ST1 = (unsigned char)(timer_value >> 8);
@@ -168,6 +154,12 @@ clock_init(void)
   CLKCONCMD |= CLKCONCMD_TICKSPD2 | CLKCONCMD_TICKSPD1;
   while(CLKCONSTA != CLKCONCMD);
 
+  /*
+   * Wait for a positive transition on the 32-kHz clock
+   */
+  while((SLEEPSTA & SLEEP_CLK32K));
+  while(!(SLEEPSTA & SLEEP_CLK32K));
+
   /* Initialize tick value */
   timer_value = ST0;
   timer_value += ((unsigned long int)ST1) << 8;
@@ -197,6 +189,12 @@ clock_isr(void) __interrupt(ST_VECTOR)
 {
   DISABLE_INTERRUPTS();
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
+
+  /*
+   * Wait for a positive transition on the 32-kHz clock
+   */
+  while((SLEEPSTA & SLEEP_CLK32K));
+  while(!(SLEEPSTA & SLEEP_CLK32K));
 
   /*
    * Read value of the ST0:ST1:ST2, add TICK_VAL and write it back.
@@ -240,4 +238,10 @@ clock_isr(void) __interrupt(ST_VECTOR)
 #if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
 #endif
+/*---------------------------------------------------------------------------*/
+uint8_t
+clock_reset_cause(void)
+{
+  return (SLEEPSTA & (SLEEP_RST1 | SLEEP_RST0)) >> 3;
+}
 /*---------------------------------------------------------------------------*/

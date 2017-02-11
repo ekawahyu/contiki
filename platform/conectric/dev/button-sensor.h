@@ -48,8 +48,8 @@
 
 #define BUTTON1_PORT 2
 #define BUTTON1_PIN  0
-#define BUTTON2_PORT 2
-#define BUTTON2_PIN  3
+#define BUTTON2_PORT 1
+#define BUTTON2_PIN  2
 
 #ifdef BUTTON_SENSOR_CONF_ON
 #define BUTTON_SENSOR_ON BUTTON_SENSOR_CONF_ON
@@ -61,8 +61,10 @@ extern const struct sensors_sensor button_2_sensor;
 #if BUTTON_SENSOR_ON
 #if defined __IAR_SYSTEMS_ICC__
 __near_func __interrupt void port_2_isr(void);
+__near_func __interrupt void port_1_isr(void);
 #else
 void port_2_isr(void) __interrupt(P2INT_VECTOR);
+void port_1_isr(void) __interrupt(P1INT_VECTOR);
 #endif
 #define   BUTTON_SENSOR_ACTIVATE() do { \
     button_1_sensor.configure(SENSORS_ACTIVE, 1); \

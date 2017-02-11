@@ -61,7 +61,7 @@ configure_b1(int type, int value)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    BUTTON_IRQ_ON_PRESS(1);
+    BUTTON_IRQ_ON_RELEASE(1);
     BUTTON_FUNC_GPIO(1);
     BUTTON_DIR_INPUT(1);
     return 1;
@@ -150,6 +150,36 @@ port_2_isr(void) __interrupt(P2INT_VECTOR)
       sensors_changed(&button_1_sensor);
     }
   }
+
+  BUTTON_IRQ_FLAG_OFF(1);
+
+  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+  EA = 1;
+}
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
+#pragma restore
+#endif
+/*---------------------------------------------------------------------------*/
+/* avoid referencing bits, we don't call code which use them */
+#if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
+#pragma save
+#if CC_CONF_OPTIMIZE_STACK_SIZE
+#pragma exclude bits
+#endif
+#endif
+#if defined __IAR_SYSTEMS_ICC__
+#pragma vector=P1INT_VECTOR
+__near_func __interrupt void port_1_isr(void)
+#else
+void
+port_1_isr(void) __interrupt(P1INT_VECTOR)
+#endif
+{
+  EA = 0;
+  ENERGEST_ON(ENERGEST_TYPE_IRQ);
+
+  /* This ISR is for the entire port. Check if the interrupt was caused by our
+   * button's pin. */
   if(BUTTON_IRQ_CHECK(2)) {
     if(timer_expired(&debouncetimer)) {
       timer_set(&debouncetimer, CLOCK_SECOND / 8);
@@ -157,7 +187,6 @@ port_2_isr(void) __interrupt(P2INT_VECTOR)
     }
   }
 
-  BUTTON_IRQ_FLAG_OFF(1);
   BUTTON_IRQ_FLAG_OFF(2);
 
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);

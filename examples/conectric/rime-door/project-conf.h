@@ -1,10 +1,10 @@
 /*
  * project-conf.h
  *
- * Created on: Nov 30, 2016
+ * Created on: Mar 3, 2014
  *     Author: Ekawahyu Susilo
  *
- * Copyright (c) 2016, Chongqing Aisenke Electronic Technology Co., Ltd.
+ * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,11 +41,21 @@
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE                  0
-#define CC2530_CONF_MAC_FROM_PRIMARY          1
+#define STARTUP_CONF_VERBOSE                  1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
-#define LPM_CONF_MODE                         0
-#define BUTTON_SENSOR_CONF_ON                 0
+
+#define NETSTACK_CONF_MAC                     nullmac_driver
+#define NETSTACK_CONF_RDC                     nullrdc_driver
+
+#define IEEE802154_CONF_PANID                 0x2007
+#define CC2530_RF_CONF_CHANNEL                25
+#if MODELS_CONF_ANAREN_A2530E_MODULE
+#else
+#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
+#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
+#endif
+
+#define LPM_CONF_MODE                         2
 
 #ifdef __cplusplus
 }

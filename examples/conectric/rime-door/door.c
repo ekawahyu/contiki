@@ -52,27 +52,37 @@ static uint8_t message[40];
 extern volatile uint8_t sleep_requested;
 
 /*---------------------------------------------------------------------------*/
-PROCESS(rht_abc_process, "RHT Sensor");
-AUTOSTART_PROCESSES(&rht_abc_process);
+PROCESS(pir_abc_process, "PIR Sensor");
+#if BUTTON_SENSOR_ON
+PROCESS(buttons_test_process, "Button Test Process");
+AUTOSTART_PROCESSES(&pir_abc_process, &buttons_test_process);
+#else
+AUTOSTART_PROCESSES(&pir_abc_process);
+#endif
 /*---------------------------------------------------------------------------*/
-static const struct abc_callbacks abc_call = {NULL};
 static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(rht_abc_process, ev, data)
+PROCESS_THREAD(pir_abc_process, ev, data)
 {
-  static unsigned int batt, temp, humid;
+  static unsigned int batt;
   static uint8_t counter;
   static float sane;
   static int dec;
   static float frac;
+  static uint8_t *sensor_data;
   static struct etimer et;
+
+  /* TODO temporary workaround to use RS485 module as door sensor */
+  P1SEL &= ~0x30; // gpio
+  P1DIR |= 0x30; // output
+  P1_4 = 0; // DE disabled
+  P1_5 = 1; // RE disabled
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
-  SENSORS_ACTIVATE(sht21_sensor);
 
-  abc_open(&abc, 128, &abc_call);
+  abc_open(&abc, 128, NULL);
 
   etimer_set(&et, CLOCK_SECOND);
 
@@ -90,58 +100,63 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   packetbuf_copyfrom(message, 7);
   abc_send(&abc);
 
-  sleep_requested = 1;
-
   while(1) {
 
-    PROCESS_WAIT_EVENT();
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
 
-    NETSTACK_MAC.off(0);
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
     dec = sane;
     frac = sane - dec;
-    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
-    sleep_requested = 1;
-
-    PROCESS_WAIT_EVENT();
-
-    NETSTACK_MAC.off(0);
-    temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
-    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_ACQ);
-    sleep_requested = 1;
-
-    PROCESS_WAIT_EVENT();
-
-    NETSTACK_MAC.off(0);
-    humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
+    sensor_data = (uint8_t*)data;
 
     memset(message, 0, 40);
     message[0] = 0;
     message[1] = 0;
     message[2] = 0xFF;
     message[3] = 0xFF;
-    message[4] = 0x10;
+    message[4] = 0x70;
     message[5] = counter++;
     message[6] = (char)(dec*10)+(char)(frac*10);
-    message[7] = (char)(temp >> 8);
-    message[8] = (char)(temp & 0xFC);
-    message[9] = (char)(humid >> 8);
-    message[10]= (char)(humid & 0xFC);
+    message[7] = *sensor_data;
 
-    NETSTACK_MAC.on();
-    packetbuf_copyfrom(message, 11);
+    packetbuf_copyfrom(message, 8);
     abc_send(&abc);
-    sleep_requested = 58;
   }
-
-  SENSORS_DEACTIVATE(sht21_sensor);
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+#if BUTTON_SENSOR_ON
+PROCESS_THREAD(buttons_test_process, ev, data)
+{
+  struct sensors_sensor *sensor;
+  static uint8_t counter;
+  static uint8_t button;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
+
+    sensor = (struct sensors_sensor *)data;
+    if(sensor == &button_1_sensor) {
+      button = 0x71;
+      process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+    }
+    if(sensor == &button_2_sensor) {
+      button = 0x72;
+      process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+    }
+  }
+
+  PROCESS_END();
+}
+#endif
+/*---------------------------------------------------------------------------*/
 void invoke_process_before_sleep(void)
 {
-  process_post_synch(&rht_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+  sleep_requested = 10;
 }
 /*---------------------------------------------------------------------------*/

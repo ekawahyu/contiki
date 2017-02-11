@@ -133,18 +133,22 @@ void clock_wait(clock_time_t t);
 void clock_delay_usec(uint16_t dt);
 
 /**
- * Adjust and skip the next tick timer by n tick ahead.
- *
- * \param tick   The tick to skip.
- */
-void clock_adjust_systick_ahead_by(unsigned int tick);
-
-/**
  * Set system sleep in seconds.
  *
  * \param sec   The time to sleep.
  */
 void clock_sleep_seconds(unsigned int sec);
+
+/**
+ * Status bit indicating the cause of the last reset.
+ * If there are multiple resets, the register only contains the last event.
+ * - 0 Power-on reset and brownout detection
+ * - 1 External reset
+ * - 2 Watchdog Timer reset
+ * - 3 Clock loss reset
+ */
+uint8_t clock_reset_cause(void);
+
 /**
  * Deprecated platform-specific routines.
  *

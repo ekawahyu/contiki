@@ -35,6 +35,7 @@
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         Ekawahyu Susilo  - <ekawahyu@yahoo.com>
  */
 
 
@@ -57,6 +58,7 @@
 #define SLEEP_HFRC_STB       0x20
 #define SLEEP_RST1           0x10 /* SLEEPSTA only */
 #define SLEEP_RST0           0x08 /* SLEEPSTA only */
+#define SLEEP_CLK32K         0x01 /* SLEEPSTA only */
 #define SLEEP_OSC_PD         0x04
 #define SLEEP_MODE1          0x02
 #define SLEEP_MODE0          0x01

@@ -45,7 +45,6 @@
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
-#include "dev/leds.h"
 
 #include <stdio.h>
 
@@ -79,12 +78,29 @@ PROCESS_THREAD(pir_abc_process, ev, data)
   static int dec;
   static float frac;
   static uint8_t *sensor_data;
+  static struct etimer et;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
 
   abc_open(&abc, 128, &abc_call);
+
+  etimer_set(&et, CLOCK_SECOND);
+
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  memset(message, 0, 40);
+  message[0] = 0;
+  message[1] = 0;
+  message[2] = 0xFF;
+  message[3] = 0xFF;
+  message[4] = 0x60;
+  message[5] = counter++;
+  message[6] = clock_reset_cause();
+
+  packetbuf_copyfrom(message, 7);
+  abc_send(&abc);
 
   while(1) {
 
@@ -134,15 +150,11 @@ PROCESS_THREAD(buttons_test_process, ev, data)
       sensor = (struct sensors_sensor *)data;
       if(sensor == &button_1_sensor) {
         button = 0x51;
-        leds_on(LEDS_GREEN);
         process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
-        leds_off(LEDS_GREEN);
       }
       if(sensor == &button_2_sensor) {
         button = 0x52;
-        leds_on(LEDS_RED);
         process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
-        leds_off(LEDS_RED);
       }
       etimer_restart(&et);
     }

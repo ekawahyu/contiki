@@ -371,10 +371,11 @@ main(void) CC_NON_BANKED
        * for the moment is to skip ahead one ISR and manually adjust the systick
        * ahead of time. One tick adjustment is equivalent to adding 7.8ms
        */
-      leds_on(LEDS_GREEN);
-      //clock_adjust_systick_ahead_by(CLOCK_SECOND * sleep_requested);
       clock_sleep_seconds(CLOCK_SECOND * sleep_requested);
-      leds_off(LEDS_GREEN);
+
+#if MODELS_CONF_ANAREN_A2530E_MODULE
+      NETSTACK_MAC.off(0);
+#endif
 
       /*
        * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
@@ -401,6 +402,19 @@ main(void) CC_NON_BANKED
       __asm_end;
 
       //fade_fast(LEDS_GREEN);
+
+      /* TODO not supposed to be here for Anaren A2530E */
+#if MODELS_CONF_ANAREN_A2530E_MODULE
+      RFC_OBS_CTRL0 = 0x68;
+      OBSSEL1 = 0xFB;
+      RFC_OBS_CTRL1 = 0x6A;
+      OBSSEL3 = 0xFC;
+      P0SEL &= ~0x80;   /* HGM */
+      P0DIR |= 0x80;    /* HGM */
+      P0_7 = 1;     /* HGM = 1 */
+
+      NETSTACK_MAC.on();
+#endif
 
       /* Remember energest IRQ for next pass */
       ENERGEST_IRQ_SAVE(irq_energest);
