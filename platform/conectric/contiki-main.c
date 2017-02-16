@@ -50,7 +50,7 @@ extern volatile uint8_t sleep_flag;
 /*---------------------------------------------------------------------------*/
 extern linkaddr_t linkaddr_node_addr;
 static CC_AT_DATA uint16_t len;
-volatile uint8_t sleep_requested = 0;
+volatile uint8_t deep_sleep_requested = 0;
 void invoke_process_before_sleep(void);
 /*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
@@ -355,7 +355,7 @@ main(void) CC_NON_BANKED
     invoke_process_before_sleep();
 
 #if LPM_MODE
-    if (sleep_requested) {
+    if (deep_sleep_requested) {
     if (rtimer_is_scheduled() == 0) {
       /* Making sure that the next sleep timer interrupt happens at least 3ms
        * after sleep command is issued. Otherwise, the system will go to sleep
@@ -371,7 +371,7 @@ main(void) CC_NON_BANKED
        * for the moment is to skip ahead one ISR and manually adjust the systick
        * ahead of time. One tick adjustment is equivalent to adding 7.8ms
        */
-      clock_sleep_seconds(CLOCK_SECOND * sleep_requested);
+      clock_sleep_seconds(CLOCK_SECOND * deep_sleep_requested);
 
 #if MODELS_CONF_ANAREN_A2530E_MODULE
       NETSTACK_MAC.off(0);
@@ -421,7 +421,7 @@ main(void) CC_NON_BANKED
 
       ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
     }
-    sleep_requested = 0;
+    deep_sleep_requested = 0;
     }
 #endif /* LPM_MODE */
   }

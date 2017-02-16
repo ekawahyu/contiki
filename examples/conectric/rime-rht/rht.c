@@ -49,7 +49,7 @@
 #include <stdio.h>
 
 static uint8_t message[40];
-extern volatile uint8_t sleep_requested;
+extern volatile uint8_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(rht_abc_process, "RHT Sensor");
@@ -90,7 +90,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   packetbuf_copyfrom(message, 7);
   abc_send(&abc);
 
-  sleep_requested = 1;
+  deep_sleep_requested = 1;
 
   while(1) {
 
@@ -102,14 +102,14 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     dec = sane;
     frac = sane - dec;
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
-    sleep_requested = 1;
+    deep_sleep_requested = 1;
 
     PROCESS_WAIT_EVENT();
 
     NETSTACK_MAC.off(0);
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_ACQ);
-    sleep_requested = 1;
+    deep_sleep_requested = 1;
 
     PROCESS_WAIT_EVENT();
 
@@ -132,7 +132,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     NETSTACK_MAC.on();
     packetbuf_copyfrom(message, 11);
     abc_send(&abc);
-    sleep_requested = 58;
+    deep_sleep_requested = 58;
   }
 
   SENSORS_DEACTIVATE(sht21_sensor);

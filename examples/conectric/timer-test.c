@@ -22,7 +22,7 @@
 #define TEST_CLOCK_SECONDS    1
 /*---------------------------------------------------------------------------*/
 static struct etimer et;
-extern volatile uint8_t sleep_requested;
+extern volatile uint8_t deep_sleep_requested;
 
 #if TEST_CLOCK_DELAY_USEC
 static rtimer_clock_t start_count, end_count, diff;
@@ -141,6 +141,6 @@ PROCESS_THREAD(clock_test_process, ev, data)
 /*---------------------------------------------------------------------------*/
 void invoke_process_before_sleep(void)
 {
-  sleep_requested = 5;
+  deep_sleep_requested = 5;
 }
 /*---------------------------------------------------------------------------*/

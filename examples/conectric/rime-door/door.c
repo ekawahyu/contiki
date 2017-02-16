@@ -49,7 +49,7 @@
 #include <stdio.h>
 
 static uint8_t message[40];
-extern volatile uint8_t sleep_requested;
+extern volatile uint8_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(pir_abc_process, "PIR Sensor");
@@ -157,6 +157,6 @@ PROCESS_THREAD(buttons_test_process, ev, data)
 /*---------------------------------------------------------------------------*/
 void invoke_process_before_sleep(void)
 {
-  sleep_requested = 10;
+  deep_sleep_requested = 10;
 }
 /*---------------------------------------------------------------------------*/
