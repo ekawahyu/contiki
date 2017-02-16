@@ -64,6 +64,9 @@ configure_b1(int type, int value)
     BUTTON_IRQ_ON_RELEASE(1);
     BUTTON_FUNC_GPIO(1);
     BUTTON_DIR_INPUT(1);
+#if BUTTON_SENSOR_INPUT_3STATE
+    BUTTON_PULLUPDOWN_3STATE(1);
+#endif
     return 1;
   case SENSORS_ACTIVE:
     if(value) {
@@ -106,6 +109,9 @@ configure_b2(int type, int value)
     BUTTON_IRQ_ON_PRESS(2);
     BUTTON_FUNC_GPIO(2);
     BUTTON_DIR_INPUT(2);
+#if BUTTON_SENSOR_INPUT_3STATE
+    BUTTON_PULLUPDOWN_3STATE(2);
+#endif
     return 1;
   case SENSORS_ACTIVE:
     if(value) {

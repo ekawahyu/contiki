@@ -57,6 +57,8 @@ extern "C" {
 
 #define LPM_CONF_MODE                         2
 
+#define BUTTON_SENSOR_CONF_INPUT_3STATE       1
+
 #ifdef __cplusplus
 }
 #endif

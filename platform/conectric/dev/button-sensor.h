@@ -55,6 +55,12 @@
 #define BUTTON_SENSOR_ON BUTTON_SENSOR_CONF_ON
 #endif /* BUTTON_SENSOR_CONF_ON */
 
+#ifdef BUTTON_SENSOR_CONF_INPUT_3STATE
+#define BUTTON_SENSOR_INPUT_3STATE BUTTON_SENSOR_CONF_INPUT_3STATE
+#else
+#define BUTTON_SENSOR_INPUT_3STATE    0
+#endif /* BUTTON_SENSOR_CONF_INPUT_3STATE */
+
 extern const struct sensors_sensor button_1_sensor;
 extern const struct sensors_sensor button_2_sensor;
 
