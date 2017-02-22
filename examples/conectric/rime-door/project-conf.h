@@ -57,6 +57,11 @@ extern "C" {
 
 #define LPM_CONF_MODE                         2
 
+/* TODO this is just a workaround of a repurposed RS485 board for door sensor */
+#define RS485_CONF_ENABLE                     1
+#define UART1_CONF_ENABLE                     0
+/* end of workaround of a repurposed RS485 board for door sensor */
+
 #ifdef __cplusplus
 }
 #endif

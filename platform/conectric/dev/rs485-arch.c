@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * rs485-arch.c
  *
- * Created on: Mar 3, 2014
+ * Created on: Aug 20, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,33 +34,30 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "cc253x.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      0
-
-#define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     nullrdc_driver
-
-#define IEEE802154_CONF_PANID                 0x2007
-#define CC2530_RF_CONF_CHANNEL                25
-#if MODELS_CONF_ANAREN_A2530E_MODULE
-#else
-#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
-#endif
-
-#define LPM_CONF_MODE                         2
-
-#define BUTTON_SENSOR_CONF_INPUT_3STATE       0
-
-#ifdef __cplusplus
+void rs485_de_nre_init(void)
+{
+  P1SEL &= ~0x30; /* configure P1.4/P1.5 as GPIO for DE/nRE */
+  P1DIR |= 0x30;
+  P1 &= ~0x10; /* set P1.4 low (DE) */
+  P1 |= 0x20; /* set P1.5 high (nRE) */
 }
-#endif
 
-#endif /* PROJECT_CONF_H_ */
+void rs485_de_nre_high(void)
+{
+  P1 |= 0x10; /* set P1.4 high (DE) */
+  P1 |= 0x20; /* set P1.5 high (nRE) */
+}
+
+void rs485_de_nre_low(void)
+{
+  P1 &= ~0x10; /* set P1.4 low (DE) */
+  P1 &= ~0x20; /* set P1.5 low (nRE) */
+}
+
+void rs485_de_nre_z(void)
+{
+  P1 &= ~0x10; /* set P1.4 low (DE) */
+  P1 |= 0x20; /* set P1.5 high (nRE) */
+}

@@ -45,6 +45,7 @@
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
+#include "dev/rs485-arch.h"
 
 #include <stdio.h>
 
@@ -73,10 +74,7 @@ PROCESS_THREAD(pir_abc_process, ev, data)
   static struct etimer et;
 
   /* TODO temporary workaround to use RS485 module as door sensor */
-  P1SEL &= ~0x30; // gpio
-  P1DIR |= 0x30; // output
-  P1_4 = 0; // DE disabled
-  P1_5 = 1; // RE disabled
+  rs485_de_nre_z();
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 

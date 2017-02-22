@@ -1,7 +1,7 @@
 /*
- * project-conf.h
+ * rs485-arch.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Aug 20, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,33 +34,20 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef RS485_ARCH_H_
+#define RS485_ARCH_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      0
-
-#define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     nullrdc_driver
-
-#define IEEE802154_CONF_PANID                 0x2007
-#define CC2530_RF_CONF_CHANNEL                25
-#if MODELS_CONF_ANAREN_A2530E_MODULE
-#else
-#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
-#endif
-
-#define LPM_CONF_MODE                         2
-
-#define BUTTON_SENSOR_CONF_INPUT_3STATE       0
+void rs485_de_nre_init(void);
+void rs485_de_nre_high(void);
+void rs485_de_nre_low(void);
+void rs485_de_nre_z(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* RS485_ARCH_H_ */
