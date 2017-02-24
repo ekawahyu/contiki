@@ -4,11 +4,13 @@
 #include "sys/clock.h"
 #include "sys/autostart.h"
 #include "dev/serial-line.h"
+#include "dev/modbus-line.h"
 #include "dev/slip.h"
 #include "dev/gpio.h"
 #include "dev/leds.h"
 #include "dev/spi.h"
 #include "dev/io-arch.h"
+#include "dev/uart-arch.h"
 #include "dev/dma.h"
 #include "dev/cc2530-rf.h"
 #include "dev/radio.h"
@@ -205,6 +207,11 @@ main(void) CC_NON_BANKED
 
   /* initialize process manager. */
   process_init();
+
+  uart_arch_init();
+
+  uart_arch_set_input(modbus_line_input_byte);
+  modbus_line_init();
 
 #if DMA_ON
   dma_init();
