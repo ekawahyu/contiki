@@ -3,10 +3,10 @@ CONTIKI = ../../../
 
 HAVE_BANKING=1
 
-all: ekm
+all: sw
 
 CONTIKI_WITH_RIME = 1
 include $(CONTIKI)/Makefile.include
 
 flash: all
-	cc-tool -ew ekm.hex
+	cc-tool -ew sw.hex

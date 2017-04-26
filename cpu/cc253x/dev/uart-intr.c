@@ -94,5 +94,5 @@ uart1_rx_isr(void) __interrupt(URX1_VECTOR)
 #pragma restore
 #endif
 /*---------------------------------------------------------------------------*/
-#endif /* UART_ONE_CONF_WITH_INPUT */
+#endif /* UART1_CONF_WITH_INPUT */
 #endif /* UART1_ENABLE */

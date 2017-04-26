@@ -57,19 +57,19 @@ static uint8_t message[40];
 extern volatile uint8_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
-PROCESS(pir_abc_process, "PIR Sensor");
+PROCESS(sub_abc_process, "Submeter");
 PROCESS(serial_in_process, "Serial example");
 PROCESS(modbus_in_process, "Modbus example");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&pir_abc_process, &serial_in_process, &modbus_in_process, &buttons_test_process);
+AUTOSTART_PROCESSES(&sub_abc_process, &serial_in_process, &modbus_in_process, &buttons_test_process);
 #else
-AUTOSTART_PROCESSES(&pir_abc_process, &serial_in_process, &modbus_in_process);
+AUTOSTART_PROCESSES(&sub_abc_process, &serial_in_process, &modbus_in_process);
 #endif
 /*---------------------------------------------------------------------------*/
 static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(pir_abc_process, ev, data)
+PROCESS_THREAD(sub_abc_process, ev, data)
 {
   static unsigned int batt;
   static uint8_t counter;
@@ -181,11 +181,11 @@ PROCESS_THREAD(buttons_test_process, ev, data)
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
       button = 0x71;
-      process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&sub_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
     if(sensor == &button_2_sensor) {
       button = 0x72;
-      process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&sub_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
 

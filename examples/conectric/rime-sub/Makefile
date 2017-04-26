@@ -3,10 +3,10 @@ CONTIKI = ../../../
 
 HAVE_BANKING=1
 
-all: door
+all: sub
 
 CONTIKI_WITH_RIME = 1
 include $(CONTIKI)/Makefile.include
 
 flash: all
-	cc-tool -ew door.hex
+	cc-tool -ew sub.hex
