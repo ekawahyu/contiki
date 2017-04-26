@@ -60,6 +60,8 @@ extern "C" {
 #define RS485_CONF_ENABLE                     1
 #define UART1_CONF_ENABLE                     1
 
+#define BUTTON_SENSOR_CONF_ON                 0
+
 #ifdef __cplusplus
 }
 #endif

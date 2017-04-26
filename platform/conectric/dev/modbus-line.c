@@ -37,7 +37,7 @@
 #include "dev/modbus-line.h"
 #include "dev/leds.h"
 
-#define BUFSIZE 128
+#define BUFSIZE 276
 
 static int pos;
 static uint8_t modbus_rx_data[BUFSIZE];
@@ -50,11 +50,11 @@ process_event_t modbus_line_event_message;
 int
 modbus_line_input_byte(unsigned char c)
 {
-  modbus_rx_data[pos++] = c;
-
-  if(pos >= BUFSIZE) {
+  if(++pos >= 270) {
     pos = 0;
   }
+
+  modbus_rx_data[pos] = c;
 
   /* Wake up consumer process */
   process_poll(&modbus_line_process);
@@ -73,7 +73,7 @@ PROCESS_THREAD(modbus_line_process, ev, data)
     PROCESS_YIELD();
 
     /* else */
-    process_post(PROCESS_BROADCAST, modbus_line_event_message, &modbus_rx_data[pos-1]);
+    process_post(PROCESS_BROADCAST, modbus_line_event_message, &modbus_rx_data[pos]);
 
     /* Wait until all processes have handled the modbus line event */
     if(PROCESS_ERR_OK ==

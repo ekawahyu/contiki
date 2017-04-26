@@ -53,17 +53,17 @@ static uint8_t message[40];
 extern volatile uint8_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
-PROCESS(pir_abc_process, "PIR Sensor");
+PROCESS(sw_abc_process, "SW Sensor");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&pir_abc_process, &buttons_test_process);
+AUTOSTART_PROCESSES(&sw_abc_process, &buttons_test_process);
 #else
-AUTOSTART_PROCESSES(&pir_abc_process);
+AUTOSTART_PROCESSES(&sw_abc_process);
 #endif
 /*---------------------------------------------------------------------------*/
 static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(pir_abc_process, ev, data)
+PROCESS_THREAD(sw_abc_process, ev, data)
 {
   static unsigned int batt;
   static uint8_t counter;
@@ -141,11 +141,11 @@ PROCESS_THREAD(buttons_test_process, ev, data)
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
       button = 0x71;
-      process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
     if(sensor == &button_2_sensor) {
       button = 0x72;
-      process_post(&pir_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
 

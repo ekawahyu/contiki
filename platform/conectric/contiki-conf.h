@@ -49,8 +49,16 @@
  * USARTs:
  *   conectric RS232 -> USART0 / Alternative 1 (UART)
  *   conectric SPI   -> USART1 / Alternative 2 (SPI)
+ *   conectric RS485 -> USART1 / Alternative 2 (UART)
+ *
+ *   By default, USART0 is being used by console I/O. Defining UART_ON_USART=0
+ *   makes UART input/output to overlap with console I/O.
+ *
+ *   If SPI interface is not used, it is suggested to separate UART from
+ *   console I/O by defining UART_ON_USART=1
+ *
  */
-#define UART_ON_USART     0
+#define UART_ON_USART     1
 
 #ifndef UART0_CONF_ENABLE
 #define UART0_CONF_ENABLE  1
@@ -65,6 +73,9 @@
 
 #ifndef UART1_CONF_ENABLE
 #define UART1_CONF_ENABLE  0
+#endif
+#ifndef UART1_CONF_WITH_INPUT
+#define UART1_CONF_WITH_INPUT 1
 #endif
 
 #ifndef SPI0_CONF_ENABLE
@@ -103,7 +114,7 @@
 #endif
 
 #if CC2530_RF_CONF_HEXDUMP
-/* We need UART1 output */
+/* We need UART0 output */
 #undef UART0_CONF_ENABLE
 #define UART0_CONF_ENABLE   1
 #endif

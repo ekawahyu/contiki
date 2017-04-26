@@ -48,11 +48,8 @@ gpio_arch_init(void)
   P0DIR |= (GPIO1_MASK | GPIO2_MASK | GPIO3_MASK | GPIO4_MASK);
   P2SEL &= ~GPIO5_MASK;
   P2DIR |= GPIO5_MASK;
-  GPIO1_PIN = 0;
-  GPIO2_PIN = 0;
-  GPIO3_PIN = 0;
-  GPIO4_PIN = 0;
-  GPIO5_PIN = 0;
+
+  gpio_arch_set(0);
 }
 /*---------------------------------------------------------------------------*/
 unsigned char

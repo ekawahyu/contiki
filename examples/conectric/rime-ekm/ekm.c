@@ -48,6 +48,9 @@
 #include "dev/serial-line.h"
 #include "dev/modbus-line.h"
 
+#include "dev/uart-arch.h"
+#include "debug.h"
+
 #include <stdio.h>
 
 static uint8_t message[40];
@@ -76,9 +79,6 @@ PROCESS_THREAD(pir_abc_process, ev, data)
   static uint8_t *sensor_data;
   static struct etimer et;
 
-  /* TODO temporary workaround to use RS485 module as door sensor */
-  rs485_de_nre_z();
-
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
@@ -101,6 +101,43 @@ PROCESS_THREAD(pir_abc_process, ev, data)
   packetbuf_copyfrom(message, 7);
   abc_send(&abc);
 
+  /* Low level RS485 test */
+  uart_arch_writeb(0x2F);
+  uart_arch_writeb(0x3F);
+
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x31);
+  uart_arch_writeb(0x35);
+  uart_arch_writeb(0x36);
+  uart_arch_writeb(0x38);
+  uart_arch_writeb(0x39);
+
+  /*uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x33);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x32);
+  uart_arch_writeb(0x39);
+  uart_arch_writeb(0x33);
+  uart_arch_writeb(0x32);
+
+  uart_arch_writeb(0x30);
+  uart_arch_writeb(0x30);*/
+
+  uart_arch_writeb(0x21);
+  uart_arch_writeb(0x0D);
+  uart_arch_writeb(0x0A);
+
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
@@ -116,7 +153,7 @@ PROCESS_THREAD(pir_abc_process, ev, data)
     message[1] = 0;
     message[2] = 0xFF;
     message[3] = 0xFF;
-    message[4] = 0x70;
+    message[4] = 0x80;
     message[5] = counter++;
     message[6] = (char)(dec*10)+(char)(frac*10);
     message[7] = *sensor_data;
@@ -176,7 +213,8 @@ PROCESS_THREAD(modbus_in_process, ev, data)
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
-    printf("Modbus_RX: %s\n", (char*)data);
+    //printf("Modbus_RX: %s\n", (char*)data);
+    puthex(*(unsigned char*)data & 0x7F);
   }
 
   PROCESS_END();
