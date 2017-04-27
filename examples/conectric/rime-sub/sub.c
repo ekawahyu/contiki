@@ -53,8 +53,14 @@
 
 #include <stdio.h>
 
-static uint8_t message[40];
+#define BUFSIZE 256
+
+static uint8_t message[72];
+static uint8_t * pmessage = NULL;
 extern volatile uint8_t deep_sleep_requested;
+
+static int pos;
+static uint8_t submeter_data[BUFSIZE];
 
 /*---------------------------------------------------------------------------*/
 PROCESS(sub_abc_process, "Submeter");
@@ -78,6 +84,7 @@ PROCESS_THREAD(sub_abc_process, ev, data)
   static float frac;
   static uint8_t *sensor_data;
   static struct etimer et;
+  static int pos_counter;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -89,7 +96,7 @@ PROCESS_THREAD(sub_abc_process, ev, data)
 
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  memset(message, 0, 40);
+  memset(message, 0, 72);
   message[0] = 0;
   message[1] = 0;
   message[2] = 0xFF;
@@ -101,46 +108,54 @@ PROCESS_THREAD(sub_abc_process, ev, data)
   packetbuf_copyfrom(message, 7);
   abc_send(&abc);
 
-  /* Low level RS485 test */
-  uart_arch_writeb(0x2F);
-  uart_arch_writeb(0x3F);
-
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x31);
-  uart_arch_writeb(0x35);
-  uart_arch_writeb(0x36);
-  uart_arch_writeb(0x38);
-  uart_arch_writeb(0x39);
-
-  /*uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x33);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x32);
-  uart_arch_writeb(0x39);
-  uart_arch_writeb(0x33);
-  uart_arch_writeb(0x32);
-
-  uart_arch_writeb(0x30);
-  uart_arch_writeb(0x30);*/
-
-  uart_arch_writeb(0x21);
-  uart_arch_writeb(0x0D);
-  uart_arch_writeb(0x0A);
+  deep_sleep_requested = 0;
 
   while(1) {
 
-    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+    etimer_set(&et, 10 * CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    pos = 0;
+
+    /* Low level RS485 test */
+    uart_arch_writeb(0x2F);
+    uart_arch_writeb(0x3F);
+
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x31);
+    uart_arch_writeb(0x35);
+    uart_arch_writeb(0x36);
+    uart_arch_writeb(0x38);
+    uart_arch_writeb(0x39);
+
+    /*uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x33);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x32);
+    uart_arch_writeb(0x39);
+    uart_arch_writeb(0x33);
+    uart_arch_writeb(0x32);
+
+    uart_arch_writeb(0x30);
+    uart_arch_writeb(0x30);*/
+
+    uart_arch_writeb(0x21);
+    uart_arch_writeb(0x0D);
+    uart_arch_writeb(0x0A);
+
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
@@ -148,18 +163,89 @@ PROCESS_THREAD(sub_abc_process, ev, data)
     frac = sane - dec;
     sensor_data = (uint8_t*)data;
 
-    memset(message, 0, 40);
-    message[0] = 0;
-    message[1] = 0;
-    message[2] = 0xFF;
-    message[3] = 0xFF;
-    message[4] = 0x80;
-    message[5] = counter++;
-    message[6] = (char)(dec*10)+(char)(frac*10);
-    message[7] = *sensor_data;
+    /* 1st chunk */
+    pmessage = message;
+    memset(message, 0, 72);
+    *pmessage++ = 0;
+    *pmessage++ = 0;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0x80;
+    *pmessage++ = counter++;
+    *pmessage++ = (char)(dec*10)+(char)(frac*10);
+    *pmessage++ = 0x81;
 
-    packetbuf_copyfrom(message, 8);
+    for (pos_counter=0; pos_counter<64; pos_counter++)
+      *pmessage++ = submeter_data[pos_counter];
+
+    packetbuf_copyfrom(message, 72);
     abc_send(&abc);
+
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    /* 2nd chunk */
+    pmessage = message;
+    memset(message, 0, 72);
+    *pmessage++ = 0;
+    *pmessage++ = 0;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0x80;
+    *pmessage++ = counter++;
+    *pmessage++ = (char)(dec*10)+(char)(frac*10);
+    *pmessage++ = 0x82;
+
+    for (pos_counter=64; pos_counter<128; pos_counter++)
+      *pmessage++ = submeter_data[pos_counter];
+
+    packetbuf_copyfrom(message, 72);
+    abc_send(&abc);
+
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    /* 3rd chunk */
+    pmessage = message;
+    memset(message, 0, 72);
+    *pmessage++ = 0;
+    *pmessage++ = 0;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0x80;
+    *pmessage++ = counter++;
+    *pmessage++ = (char)(dec*10)+(char)(frac*10);
+    *pmessage++ = 0x83;
+
+    for (pos_counter=128; pos_counter<192; pos_counter++)
+      *pmessage++ = submeter_data[pos_counter];
+
+    packetbuf_copyfrom(message, 72);
+    abc_send(&abc);
+
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    /* 4th chunk */
+    pmessage = message;
+    memset(message, 0, 72);
+    *pmessage++ = 0;
+    *pmessage++ = 0;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0xFF;
+    *pmessage++ = 0x80;
+    *pmessage++ = counter++;
+    *pmessage++ = (char)(dec*10)+(char)(frac*10);
+    *pmessage++ = 0x84;
+
+    for (pos_counter=192; pos_counter<256; pos_counter++)
+      *pmessage++ = submeter_data[pos_counter];
+
+    packetbuf_copyfrom(message, 72);
+    abc_send(&abc);
+
+    for (pos_counter=0; pos_counter<BUFSIZE; pos_counter++)
+      puthex(submeter_data[pos_counter]);
   }
 
   PROCESS_END();
@@ -214,7 +300,9 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
     //printf("Modbus_RX: %s\n", (char*)data);
-    puthex(*(unsigned char*)data & 0x7F);
+    //puthex(*(unsigned char*)data & 0x7F);
+    submeter_data[pos++] = *(unsigned char*)data & 0x7F;
+
   }
 
   PROCESS_END();
