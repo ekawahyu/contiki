@@ -70,6 +70,8 @@ static const struct packetbuf_attrlist attributes[] =
 #define PRINTF(...)
 #endif
 
+static uint16_t myrank = 255;
+
 static int run_trickle(struct trickle_conn *c);
 /*---------------------------------------------------------------------------*/
 static void
@@ -136,6 +138,7 @@ recv(struct broadcast_conn *bc, const linkaddr_t *from)
 {
   struct trickle_conn *c = (struct trickle_conn *)bc;
   uint16_t seqno = packetbuf_attr(PACKETBUF_ATTR_EPACKET_ID);
+  uint8_t rank = packetbuf_attr(PACKETBUF_ATTR_EPACKET_TYPE);
 
   PRINTF("%d.%d: trickle recv seqno %d from %d.%d our %d data len %d channel %d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -146,7 +149,7 @@ recv(struct broadcast_conn *bc, const linkaddr_t *from)
 	 packetbuf_attr(PACKETBUF_ATTR_CHANNEL));
 
   if(seqno == c->seqno) {
-    /*    c->cb->recv(c);*/
+    //c->cb->recv(c);
     ++c->duplicates;
   } else if(SEQNO_LT(seqno, c->seqno)) {
     c->interval_scaling = 0;
@@ -156,6 +159,11 @@ recv(struct broadcast_conn *bc, const linkaddr_t *from)
     /*    ether_set_line(from->u8[0], from->u8[1]);*/
 #endif /* CONTIKI_TARGET_NETSIM */
     c->seqno = seqno;
+
+    if (rank < 255) rank++;
+    packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_TYPE, rank);
+    myrank =  rank;
+
     /* Store the incoming data in the queuebuf */
     if(c->q != NULL) {
       queuebuf_free(c->q);
@@ -199,12 +207,26 @@ trickle_send(struct trickle_conn *c)
   }
   c->seqno++;
   packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_ID, c->seqno);
+  packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_TYPE, myrank);
+  packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &linkaddr_node_addr);
   c->q = queuebuf_new_from_packetbuf();
   PRINTF("%d.%d: trickle send seqno %d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	 c->seqno);
   reset_interval(c);
   send(c);
+}
+/*---------------------------------------------------------------------------*/
+void
+trickle_set_rank(uint16_t rank)
+{
+  myrank = rank;
+}
+/*---------------------------------------------------------------------------*/
+uint16_t
+trickle_rank(struct trickle_conn *c)
+{
+  return myrank;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

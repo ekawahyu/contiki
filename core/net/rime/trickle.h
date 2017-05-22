@@ -62,7 +62,9 @@
 #include "net/rime/broadcast.h"
 #include "net/queuebuf.h"
 
-#define TRICKLE_ATTRIBUTES  { PACKETBUF_ATTR_EPACKET_ID, PACKETBUF_ATTR_BIT * 8 },\
+#define TRICKLE_ATTRIBUTES  { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
+                            { PACKETBUF_ATTR_EPACKET_ID, PACKETBUF_ATTR_BIT * 8 },\
+                            { PACKETBUF_ATTR_EPACKET_TYPE, PACKETBUF_ATTR_BYTE },\
                             BROADCAST_ATTRIBUTES
 
 struct trickle_conn;
@@ -88,6 +90,10 @@ void trickle_open(struct trickle_conn *c, clock_time_t interval,
 void trickle_close(struct trickle_conn *c);
 
 void trickle_send(struct trickle_conn *c);
+
+void trickle_set_rank(uint16_t rank);
+
+uint16_t trickle_rank(struct trickle_conn *c);
 
 #endif /* TRICKLE_H_ */
 /** @} */
