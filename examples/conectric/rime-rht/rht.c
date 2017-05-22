@@ -61,6 +61,7 @@ static struct abc_conn abc;
 PROCESS_THREAD(rht_abc_process, ev, data)
 {
   static unsigned int batt, temp, humid;
+  static unsigned int prev_temp, prev_humid;
   static uint8_t counter;
   static float sane;
   static int dec;
@@ -107,6 +108,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     NETSTACK_MAC.off(0);
+    prev_temp = temp;
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_ACQ);
     deep_sleep_requested = 1;
@@ -114,6 +116,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     NETSTACK_MAC.off(0);
+    prev_humid = humid;
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
 
     memset(message, 0, 40);
@@ -124,10 +127,21 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     message[4] = 0x10;
     message[5] = counter++;
     message[6] = (char)(dec*10)+(char)(frac*10);
-    message[7] = (char)(temp >> 8);
-    message[8] = (char)(temp & 0xFC);
-    message[9] = (char)(humid >> 8);
-    message[10]= (char)(humid & 0xFC);
+    if (prev_temp != temp) {
+      message[7] = (char)(temp >> 8);
+      message[8] = (char)(temp & 0xFC);
+    }
+    else {
+      message[7] = 0;
+      message[8] = 0;
+    }
+    if (prev_humid != humid) {
+      message[9] = (char)(humid >> 8);
+      message[10]= (char)(humid & 0xFC);
+    } else {
+      message[9] = 0;
+      message[10]= 0;
+    }
 
     NETSTACK_MAC.on();
     packetbuf_copyfrom(message, 11);

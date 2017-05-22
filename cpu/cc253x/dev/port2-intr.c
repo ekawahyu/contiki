@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern struct cc253x_p2_handler *handlers;
 
-/* avoid referencing bits, we don't call code which use them */
+/* avoid referencing bits, we don't call code which use them
 #if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma save
 #if CC_CONF_OPTIMIZE_STACK_SIZE
@@ -62,3 +62,4 @@ port_2_isr(void) __interrupt(P2INT_VECTOR)
 #if defined(__SDCC_mcs51) || defined(SDCC_mcs51)
 #pragma restore
 #endif
+*/
