@@ -187,11 +187,9 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
   printf("\n");
 }
 /*
- * This function is called to forward a packet. The function picks a
- * random neighbor from the neighbor list and returns its address. The
- * multihop layer sends the packet to this address. If no neighbor is
- * found, the function returns NULL to signal to the multihop layer
- * that the packet should be dropped.
+ * This function is called to forward a packet. It returns a forwarding address
+ * determined by trickle message ranking. If no neighbor is found, the function
+ * returns NULL to signal to the multihop layer to drop the packet.
  */
 static linkaddr_t *
 multihop_forward(struct multihop_conn *c,
