@@ -41,16 +41,22 @@
 #include "net/rime/rime.h"
 #include "random.h"
 
-#include "dev/button-sensor.h"
 #include "dev/serial-line.h"
 
 #include "dev/leds.h"
 
 #include <stdio.h>
 
+enum {
+  CONECTRIC_ATTR_NONE,
+  CONECTRIC_ROUTE_REQUEST,
+  CONECTRIC_ROUTE_REPLY,
+  CONECTRIC_TIME_SYNC,
+  CONECTRIC_ATTR_MAX
+};
 static uint16_t rank = 255;
-static linkaddr_t forward_addr = {1, 0};
-static linkaddr_t esender_addr = {1, 0};
+static linkaddr_t forward_addr = {{1, 0}};
+static linkaddr_t esender_addr = {{1, 0}};
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
@@ -70,9 +76,6 @@ abc_recv(struct abc_conn *c)
     linkaddr_t src;
     uint16_t rssi;
   } msg;
-  static uint16_t counter;
-  static uint8_t * packet;
-  static uint8_t seqno;
 
   memset(&msg, 0, sizeof(msg));
   linkaddr_copy(&msg.src, packetbuf_addr(PACKETBUF_ADDR_SENDER));
@@ -81,11 +84,7 @@ abc_recv(struct abc_conn *c)
 
   printf("%d.%d: found sensor %d.%d (%d) - %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      msg.src.u8[0], msg.src.u8[1], msg.rssi, msg.timestamp);
-
-  seqno = (uint8_t)packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
-  packet = (uint8_t *)packetbuf_dataptr();
-  counter = (packet[1] << 8) + packet[0];
+      msg.src.u8[0], msg.src.u8[1], msg.rssi, (int)msg.timestamp);
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -98,10 +97,12 @@ trickle_recv(struct trickle_conn *c)
     linkaddr_t src;
     uint16_t rssi;
   } msg;
-  static uint16_t counter;
-  static uint8_t * packet;
-  static uint8_t seqno;
+  uint8_t message[128];
+  uint8_t packetbuf_len, header_len;
 
+  /* Copy the packet attributes to avoid them being overwritten or
+     cleared by an application program that uses the packet buffer for
+     its own needs */
   memset(&msg, 0, sizeof(msg));
   linkaddr_copy(&msg.src, packetbuf_addr(PACKETBUF_ADDR_SENDER));
   linkaddr_copy(&forward_addr, &msg.src);
@@ -109,23 +110,35 @@ trickle_recv(struct trickle_conn *c)
   msg.rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
   msg.timestamp = clock_seconds();
 
-  seqno = packetbuf_attr(PACKETBUF_ATTR_EPACKET_ID);
-  packet = (uint8_t *)packetbuf_dataptr();
-  counter = (packet[1] << 8) + packet[0];
-
-  printf("%d.%d: found neighbor %d.%d (%d) - %d\n",
+  /*printf("%d.%d: found neighbor %d.%d (%d) - %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       msg.src.u8[0], msg.src.u8[1],
       packetbuf_attr(PACKETBUF_ATTR_EPACKET_TYPE),
-      msg.timestamp);
+      msg.timestamp);*/
 
   rank = trickle_rank(c);
-  printf("%d\n", rank);
 
-  if (packet[0] == linkaddr_node_addr.u8[0] && packet[1] == linkaddr_node_addr.u8[1])
-    process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, NULL);
+  /* Copy packetbuf to message */
+  memset(message, 0, sizeof(message));
+  packetbuf_len = packetbuf_copyto(message);
+  packetbuf_len = packetbuf_len; /* suppressed warning */
 
-  leds_toggle(LEDS_RED);
+  header_len = message[0];
+  if (message[header_len] == CONECTRIC_ROUTE_REQUEST) {
+    if (message[header_len-1] == linkaddr_node_addr.u8[0] &&
+        message[header_len-2] == linkaddr_node_addr.u8[1]) {
+      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, NULL);
+      leds_toggle(LEDS_RED);
+    }
+  }
+  if (message[header_len] == CONECTRIC_TIME_SYNC) {
+    clock_set_seconds(
+        ((uint32_t)message[header_len+1] << 24) +
+        ((uint32_t)message[header_len+2] << 16) +
+        ((uint32_t)message[header_len+3] << 8) +
+        ((uint32_t)message[header_len+4]));
+    leds_toggle(LEDS_RED);
+  }
 }
 const static struct trickle_callbacks trickle_call = {trickle_recv};
 static struct trickle_conn trickle;
@@ -138,11 +151,40 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
      const linkaddr_t *prevhop,
      uint8_t hops)
 {
-  printf("%d.%d: multihop message from %d.%d - %d hops\n",
+  linkaddr_t msender, mreceiver, mprevhop;
+  uint8_t message[128];
+  uint8_t packetbuf_len, header_len;
+  uint8_t mhops;
+  int i;
+
+  /* Copy the packet attributes to avoid them being overwritten or
+     cleared by an application program that uses the packet buffer for
+     its own needs */
+  linkaddr_copy(&msender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
+  linkaddr_copy(&mreceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
+  linkaddr_copy(&mprevhop, prevhop);
+  mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
+  mhops = mhops; /* suppressed warning */
+
+  printf("%d.%d: multihop message from %d.%d - (%d hops) - %d\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         packetbuf_addr(PACKETBUF_ADDR_ESENDER)->u8[0],
         packetbuf_addr(PACKETBUF_ADDR_ESENDER)->u8[1],
-        packetbuf_attr(PACKETBUF_ATTR_HOPS));
+        packetbuf_attr(PACKETBUF_ATTR_HOPS),
+        (int)clock_seconds());
+
+  /* Copy packetbuf to message */
+  memset(message, 0, sizeof(message));
+  packetbuf_len = packetbuf_copyto(message);
+
+  header_len = message[0];
+  header_len = header_len; /* suppressed warning */
+
+  printf(">");
+  for (i = 0; i < packetbuf_len; i++) {
+    printf(" %02X", message[i]);
+  }
+  printf("\n");
 }
 /*
  * This function is called to forward a packet. The function picks a
@@ -156,6 +198,53 @@ multihop_forward(struct multihop_conn *c,
   const linkaddr_t *originator, const linkaddr_t *dest,
   const linkaddr_t *prevhop, uint8_t hops)
 {
+  linkaddr_t msender, mreceiver, mprevhop;
+  uint8_t message[128];
+  uint8_t mhops, packetbuf_len, header_len;
+  uint8_t * header;
+  int i;
+
+  /* Copy the packet attributes to avoid them being overwritten or
+     cleared by an application program that uses the packet buffer for
+     its own needs */
+  linkaddr_copy(&msender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
+  linkaddr_copy(&mreceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
+  mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
+
+  /* If I am the originator, mprevhop == self linkaddr */
+  if (prevhop == NULL)
+    linkaddr_copy(&mprevhop, originator);
+  else
+    linkaddr_copy(&mprevhop, prevhop);
+
+  /*printf("%d.%d: multihop to forward from %d.%d - len=%d - %d hops\n",
+        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+        mprevhop.u8[0], mprevhop.u8[1], packetbuf_datalen(), mhops);*/
+
+  memset(message, 0, sizeof(message));
+  packetbuf_len = packetbuf_copyto(message);
+
+  header_len = message[0];
+  packetbuf_copyfrom(&message[header_len], packetbuf_len - header_len);
+  packetbuf_hdralloc(header_len + 2);
+  header = (uint8_t *)packetbuf_hdrptr();
+
+  *header++ = header_len + 2;
+  *header++ = message[1];
+  *header++ = message[2] + 1;
+  *header++ = message[3] + 1;
+  *header++ = message[4];
+  *header++ = message[5];
+  *header++ = linkaddr_node_addr.u8[1];
+  *header++ = linkaddr_node_addr.u8[0];
+  for (i = 6; i < header_len; i++) {
+    *header++ = message[i];
+  }
+
+  packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &msender);
+  packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mreceiver);
+  packetbuf_set_attr(PACKETBUF_ATTR_HOPS, mhops);
+
   return &forward_addr;
 }
 static const struct multihop_callbacks multihop_call = {multihop_recv, multihop_forward};
@@ -163,11 +252,6 @@ static struct multihop_conn multihop;
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_abc_process, ev, data)
 {
-  static struct etimer et;
-  static uint8_t message[64];
-  static uint8_t loop;
-  static uint16_t counter = 0;
-
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
@@ -183,28 +267,45 @@ PROCESS_THREAD(example_abc_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_trickle_process, ev, data)
 {
-  static uint8_t message[64];
-  static uint16_t counter = 0;
+  static uint8_t message[128];
+  static uint8_t * header;
+  static uint8_t counter = 0;
+  static uint8_t * mydata;
 
   PROCESS_EXITHANDLER(trickle_close(&trickle);)
   PROCESS_BEGIN();
 
   trickle_open(&trickle, CLOCK_SECOND, 145, &trickle_call);
-  SENSORS_ACTIVATE(button_sensor);
 
   while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event &&
-			     data == &button_sensor);
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
 
-    memset(message, 0, 2);
-    counter++;
-    message[0] = 49;
-    message[1] = 0;
-    packetbuf_copyfrom(message, 2);
+    memset(message, 0, sizeof(message));
+
+    mydata = (uint8_t *)data;
+    if (mydata[0] == 0x31)
+      message[0] = CONECTRIC_ROUTE_REQUEST;
+    if (mydata[0] == 0x32)
+      message[0] = CONECTRIC_TIME_SYNC;
+
+    packetbuf_copyfrom(message, 1);
+
+    printf("%d.%d: trickle send %s - %d\n",
+        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+        (char *)data,
+        (int)clock_seconds());
+
+    packetbuf_hdralloc(6);
+
+    header = (uint8_t *)packetbuf_hdrptr();
+    *header++ = 6;          /* header len */
+    *header++ = counter++;  /* seqno */
+    *header++ = 0;          /* hop count */
+    *header++ = 0;          /* number of hops */
+    *header++ = 0;          /* destination addr H */
+    *header++ = 49;         /* destination addr L */
 
     trickle_set_rank(1);
-    rank = trickle_rank(&trickle);
-    printf("%d\n", rank);
     trickle_send(&trickle);
   }
   PROCESS_END();
@@ -213,6 +314,10 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 PROCESS_THREAD(example_multihop_process, ev, data)
 {
   static struct etimer et;
+  static linkaddr_t to;
+  static uint8_t message[128];
+  static uint8_t counter;
+  static uint8_t * header;
 
   PROCESS_EXITHANDLER(multihop_close(&multihop);)
 
@@ -223,7 +328,6 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 
   /* Loop forever, send a packet when the button is pressed. */
   while(1) {
-    linkaddr_t to;
 
     /* Wait until we get trickle message */
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
@@ -233,13 +337,21 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    /* Copy the "Hello" to the packet buffer. */
-    packetbuf_copyfrom("Hello", 6);
+    memset(message, 0, sizeof(message));
+    message[0] = CONECTRIC_ROUTE_REPLY;
+    packetbuf_copyfrom(message, 1);
 
-    /* Set the Rime address of the final receiver of the packet to
-       1.0. This is a value that happens to work nicely in a Cooja
-       simulation (because the default simulation setup creates one
-       node with address 1.0). */
+    packetbuf_hdralloc(6);
+
+    header = (uint8_t *)packetbuf_hdrptr();
+    *header++ = 6;                  /* header len */
+    *header++ = counter++;          /* seqno */
+    *header++ = 0;                  /* hop count */
+    *header++ = 0;                  /* number of hops */
+    *header++ = esender_addr.u8[1]; /* destination addr H */
+    *header++ = esender_addr.u8[0]; /* destination addr L */
+
+    /* Set the Rime address of the final receiver */
     to.u8[0] = esender_addr.u8[0];
     to.u8[1] = esender_addr.u8[1];
 
@@ -247,8 +359,7 @@ PROCESS_THREAD(example_multihop_process, ev, data)
     multihop_send(&multihop, &to);
     printf("%d.%d: multihop sent to %d.%d - %d\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        to.u8[0], to.u8[1], clock_seconds());
-
+        to.u8[0], to.u8[1], (int)clock_seconds());
   }
 
   PROCESS_END();
@@ -256,12 +367,19 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
+  static char * mydata = NULL;
+
   PROCESS_BEGIN();
 
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
-    printf("Serial_RX: %s\n", (char*)data);
+    printf("Serial_RX: %s (len=%d)\n", (char*)data, strlen(data));
+    mydata = (char*)data;
+    if (mydata[0] == '<') {
+      mydata++;
+      process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, mydata);
+    }
   }
 
   PROCESS_END();
