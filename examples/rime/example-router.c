@@ -56,7 +56,9 @@ enum {
 };
 static uint16_t rank = 255;
 static linkaddr_t forward_addr = {{1, 0}};
+static linkaddr_t prevhop_addr = {{1, 0}};
 static linkaddr_t esender_addr = {{1, 0}};
+static uint8_t sensors[128];
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
@@ -151,7 +153,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
      const linkaddr_t *prevhop,
      uint8_t hops)
 {
-  linkaddr_t msender, mreceiver, mprevhop;
+  linkaddr_t msender, mreceiver;
   uint8_t message[128];
   uint8_t packetbuf_len, header_len;
   uint8_t mhops;
@@ -162,7 +164,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
      its own needs */
   linkaddr_copy(&msender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
   linkaddr_copy(&mreceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
-  linkaddr_copy(&mprevhop, prevhop);
+  linkaddr_copy(&prevhop_addr, prevhop);
   mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
   mhops = mhops; /* suppressed warning */
 
@@ -196,7 +198,7 @@ multihop_forward(struct multihop_conn *c,
   const linkaddr_t *originator, const linkaddr_t *dest,
   const linkaddr_t *prevhop, uint8_t hops)
 {
-  linkaddr_t msender, mreceiver, mprevhop;
+  linkaddr_t msender, mreceiver;
   uint8_t message[128];
   uint8_t mhops, packetbuf_len, header_len;
   uint8_t * header;
@@ -209,15 +211,15 @@ multihop_forward(struct multihop_conn *c,
   linkaddr_copy(&mreceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
   mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
 
-  /* If I am the originator, mprevhop == self linkaddr */
+  /* If I am the originator, prevhop_addr == self linkaddr */
   if (prevhop == NULL)
-    linkaddr_copy(&mprevhop, originator);
+    linkaddr_copy(&prevhop_addr, originator);
   else
-    linkaddr_copy(&mprevhop, prevhop);
+    linkaddr_copy(&prevhop_addr, prevhop);
 
   /*printf("%d.%d: multihop to forward from %d.%d - len=%d - %d hops\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        mprevhop.u8[0], mprevhop.u8[1], packetbuf_datalen(), mhops);*/
+        prevhop_addr.u8[0], prevhop_addr.u8[1], packetbuf_datalen(), mhops);*/
 
   memset(message, 0, sizeof(message));
   packetbuf_len = packetbuf_copyto(message);

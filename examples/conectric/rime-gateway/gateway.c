@@ -42,12 +42,27 @@
 #include "random.h"
 #include "debug.h"
 
+#include "dev/serial-line.h"
+
 #include "dev/adc-sensor.h"
 
 #include <stdio.h>
+
+#if CC2530_CONF_MAC_FROM_PRIMARY
+#if defined __IAR_SYSTEMS_ICC__
+  volatile unsigned char *gmacp = &X_IEEE_ADDR;
+#else
+  __xdata unsigned char *gmacp = &X_IEEE_ADDR;
+#endif
+#else
+  __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS(gateway_abc_process, "Gateway");
-AUTOSTART_PROCESSES(&gateway_abc_process);
+PROCESS(serial_in_process, "SerialIn");
+AUTOSTART_PROCESSES(
+    &gateway_abc_process,
+    &serial_in_process);
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv(struct abc_conn *c)
@@ -82,6 +97,39 @@ PROCESS_THREAD(gateway_abc_process, ev, data)
 
   while(1) {
     PROCESS_YIELD();
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_in_process, ev, data)
+{
+  static char * mydata = NULL;
+  static uint8_t ext_addr[8];
+  signed char i;
+
+  PROCESS_BEGIN();
+
+  /*
+   * Read IEEE address from flash, store in ext_addr.
+   * Invert endianness (from little to big endian)
+   */
+  for(i = 7; i >= 0; --i) {
+    ext_addr[i] = *gmacp;
+    gmacp++;
+  }
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    //printf("Serial_RX: %s (len=%d)\n", (char*)data, strlen(data));
+    mydata = (char*)data;
+    if (mydata[0] == 'M') {
+      if (mydata[1] == 'R') {
+        for(i = 0; i <= 7; i++) printf("%02x", ext_addr[i]);
+      }
+      printf("\n");
+    }
   }
 
   PROCESS_END();
