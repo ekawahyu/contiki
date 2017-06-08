@@ -57,6 +57,8 @@ extern "C" {
 
 #define LPM_CONF_MODE                         0
 
+#define CONECTRIC_BURST_NUMBER                5
+
 #ifdef __cplusplus
 }
 #endif

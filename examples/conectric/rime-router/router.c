@@ -293,5 +293,5 @@ PROCESS_THREAD(serial_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 void invoke_process_before_sleep(void)
 {
-
+  deep_sleep_requested = 0;
 }

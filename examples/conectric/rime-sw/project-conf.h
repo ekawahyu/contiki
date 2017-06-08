@@ -62,6 +62,8 @@ extern "C" {
 #define UART1_CONF_ENABLE                     0
 /* end of workaround of a repurposed RS485 board for door sensor */
 
+#define CONECTRIC_BURST_NUMBER                5
+
 #ifdef __cplusplus
 }
 #endif

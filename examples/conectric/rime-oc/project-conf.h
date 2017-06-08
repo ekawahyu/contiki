@@ -59,6 +59,8 @@ extern "C" {
 
 #define BUTTON_SENSOR_CONF_INPUT_3STATE       0
 
+#define CONECTRIC_BURST_NUMBER                5
+
 #ifdef __cplusplus
 }
 #endif

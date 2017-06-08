@@ -49,7 +49,7 @@
 #include <stdio.h>
 
 static uint8_t message[40];
-extern volatile uint8_t deep_sleep_requested;
+extern volatile uint16_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(rht_abc_process, "RHT Sensor");
@@ -67,6 +67,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   static int dec;
   static float frac;
   static struct etimer et;
+  static uint8_t loop;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -88,10 +89,20 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   message[5] = counter++;
   message[6] = clock_reset_cause();
 
-  packetbuf_copyfrom(message, 7);
-  abc_send(&abc);
+  loop = CONECTRIC_BURST_NUMBER;
 
-  deep_sleep_requested = 1;
+  while(loop--) {
+    packetbuf_copyfrom(message, 7);
+    NETSTACK_MAC.on();
+    abc_send(&abc);
+
+    PROCESS_WAIT_EVENT();
+
+    if (loop)
+      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+    else
+      deep_sleep_requested = CLOCK_SECOND;
+  }
 
   while(1) {
 
@@ -103,7 +114,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     dec = sane;
     frac = sane - dec;
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
-    deep_sleep_requested = 1;
+    deep_sleep_requested = CLOCK_SECOND / 32;
 
     PROCESS_WAIT_EVENT();
 
@@ -111,7 +122,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     prev_temp = temp;
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_ACQ);
-    deep_sleep_requested = 1;
+    deep_sleep_requested = CLOCK_SECOND / 32;
 
     PROCESS_WAIT_EVENT();
 
@@ -127,26 +138,26 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     message[4] = 0x10;
     message[5] = counter++;
     message[6] = (char)(dec*10)+(char)(frac*10);
-    if (prev_temp != temp) {
-      message[7] = (char)(temp >> 8);
-      message[8] = (char)(temp & 0xFC);
-    }
-    else {
-      message[7] = 0;
-      message[8] = 0;
-    }
-    if (prev_humid != humid) {
-      message[9] = (char)(humid >> 8);
-      message[10]= (char)(humid & 0xFC);
-    } else {
-      message[9] = 0;
-      message[10]= 0;
+    message[7] = (char)(humid >> 8);
+    message[8] = (char)(humid & 0xFC);
+    message[9] = (char)(temp >> 8);
+    message[10]= (char)(temp & 0xFC);
+
+    loop = CONECTRIC_BURST_NUMBER;
+
+    while(loop--) {
+      packetbuf_copyfrom(message, 11);
+      NETSTACK_MAC.on();
+      abc_send(&abc);
+
+      PROCESS_WAIT_EVENT();
+
+      if (loop)
+        deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+      else
+        deep_sleep_requested = 59 * CLOCK_SECOND;
     }
 
-    NETSTACK_MAC.on();
-    packetbuf_copyfrom(message, 11);
-    abc_send(&abc);
-    deep_sleep_requested = 58;
   }
 
   SENSORS_DEACTIVATE(sht21_sensor);

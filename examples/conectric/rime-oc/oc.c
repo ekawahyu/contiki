@@ -49,7 +49,7 @@
 #include <stdio.h>
 
 static uint8_t message[40];
-extern volatile uint8_t deep_sleep_requested;
+extern volatile uint16_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(pir_abc_process, "PIR Sensor");
@@ -79,6 +79,7 @@ PROCESS_THREAD(pir_abc_process, ev, data)
   static float frac;
   static uint8_t *sensor_data;
   static struct etimer et;
+  static uint8_t loop;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -99,12 +100,24 @@ PROCESS_THREAD(pir_abc_process, ev, data)
   message[5] = counter++;
   message[6] = clock_reset_cause();
 
-  packetbuf_copyfrom(message, 7);
-  abc_send(&abc);
+  loop = CONECTRIC_BURST_NUMBER;
+
+  while(loop--) {
+    packetbuf_copyfrom(message, 7);
+    NETSTACK_MAC.on();
+    abc_send(&abc);
+
+    PROCESS_WAIT_EVENT();
+
+    if (loop)
+      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+    else
+      deep_sleep_requested = CLOCK_SECOND;
+  }
 
   while(1) {
 
-    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
@@ -122,8 +135,21 @@ PROCESS_THREAD(pir_abc_process, ev, data)
     message[6] = (char)(dec*10)+(char)(frac*10);
     message[7] = *sensor_data;
 
-    packetbuf_copyfrom(message, 8);
-    abc_send(&abc);
+    loop = CONECTRIC_BURST_NUMBER;
+
+    while(loop--) {
+      packetbuf_copyfrom(message, 8);
+      NETSTACK_MAC.on();
+      abc_send(&abc);
+
+      PROCESS_WAIT_EVENT();
+
+      if (loop)
+        deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+      else
+        deep_sleep_requested = 10 * CLOCK_SECOND;
+    }
+
   }
 
   PROCESS_END();
@@ -169,6 +195,11 @@ PROCESS_THREAD(buttons_test_process, ev, data)
 /*---------------------------------------------------------------------------*/
 void invoke_process_before_sleep(void)
 {
-  deep_sleep_requested = 10;
+  process_post_synch(&pir_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+
+  /* TODO can we try to sleep at close to the max sleep timer?
+   * like 500 * CLOCK_SECOND
+   */
+  if (deep_sleep_requested == 0) deep_sleep_requested = 60 * CLOCK_SECOND;
 }
 /*---------------------------------------------------------------------------*/
