@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\DEVELOPER\foss\contiki\projects\iar\settings\cc2530dk-border-router.Release.general.xcl" --backend -f "F:\DEVELOPER\foss\contiki\projects\iar\settings\cc2530dk-border-router.Release.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "C:\Dev\working\contiki\projects\iar\settings\cc2530dk-border-router.Release.general.xcl" --backend -f "C:\Dev\working\contiki\projects\iar\settings\cc2530dk-border-router.Release.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\DEVELOPER\foss\contiki\projects\iar\settings\cc2530dk-border-router.Release.general.xcl" "--debug_file=%~1" --backend -f "F:\DEVELOPER\foss\contiki\projects\iar\settings\cc2530dk-border-router.Release.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "C:\Dev\working\contiki\projects\iar\settings\cc2530dk-border-router.Release.general.xcl" "--debug_file=%~1" --backend -f "C:\Dev\working\contiki\projects\iar\settings\cc2530dk-border-router.Release.driver.xcl" 
 
 @echo off 
 :end
