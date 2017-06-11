@@ -168,7 +168,7 @@
         </option>
         <option>
           <name>General Idata Stack Size</name>
-          <state>0x40</state>
+          <state>0xC0</state>
         </option>
         <option>
           <name>General Pdata Stack Size</name>
@@ -176,7 +176,7 @@
         </option>
         <option>
           <name>General Xdata Stack Size</name>
-          <state>0x1D0</state>
+          <state>0x300</state>
         </option>
         <option>
           <name>General Ext Stack Size</name>
@@ -184,15 +184,15 @@
         </option>
         <option>
           <name>General Xdata Heap Size</name>
-          <state>0xFF</state>
+          <state>0x00</state>
         </option>
         <option>
           <name>General Far Heap Size</name>
-          <state>0xFFF</state>
+          <state>0x000</state>
         </option>
         <option>
           <name>General Huge Heap Size</name>
-          <state>0xFFF</state>
+          <state>0x000</state>
         </option>
         <option>
           <name>CodeBankNrOfs</name>
@@ -382,7 +382,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>10010</state>
+          <state>00000</state>
         </option>
         <option>
           <name>CCObjUseModuleName</name>
@@ -519,16 +519,16 @@
         </option>
         <option>
           <name>CCOptLevel</name>
-          <state>2</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCOptStrategy</name>
           <version>0</version>
-          <state>2</state>
+          <state>1</state>
         </option>
         <option>
           <name>CCOptLevelSlave</name>
-          <state>2</state>
+          <state>0</state>
         </option>
         <option>
           <name>CompilerMisraRules04</name>
@@ -1706,7 +1706,10 @@
       <group>
         <name>rime-sub</name>
         <file>
-          <name>$PROJ_DIR$\..\..\examples\CONECTRIC\rime-sub\sub.c</name>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sub\project-conf.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sub\sub.c</name>
         </file>
       </group>
       <file>
@@ -1757,7 +1760,7 @@
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\adc-sensor.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\button-sensor.c</name>
+          <name>$PROJ_DIR$\..\..\platform\conectric\dev\button-sensor.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\conectric-sensors.c</name>
@@ -1782,7 +1785,7 @@
         </file>
       </group>
       <file>
-        <name>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</name>
+        <name>$PROJ_DIR$\..\..\platform\conectric\contiki-main.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\platform\conectric\debug.c</name>
