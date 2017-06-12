@@ -54,7 +54,9 @@
 #include <stdio.h>
 
 #define BUFSIZE 256
+#define TRICKLE_CHANNEL 145
 
+/* Sub Globals */
 static uint8_t message[72];
 static uint8_t * pmessage = NULL;
 extern volatile uint8_t deep_sleep_requested;
@@ -98,7 +100,7 @@ PROCESS_THREAD(sub_process, ev, data)
 
   PROCESS_BEGIN();
 
-  trickle_open(&trickle, CLOCK_SECOND, 128, &trickle_call);
+  trickle_open(&trickle, CLOCK_SECOND, TRICKLE_CHANNEL, &trickle_call);
 
   etimer_set(&et, CLOCK_SECOND);
 
