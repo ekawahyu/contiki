@@ -14,35 +14,35 @@
 #include "contiki.h"
 #include "cc253x.h"
 
-/*********************************************************************
- * @fn      writeWordM
- *
- * @brief   Writes multiple Flash-WORDs to NV.
- *
- * @param   pg - A valid NV Flash page.
- * @param   offset - A valid offset into the page.
- * @param   buf - Pointer to source buffer.
- * @param   cnt - Number of 4-byte blocks to write.
- *
- * @return  none
- */
-static void writeWordM( uint8 pg, uint16 offset, uint8 *buf, uint16 cnt )
-{
-  offset = (offset / HAL_FLASH_WORD_SIZE) +
-          ((uint16)pg * (HAL_FLASH_PAGE_SIZE / HAL_FLASH_WORD_SIZE));
-  FlashWrite(offset, buf, cnt);
-}
+// Flash Controller Map
+typedef struct {
+     uint8_t SRCADDRH; //Byte 0
+     uint8_t SRCADDRL; //Byte 1
+     uint8_t DESTADDRH; //Byte 2
+     uint8_t DESTADDRL; //Byte 3
+     uint8_t LENH:5; //Byte 4 - Bit 4:0
+     uint8_t VLEN:3; //Byte 4 - Bit 7:5
+     uint8_t LENL; //Byte 5
+     uint8_t TRIG:5; //Byte 6 - Bit 4:0
+     uint8_t TMODE:2; //Byte 6 - Bit 6:5
+     uint8_t WORDSIZE:1; //Byte 6 - Bit 7
+     uint8_t PRIORITY:2; //Byte 7 - Bit 1:0
+     uint8_t M8:1; //Byte 7 - Bit 2
+     uint8_t IRQMASK:1; //Byte 7 - Bit 3
+     uint8_t DESTINC:2; //Byte 7 - Bit 5:4
+     uint8_t SRCINC:2; //Byte 7 - Bit 7:6
+} DMA_DESC;
 
 /**************************************************************************************************
- * @fn          FlashWrite
+ * @fn          Flash_WriteDMA
  *
  * @brief       This function writes 'cnt' bytes to the internal flash.
  *
  * input parameters
  *
- * @param       addr - Valid flash write address: actual addr / 4 and quad-aligned.
- * @param       buf - Valid buffer space at least as big as 'cnt' X 4.
- * @param       cnt - Number of 4-byte blocks to write.
+ * @param       data - Valid buffer space at least as big as 'cnt' X 4.
+ * @param       length - Number of 4-byte blocks to write.
+ * @param       flashwordaddr - Valid flash write address: actual addr / 4 and quad-aligned.
  *
  * output parameters
  *
@@ -51,36 +51,82 @@ static void writeWordM( uint8 pg, uint16 offset, uint8 *buf, uint16 cnt )
  * @return      None.
  **************************************************************************************************
  */
-void FlashWrite(uint16 addr, uint8 *buf, uint16 cnt)
+
+void Flash_WriteDMA(uint8_t *data, uint16_t length, uint16_t flashwordadr)
 {
-#if (defined HAL_DMA) && (HAL_DMA == TRUE)
-  halDMADesc_t *ch = HAL_NV_DMA_GET_DESC();
-
-  HAL_DMA_SET_SOURCE(ch, buf);
-  HAL_DMA_SET_DEST(ch, &FWDATA);
-  HAL_DMA_SET_VLEN(ch, HAL_DMA_VLEN_USE_LEN);
-  HAL_DMA_SET_LEN(ch, (cnt * HAL_FLASH_WORD_SIZE));
-  HAL_DMA_SET_WORD_SIZE(ch, HAL_DMA_WORDSIZE_BYTE);
-  HAL_DMA_SET_TRIG_MODE(ch, HAL_DMA_TMODE_SINGLE);
-  HAL_DMA_SET_TRIG_SRC(ch, HAL_DMA_TRIG_FLASH);
-  HAL_DMA_SET_SRC_INC(ch, HAL_DMA_SRCINC_1);
-  HAL_DMA_SET_DST_INC(ch, HAL_DMA_DSTINC_0);
-  // The DMA is to be polled and shall not issue an IRQ upon completion.
-  HAL_DMA_SET_IRQ(ch, HAL_DMA_IRQMASK_DISABLE);
-  HAL_DMA_SET_M8( ch, HAL_DMA_M8_USE_8_BITS);
-  HAL_DMA_SET_PRIORITY(ch, HAL_DMA_PRI_HIGH);
-  HAL_DMA_CLEAR_IRQ(HAL_NV_DMA_CH);
-  HAL_DMA_ARM_CH(HAL_NV_DMA_CH);
-
-  FADDRL = (uint8)addr;
-  FADDRH = (uint8)(addr >> 8);
-  FCTL |= 0x02;         // Trigger the DMA writes.
-  while (FCTL & 0x80);  // Wait until writing is done.
-#endif
+       DMA_DESC dmaConfig0;
+       dmaConfig0.SRCADDRH  = ((uint16_t)data >> 8) & 0x00FF;
+       dmaConfig0.SRCADDRL  = (uint16_t)data & 0x00FF;
+       dmaConfig0.DESTADDRH = (((uint16_t)&FWDATA) >> 8) & 0x00FF;
+       dmaConfig0.DESTADDRL = ((uint16_t)&FWDATA) & 0x00FF;
+       dmaConfig0.VLEN      = 0;
+       dmaConfig0.LENH      = (length>>8) & 0x00FF;
+       dmaConfig0.LENL      = length & 0x00FF;
+       dmaConfig0.WORDSIZE  = 0;
+       dmaConfig0.TMODE     = 0;
+       dmaConfig0.TRIG      = 18;
+       dmaConfig0.SRCINC    = 1;
+       dmaConfig0.DESTINC   = 0;
+       dmaConfig0.IRQMASK   = 0;
+       dmaConfig0.M8        = 0;
+       dmaConfig0.PRIORITY  = 2;
+       while (FCTL & 0x80);
+       FADDRH =(flashwordadr >> 8) & 0x00FF;
+       FADDRL = (flashwordadr) & 0x00FF;
+ 
+       DMA0CFGH = (((uint16_t)&dmaConfig0) >> 8) & 0x00FF;
+       DMA0CFGL = ((uint16_t)&dmaConfig0) & 0x00FF;
+       
+       DMAARM |= 0x01;
+       FCTL |= 0x02;
+       while (!(DMAIRQ & 0x01));
+       DMAIRQ = 0xFE;
+       while (FCTL & (0x80));
 }
 
 /**************************************************************************************************
- * @fn          FlashErase
+ * @fn          Flash_Read
+ *
+ * @brief       This function reads 'size' bytes from the internal flash.
+ *
+ * input parameters
+ *
+ * @param       pg - A valid flash page number.
+ * @param       offset - A valid offset into the page.
+ * @param       buf - A valid buffer space at least as big as the 'cnt' parameter.
+ * @param       size - A valid number of bytes to read.
+ *
+ * output parameters
+ *
+ * None.
+ *
+ * @return      None.
+ **************************************************************************************************
+ */
+void Flash_Read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size)
+{
+  // Calculate the offset into the containing flash bank as it gets mapped into XDATA.
+  uint8_t *pData = (uint8_t *)(offset + FLASH_PAGE_MAP) + ((pg % FLASH_BANK_PAGES) * FLASH_PAGE_SIZE);
+  
+  // Save to restore.
+  uint8_t memctr = MEMCTR;  
+
+  // Calculate the flash bank from the flash page.
+  pg /= FLASH_BANK_PAGES;  
+
+  // Calculate and map the containing flash bank into XDATA.
+  MEMCTR = (MEMCTR & 0xF8) | pg;
+
+  while (size--)
+  {
+    *buf++ = *pData++;
+  }
+
+  MEMCTR = memctr;
+}
+
+/**************************************************************************************************
+ * @fn          Flash_PageErase
  *
  * @brief       This function erases the specified page of the internal flash.
  *
@@ -95,9 +141,19 @@ void FlashWrite(uint16 addr, uint8 *buf, uint16 cnt)
  * @return      None.
  **************************************************************************************************
  */
-void FlashErase(uint8 pg)
+
+void Flash_PageErase(uint8_t pg)
 {
-  FADDRH = pg * (HAL_FLASH_PAGE_SIZE / HAL_FLASH_WORD_SIZE / 256);
-  FCTL |= 0x01;
+ uint8_t test;
+ EA = 0; // disable interrupt
+ while(FCTL & 0x80);
+ FADDRH = pg << 1;
+ FADDRL = 0x00;
+ FCTL |= 0x01;
+
+ test = FCTL;
+ while(FCTL & 0x80);
+ EA = 1; // enable interrupt
+ test=0;
 }
 
