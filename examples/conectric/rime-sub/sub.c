@@ -54,7 +54,9 @@
 #include <stdio.h>
 
 #define BUFSIZE 256
+#define TRICKLE_CHANNEL 145
 
+/* Sub Globals */
 static uint8_t message[72];
 static uint8_t * pmessage = NULL;
 extern volatile uint8_t deep_sleep_requested;
@@ -63,19 +65,27 @@ static int pos;
 static uint8_t submeter_data[BUFSIZE];
 
 /*---------------------------------------------------------------------------*/
-PROCESS(sub_abc_process, "Submeter");
+PROCESS(sub_process, "Submeter");
 PROCESS(serial_in_process, "Serial example");
 PROCESS(modbus_in_process, "Modbus example");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&sub_abc_process, &serial_in_process, &modbus_in_process, &buttons_test_process);
+AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &buttons_test_process);
 #else
-AUTOSTART_PROCESSES(&sub_abc_process, &serial_in_process, &modbus_in_process);
+AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process);
 #endif
 /*---------------------------------------------------------------------------*/
-static struct abc_conn abc;
+static void
+trickle_recv(struct trickle_conn *c)
+{
+  printf("%d.%d: trickle message received '%s'\n",
+	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+	 (char *)packetbuf_dataptr());
+}
+const static struct trickle_callbacks trickle_call = {trickle_recv};
+static struct trickle_conn trickle;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(sub_abc_process, ev, data)
+PROCESS_THREAD(sub_process, ev, data)
 {
   static unsigned int batt;
   static uint8_t counter;
@@ -86,11 +96,11 @@ PROCESS_THREAD(sub_abc_process, ev, data)
   static struct etimer et;
   static int pos_counter;
 
-  PROCESS_EXITHANDLER(abc_close(&abc);)
+  PROCESS_EXITHANDLER(trickle_close(&trickle);)
 
   PROCESS_BEGIN();
 
-  abc_open(&abc, 128, NULL);
+  trickle_open(&trickle, CLOCK_SECOND, TRICKLE_CHANNEL, &trickle_call);
 
   etimer_set(&et, CLOCK_SECOND);
 
@@ -106,7 +116,7 @@ PROCESS_THREAD(sub_abc_process, ev, data)
   message[6] = clock_reset_cause();
 
   packetbuf_copyfrom(message, 7);
-  abc_send(&abc);
+  trickle_send(&trickle);
 
   deep_sleep_requested = 0;
 
@@ -179,7 +189,7 @@ PROCESS_THREAD(sub_abc_process, ev, data)
       *pmessage++ = submeter_data[pos_counter];
 
     packetbuf_copyfrom(message, 72);
-    abc_send(&abc);
+    trickle_send(&trickle);
 
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
@@ -200,7 +210,7 @@ PROCESS_THREAD(sub_abc_process, ev, data)
       *pmessage++ = submeter_data[pos_counter];
 
     packetbuf_copyfrom(message, 72);
-    abc_send(&abc);
+    trickle_send(&trickle);
 
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
@@ -221,7 +231,7 @@ PROCESS_THREAD(sub_abc_process, ev, data)
       *pmessage++ = submeter_data[pos_counter];
 
     packetbuf_copyfrom(message, 72);
-    abc_send(&abc);
+    trickle_send(&trickle);
 
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
@@ -242,7 +252,7 @@ PROCESS_THREAD(sub_abc_process, ev, data)
       *pmessage++ = submeter_data[pos_counter];
 
     packetbuf_copyfrom(message, 72);
-    abc_send(&abc);
+    trickle_send(&trickle);
 
     for (pos_counter=0; pos_counter<BUFSIZE; pos_counter++)
       puthex(submeter_data[pos_counter]);
@@ -267,11 +277,11 @@ PROCESS_THREAD(buttons_test_process, ev, data)
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
       button = 0x71;
-      process_post(&sub_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
     }
     if(sensor == &button_2_sensor) {
       button = 0x72;
-      process_post(&sub_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
 
