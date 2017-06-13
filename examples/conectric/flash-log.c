@@ -8,10 +8,18 @@
 #include "contiki.h"
 #include <stdio.h> /* For printf() */
 #include "flash.h"
-extern volatile uint8_t deep_sleep_requested;
+#include "flash-logging.h"
 
-// Log Test Globals
-#define Log_Addr 0x18000
+/* Flash Logging */
+enum
+{
+  LOG_EVENT1 = 0x01,    // event description
+  LOG_EVENT2 = 0x02,    // event description
+  LOG_EVENT3 = 0x03     // event description
+};
+/*---------------*/
+
+extern volatile uint8_t deep_sleep_requested;
 
 uint8_t WriteData[8]=
 {
@@ -33,11 +41,7 @@ PROCESS_THREAD(flash_log_process, ev, data)
 
   PROCESS_BEGIN();
 
-  printf("erasing flash\n");
-  
-  Flash_PageErase(ADDR_PAGE(Log_Addr));
-  
-  printf("Writing to Flash!\n");
+  flashlogging_init();
   
   WriteData[0]=0x01;
   WriteData[1]=0x02;
@@ -48,13 +52,15 @@ PROCESS_THREAD(flash_log_process, ev, data)
   WriteData[6]=0x07;
   WriteData[7]=0x08;
 
-  Flash_WriteDMA(WriteData,8, FLASH_WORD_ADDR(Log_Addr));
-
-  Flash_Read(ADDR_PAGE(Log_Addr), ADDR_OFFSET(Log_Addr), ReadData, 8);
-  
-  volatile uint8_t test3 = ReadData[2];
-
-  Flash_PageErase(ADDR_PAGE(Log_Addr));
+  uint16_t timestamp = 0x0001;
+  while (timestamp < 0x00FF)
+  {
+    flashlogging_write8(FLASH_LOG_CMP_ID, LOG_EVENT2, timestamp, WriteData);
+    
+    timestamp += 0x11;
+    for(int ct=0; ct < 8; ct++)
+      WriteData[ct] += 0x10;
+  }
 
   PROCESS_END();
 }

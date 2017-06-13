@@ -22,12 +22,12 @@ extern "C" {
 #define FLASH_WORD_ADDR(addr) (addr >> 2)
 #define FLASH_PAGE_SIZE 2048
 #define FLASH_BANK_PAGES 16
-#define ADDR_PAGE(addr) (addr / FLASH_PAGE_SIZE)
-#define ADDR_OFFSET(addr) (addr % FLASH_PAGE_SIZE)
+#define FLASH_PAGE(addr) (addr / FLASH_PAGE_SIZE)
+#define FLASH_PAGE_OFFSET(addr) (addr % FLASH_PAGE_SIZE)
 
-void Flash_WriteDMA(uint8_t *data, uint16_t length, uint16_t flashwordadr);
-void Flash_Read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size);
-void Flash_PageErase(uint8_t pg);
+void flash_write_DMA(uint8_t *data, uint16_t length, uint16_t flashwordadr);
+void flash_read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size);
+void flash_page_erase(uint8_t pg);
 
 #ifdef __cplusplus
 }

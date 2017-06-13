@@ -10,7 +10,7 @@
  *
  */
 
-#include "dev/flash.h"
+#include "flash.h"
 #include "contiki.h"
 #include "cc253x.h"
 
@@ -34,7 +34,7 @@ typedef struct {
 } DMA_DESC;
 
 /**************************************************************************************************
- * @fn          Flash_WriteDMA
+ * @fn          flash_write_DMA
  *
  * @brief       This function writes 'cnt' bytes to the internal flash.
  *
@@ -52,7 +52,7 @@ typedef struct {
  **************************************************************************************************
  */
 
-void Flash_WriteDMA(uint8_t *data, uint16_t length, uint16_t flashwordadr)
+void flash_write_DMA(uint8_t *data, uint16_t length, uint16_t flashwordadr)
 {
        DMA_DESC dmaConfig0;
        dmaConfig0.SRCADDRH  = ((uint16_t)data >> 8) & 0x00FF;
@@ -85,7 +85,7 @@ void Flash_WriteDMA(uint8_t *data, uint16_t length, uint16_t flashwordadr)
 }
 
 /**************************************************************************************************
- * @fn          Flash_Read
+ * @fn          flash_read
  *
  * @brief       This function reads 'size' bytes from the internal flash.
  *
@@ -103,7 +103,7 @@ void Flash_WriteDMA(uint8_t *data, uint16_t length, uint16_t flashwordadr)
  * @return      None.
  **************************************************************************************************
  */
-void Flash_Read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size)
+void flash_read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size)
 {
   // Calculate the offset into the containing flash bank as it gets mapped into XDATA.
   uint8_t *pData = (uint8_t *)(offset + FLASH_PAGE_MAP) + ((pg % FLASH_BANK_PAGES) * FLASH_PAGE_SIZE);
@@ -126,7 +126,7 @@ void Flash_Read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size)
 }
 
 /**************************************************************************************************
- * @fn          Flash_PageErase
+ * @fn          flash_page_erase
  *
  * @brief       This function erases the specified page of the internal flash.
  *
@@ -142,7 +142,7 @@ void Flash_Read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size)
  **************************************************************************************************
  */
 
-void Flash_PageErase(uint8_t pg)
+void flash_page_erase(uint8_t pg)
 {
  uint8_t test;
  EA = 0; // disable interrupt
