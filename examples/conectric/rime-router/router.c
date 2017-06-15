@@ -51,6 +51,7 @@
 static uint16_t rank = 255;
 static linkaddr_t forward_addr = {{1, 0}};
 static linkaddr_t esender_addr = {{1, 0}};
+extern volatile uint16_t deep_sleep_requested;
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
