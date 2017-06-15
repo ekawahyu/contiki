@@ -17,7 +17,7 @@ uint8_t flash_logging_scratch[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0
 
 #define FLASH_WRITE_SIZE_MIN 8
 
-void flashlogging_write_reference(uint8_t componentId, uint8_t eventId)
+void flashlogging_write_fullclock(uint8_t componentId, uint8_t eventId)
 {
   clock_time_t global_time = clock_seconds();
 
@@ -44,7 +44,7 @@ void flashlogging_init()
   flash_logging_addr = (flash_logging_addr < FLASH_LOGGING_END) ? flash_logging_addr : FLASH_LOGGING_START; 
 
   // write boot stamp in Flash
-  flashlogging_write_reference(FLASH_LOGGING_CMP_ID, LOGGING_INIT);
+  flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, LOGGING_INIT);
 }
 
 void flashlogging_write4(uint8_t componentId, uint8_t eventId, uint8_t *data)
