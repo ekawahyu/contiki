@@ -19,9 +19,10 @@
 /* FLASH LOGGING Globals */
 enum
 {
-  LOGGING_INIT = 0x00,    // event description
-  LOGGING_EVENT2 = 0x01,    // event description
-  LOGGING_EVENT3 = 0x02     // event description
+  LOGGING_RESERVED = 0x00, // reserved
+  LOGGING_INIT = 0x01,    // initialization
+  LOGGING_REF  = 0x02,    // reference timestamps
+  LOGGING_EVENT3 = 0x03     // event description
 };
 
 // logging component ID's
@@ -44,6 +45,6 @@ enum
 
 void flashlogging_init(void);
 void flashlogging_write4(uint8_t componentId, uint8_t eventId, uint8_t *data);
-
+void flashlogging_write_reference(uint8_t componentId, uint8_t eventId);
 
 #endif /* FLASH_LOGGING_H_ */

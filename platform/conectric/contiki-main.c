@@ -317,8 +317,10 @@ main(void) CC_NON_BANKED
 
   autostart_start(autostart_processes);
 
+#if WATCHODG
   watchdog_start();
-
+#endif
+  
   fade(LEDS_YELLOW);
 
   /* TODO not supposed to be here for Anaren A2530E */

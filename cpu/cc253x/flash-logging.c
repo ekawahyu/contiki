@@ -13,15 +13,26 @@
 
 uint32_t flash_logging_addr = FLASH_LOGGING_START;
 // scratch pad for writes setup for start seq
-uint8_t flash_logging_scratch[8] = { 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC, 0xDD };
+uint8_t flash_logging_scratch[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 #define FLASH_WRITE_SIZE_MIN 8
+
+void flashlogging_write_reference(uint8_t componentId, uint8_t eventId)
+{
+  clock_time_t global_time = clock_seconds();
+
+  // eventId can override using LOGGING_REF if caller desires
+  eventId = (eventId != 0) ? eventId : LOGGING_REF;
+  
+  // place global time in flash at start of write block
+  memcpy(&flash_logging_scratch[4], &global_time, 4);
+  flashlogging_write4(componentId, eventId, &flash_logging_scratch[4]);
+}
 
 void flashlogging_init()
 {
   uint8_t read_buf[FLASH_WRITE_SIZE_MIN];  // read by minimum write size
   flash_logging_addr = FLASH_LOGGING_START - FLASH_WRITE_SIZE_MIN;
-  clock_time_t global_time = clock_seconds();
   
   // loop until you find the first unused memory (no writes begin with 0xFF)
   do {
@@ -32,9 +43,8 @@ void flashlogging_init()
   // catch exceptional case where device reset with write area completely full
   flash_logging_addr = (flash_logging_addr < FLASH_LOGGING_END) ? flash_logging_addr : FLASH_LOGGING_START; 
 
-  // place "boot" sequence in flash at start of write block
-  memcpy(&flash_logging_scratch[4], &global_time, 4);
-  flashlogging_write4(FLASH_LOGGING_CMP_ID, LOGGING_INIT, &flash_logging_scratch[4]);
+  // write boot stamp in Flash
+  flashlogging_write_reference(FLASH_LOGGING_CMP_ID, LOGGING_INIT);
 }
 
 void flashlogging_write4(uint8_t componentId, uint8_t eventId, uint8_t *data)
