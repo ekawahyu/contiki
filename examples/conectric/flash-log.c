@@ -13,9 +13,9 @@
 /* Flash Logging */
 enum
 {
-  LOG_EVENT1 = 0x01,    // event description
-  LOG_EVENT2 = 0x02,    // event description
-  LOG_EVENT3 = 0x03     // event description
+  LOG_EVENT1 = 0x00,    // event description
+  LOG_EVENT2 = 0x01,    // event description
+  LOG_EVENT3 = 0x02     // event description
 };
 /*---------------*/
 
@@ -26,10 +26,6 @@ uint8_t WriteData[8]=
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-uint8_t ReadData[8]=
-{
- 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
 /*---------------*/
 
 /*---------------------------------------------------------------------------*/
@@ -38,7 +34,8 @@ AUTOSTART_PROCESSES(&flash_log_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(flash_log_process, ev, data)
 {
-
+  static struct etimer et;
+  
   PROCESS_BEGIN();
 
   flashlogging_init();
@@ -52,12 +49,14 @@ PROCESS_THREAD(flash_log_process, ev, data)
   WriteData[6]=0x07;
   WriteData[7]=0x08;
 
-  uint16_t timestamp = 0x0001;
-  while (timestamp < 0x00FF)
+  uint8_t ct = 0x01;
+  while (ct < 0xFFFF)
   {
-    flashlogging_write8(FLASH_LOG_CMP_ID, LOG_EVENT2, timestamp, WriteData);
+    flashlogging_write4(FLASH_LOG_CMP_ID, LOG_EVENT2, WriteData);
     
-    timestamp += 0x11;
+    etimer_set(&et, 5 * CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    
     for(int ct=0; ct < 8; ct++)
       WriteData[ct] += 0x10;
   }

@@ -13,11 +13,16 @@
 
 // Default start address for cyclical write to Flash (Bank 3)
 #define FLASH_LOGGING_START 0x18000
-// Default end address for cyclical write to Flash (end Bank 7)
-#define FLASH_LOGGING_END   0x38000
+// Default end address for cyclical write to Flash (beginning last Page Bank 8)
+#define FLASH_LOGGING_END   0x3F800
 
 /* FLASH LOGGING Globals */
-extern uint32_t flash_logging_addr;
+enum
+{
+  LOGGING_INIT = 0x00,    // event description
+  LOGGING_EVENT2 = 0x01,    // event description
+  LOGGING_EVENT3 = 0x02     // event description
+};
 
 // logging component ID's
 enum
@@ -38,7 +43,7 @@ enum
 };
 
 void flashlogging_init(void);
-void flashlogging_write8(uint8_t componentId, uint8_t eventId, uint16_t timestamp, uint8_t *data);
+void flashlogging_write4(uint8_t componentId, uint8_t eventId, uint8_t *data);
 
 
 #endif /* FLASH_LOGGING_H_ */
