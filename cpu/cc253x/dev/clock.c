@@ -95,6 +95,12 @@ clock_time(void)
   return count;
 }
 /*---------------------------------------------------------------------------*/
+void
+clock_set_seconds(unsigned long sec)
+{
+  seconds = sec;
+}
+/*---------------------------------------------------------------------------*/
 CCIF unsigned long
 clock_seconds(void)
 {
