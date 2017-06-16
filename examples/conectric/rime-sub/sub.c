@@ -65,6 +65,7 @@ static int pos;
 static uint8_t submeter_data[BUFSIZE];
 
 /* Flash Logging */
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))  
 enum
 {
   SUB_RESERVED = 0x00,    // reserved
@@ -343,7 +344,7 @@ PROCESS_THREAD(flash_log_process, ev, data)
   
   while (1)
   {
-    etimer_set(&et, 1 * CLOCK_SECOND * 60);
+    etimer_set(&et, LOGGING_REF_TIME_PD);  
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);

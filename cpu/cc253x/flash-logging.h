@@ -31,6 +31,7 @@ enum
   
   /* 0x20-0x3F  cpu */
   FLASH_LOGGING_CMP_ID = 0x20,
+  
   /* 0x40-0x5F  dev */
   
   /* 0x60-0x7F  platform */
@@ -38,6 +39,9 @@ enum
   /* 0x80-0x9F  examples */
   RIME_SUB_CMP_ID = 0x80,
   RIME_RHT_CMP_ID = 0x81,
+  RIME_OC_CMP_ID = 0x82,
+  RIME_SW_CMP_ID = 0x83,
+  
   /* 0xFF invalid */
   NOT_VALID = 0xFF
 };

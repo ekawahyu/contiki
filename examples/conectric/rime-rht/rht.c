@@ -51,9 +51,11 @@
 
 static uint8_t message[40];
 extern volatile uint16_t deep_sleep_requested;
-static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 /* Flash Logging */
+static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
 enum
 {
   RHT_RESERVED = 0x00,    // reserved
@@ -155,7 +157,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
     loop = CONECTRIC_BURST_NUMBER;
 
-    // Log data that was sent out over the air
+    // Log data that will be sent out over the air
     logData[0] = (char)(humid >> 8);
     logData[1] = (char)(humid & 0xFC);
     logData[2] = (char)(temp >> 8);
@@ -192,7 +194,7 @@ PROCESS_THREAD(flash_log_process, ev, data)
   
   while (1)
   {
-    etimer_set(&et, 1 * CLOCK_SECOND * 60);
+    etimer_set(&et, LOGGING_REF_TIME_PD);  
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
