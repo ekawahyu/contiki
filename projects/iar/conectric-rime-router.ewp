@@ -168,7 +168,7 @@
         </option>
         <option>
           <name>General Idata Stack Size</name>
-          <state>0x40</state>
+          <state>0xC0</state>
         </option>
         <option>
           <name>General Pdata Stack Size</name>
@@ -176,7 +176,7 @@
         </option>
         <option>
           <name>General Xdata Stack Size</name>
-          <state>0x1D0</state>
+          <state>0x300</state>
         </option>
         <option>
           <name>General Ext Stack Size</name>
@@ -184,15 +184,15 @@
         </option>
         <option>
           <name>General Xdata Heap Size</name>
-          <state>0xFF</state>
+          <state>0x00</state>
         </option>
         <option>
           <name>General Far Heap Size</name>
-          <state>0xFFF</state>
+          <state>0x000</state>
         </option>
         <option>
           <name>General Huge Heap Size</name>
-          <state>0xFFF</state>
+          <state>0x000</state>
         </option>
         <option>
           <name>CodeBankNrOfs</name>
@@ -824,11 +824,11 @@
         </option>
         <option>
           <name>XclOverride</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>XclFile</name>
-          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\lnk51ew_CC2530F256_banked.xcl</state>
+          <state>$PROJ_DIR$\..\..\platform\conectric\CC2530F256_banked.xcl</state>
         </option>
         <option>
           <name>XclFileSlave</name>
@@ -1613,6 +1613,9 @@
           <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma_intr.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\flash.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\gpio.c</name>
         </file>
         <file>
@@ -1677,6 +1680,9 @@
         <name>$PROJ_DIR$\..\..\cpu\cc253x\cc253x.h</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-logging.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>
       </file>
       <file>
@@ -1706,7 +1712,10 @@
       <group>
         <name>rime-router</name>
         <file>
-          <name>$PROJ_DIR$\..\..\examples\CONECTRIC\RIME-ROUTER\router.c</name>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-router\project-conf.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-router\router.c</name>
         </file>
       </group>
       <file>
@@ -1757,7 +1766,7 @@
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\adc-sensor.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\button-sensor.c</name>
+          <name>$PROJ_DIR$\..\..\platform\conectric\dev\button-sensor.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\conectric-sensors.c</name>
@@ -1782,7 +1791,7 @@
         </file>
       </group>
       <file>
-        <name>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</name>
+        <name>$PROJ_DIR$\..\..\platform\conectric\contiki-main.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\platform\conectric\debug.c</name>

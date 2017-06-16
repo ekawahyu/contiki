@@ -40,6 +40,7 @@
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "random.h"
+#include "flash-logging.h"
 
 #include "dev/button-sensor.h"
 #include "dev/serial-line.h"
@@ -51,16 +52,29 @@
 static uint16_t rank = 255;
 static linkaddr_t forward_addr = {{1, 0}};
 static linkaddr_t esender_addr = {{1, 0}};
+extern volatile uint16_t deep_sleep_requested;
+
+/* Flash Logging */
+static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+enum
+{
+  ROUTER_RESERVED = 0x00,    // reserved
+  ROUTER_SEND     = 0x01,    // send data event 
+};
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
 PROCESS(example_multihop_process, "ConMHop");
 PROCESS(serial_in_process, "SerialIn");
+PROCESS(flash_log_process, "Flash Log process");
 AUTOSTART_PROCESSES(
     &example_abc_process,
     &example_trickle_process,
     &example_multihop_process,
-    &serial_in_process);
+    &serial_in_process, 
+    &flash_log_process);
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv(struct abc_conn *c)
@@ -185,6 +199,13 @@ PROCESS_THREAD(example_abc_process, ev, data)
     message[0] = counter & 0xFF;
     message[1] = (counter & 0xFF00) >> 8;
 
+    // Log data that will be sent out over the air
+//    logData[0] = counter & 0xFF;
+//    logData[1] = (counter & 0xFF00) >> 8;
+//    logData[2] = 0x00;
+//    logData[3] = 0x00;
+//    flashlogging_write4(RIME_ROUTER_CMP_ID, ROUTER_SEND, logData);  
+    
     loop = 3;
     while(loop--) {
       /* Delay 1-2 seconds */
@@ -286,6 +307,25 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
     printf("Serial_RX: %s\n", (char*)data);
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(flash_log_process, ev, data)
+{
+  static struct etimer et;
+  
+  PROCESS_BEGIN();
+
+  flashlogging_init();
+  
+  while (1)
+  {
+    etimer_set(&et, LOGGING_REF_TIME_PD);  
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    
+    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
   }
 
   PROCESS_END();

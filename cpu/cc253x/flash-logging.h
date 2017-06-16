@@ -41,6 +41,7 @@ enum
   RIME_RHT_CMP_ID = 0x81,
   RIME_OC_CMP_ID = 0x82,
   RIME_SW_CMP_ID = 0x83,
+  RIME_ROUTER_CMP_ID = 0x83,
   
   /* 0xFF invalid */
   NOT_VALID = 0xFF
