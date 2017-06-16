@@ -37,6 +37,7 @@ enum
   
   /* 0x80-0x9F  examples */
   RIME_SUB_CMP_ID = 0x80,
+  RIME_RHT_CMP_ID = 0x81,
   /* 0xFF invalid */
   NOT_VALID = 0xFF
 };

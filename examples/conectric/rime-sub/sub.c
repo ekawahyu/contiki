@@ -56,13 +56,6 @@
 
 #define BUFSIZE 256
 
-/* Flash Logging */
-enum
-{
-  SUB_RESERVED = 0x00,    // reserved
-  SUB_SEND     = 0x01,    // send data event 
-};
-
 static uint8_t message[72];
 static uint8_t * pmessage = NULL;
 extern volatile uint16_t deep_sleep_requested;
@@ -70,6 +63,13 @@ static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 static int pos;
 static uint8_t submeter_data[BUFSIZE];
+
+/* Flash Logging */
+enum
+{
+  SUB_RESERVED = 0x00,    // reserved
+  SUB_SEND     = 0x01,    // send data event 
+};
 
 /*---------------------------------------------------------------------------*/
 PROCESS(sub_process, "Submeter");

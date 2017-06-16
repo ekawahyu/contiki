@@ -41,6 +41,7 @@
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "random.h"
+#include "flash-logging.h"
 
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
@@ -50,10 +51,19 @@
 
 static uint8_t message[40];
 extern volatile uint16_t deep_sleep_requested;
+static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+
+/* Flash Logging */
+enum
+{
+  RHT_RESERVED = 0x00,    // reserved
+  RHT_SEND     = 0x01,    // send data event 
+};
 
 /*---------------------------------------------------------------------------*/
 PROCESS(rht_abc_process, "RHT Sensor");
-AUTOSTART_PROCESSES(&rht_abc_process);
+PROCESS(flash_log_process, "Flash Log process");
+AUTOSTART_PROCESSES(&rht_abc_process, &flash_log_process);
 /*---------------------------------------------------------------------------*/
 static const struct abc_callbacks abc_call = {NULL};
 static struct abc_conn abc;
@@ -145,6 +155,13 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
     loop = CONECTRIC_BURST_NUMBER;
 
+    // Log data that was sent out over the air
+    logData[0] = (char)(humid >> 8);
+    logData[1] = (char)(humid & 0xFC);
+    logData[2] = (char)(temp >> 8);
+    logData[3] = (char)(temp & 0xFC);
+    flashlogging_write4(RIME_RHT_CMP_ID, RHT_SEND, logData);  
+
     while(loop--) {
       packetbuf_copyfrom(message, 11);
       NETSTACK_MAC.on();
@@ -161,6 +178,25 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   }
 
   SENSORS_DEACTIVATE(sht21_sensor);
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(flash_log_process, ev, data)
+{
+  static struct etimer et;
+  
+  PROCESS_BEGIN();
+
+  flashlogging_init();
+  
+  while (1)
+  {
+    etimer_set(&et, 1 * CLOCK_SECOND * 60);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    
+    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+  }
 
   PROCESS_END();
 }

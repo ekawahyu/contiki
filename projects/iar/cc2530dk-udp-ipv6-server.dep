@@ -6,6 +6,8 @@
   <configuration>
     <name>Release</name>
     <outputs>
+      <file>$PROJ_DIR$\..\..\core\net\rime\packetqueue.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\polite.c</file>
       <file>$PROJ_DIR$\..\..\core\dev\leds.c</file>
       <file>$PROJ_DIR$\..\..\core\dev\nullradio.c</file>
       <file>$PROJ_DIR$\..\..\core\lib\petsciiconv.c</file>
@@ -40,30 +42,54 @@
       <file>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6-nbr.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ipv6\sicslowpan.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ip\uip-split.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\ipv6\multicast\roll-tm.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\ipv6\multicast\uip-mcast6-stats.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\ipv6\multicast\smrf.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\ipv6\multicast\uip-mcast6-route.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ip\uip-nameserver.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ipv6\uip6.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\llsec\noncoresec\noncoresec.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ip\uiplib.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ipv6\uip-icmp6.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\contikimac\contikimac.c</file>
       <file>$PROJ_DIR$\..\..\core\net\llsec\nullsec.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\cxmac\cxmac.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\csma.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ip\uip-packetqueue.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\sicslowmac\sicslowmac.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ip\uip-udp-packet.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ipv6\uip-nd6.c</file>
       <file>$PROJ_DIR$\..\..\core\net\llsec\anti-replay.c</file>
       <file>$PROJ_DIR$\..\..\core\net\llsec\ccm-star-packetbuf.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6-route.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\nordc.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon-raw.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon-bitopt.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\framer-nullmac.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\abc.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\broadcast.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect-neighbor.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\mac.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\broadcast-announcement.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\mac-sequence.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\nullmac.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\phase.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\channel.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\mesh.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\framer-802154.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\multihop.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\nullrdc.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\frame802154e-ie.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\announcement.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect-link-estimate.c</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\frame802154.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\netflood.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\neighbor-discovery.c</file>
       <file>$PROJ_DIR$\Release\Obj\uart-intr.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\nullrdc-noframer.r51</file>
       <file>$PROJ_DIR$\Release\Obj\me.r51</file>
@@ -174,18 +200,31 @@
       <file>$PROJ_DIR$\Release\Obj\putchar.r51</file>
       <file>$PROJ_DIR$\..\..\core\contiki-default-conf.h</file>
       <file>$PROJ_DIR$\Release\Obj\timer.__cstat.et</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rucb.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rudolph1.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\timesynch.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-dag-root.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-nbr-policy.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rmh.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\trickle.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\route-discovery.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\stbroadcast.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\route.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\unicast.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-dag.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\runicast.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\stunicast.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-mrhof.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-timers.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-ns.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl.c</file>
       <file>$PROJ_DIR$\..\..\core\net\linkaddr.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rime.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-of0.c</file>
       <file>$PROJ_DIR$\..\..\core\net\link-stats.c</file>
       <file>$PROJ_DIR$\..\..\core\net\nbr-table.c</file>
       <file>$PROJ_DIR$\..\..\core\net\net-debug.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rudolph2.c</file>
       <file>$PROJ_DIR$\..\..\core\net\packetbuf.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\rimestats.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rpl\rpl-icmp6.c</file>
@@ -201,6 +240,7 @@
       <file>$PROJ_DIR$\..\..\core\sys\rtimer.c</file>
       <file>$PROJ_DIR$\..\..\core\sys\mt.c</file>
       <file>$PROJ_DIR$\..\..\core\sys\process.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\spi1.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart0.c</file>
       <file>$PROJ_DIR$\..\..\core\sys\energest.c</file>
       <file>$PROJ_DIR$\..\..\core\sys\autostart.c</file>
@@ -209,21 +249,38 @@
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart1.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\random.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\watchdog.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\usb\usb-arch.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\usb\common\cdc-acm\cdc-acm.c</file>
       <file>$PROJ_DIR$\..\..\core\sys\stimer.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\usb\cdc-acm-descriptors.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\usb\common\usb-core.c</file>
       <file>$PROJ_DIR$\..\..\core\sys\etimer.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\clock.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\gpio.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\spi.c</file>
       <file>$PROJ_DIR$\..\..\core\sys\ctimer.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\8051def.h</file>
+      <file>$PROJ_DIR$\..\..\examples\cc2530dk\blink-hello.c</file>
+      <file>$PROJ_DIR$\..\..\examples\cc2530dk\border-router\border-router.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\stack.c</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\cc253x-SDCC.h</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\soc.c</file>
       <file>$PROJ_DIR$\..\..\platform\cc2530dk\dev\adc-sensor.c</file>
+      <file>$PROJ_DIR$\..\..\dev\lsm330dlc\lsm330dlc-sensor.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ipv6\uip-nd6.h</file>
       <file>$PROJ_DIR$\..\..\platform\cc2530dk\dev\leds-arch.c</file>
       <file>$PROJ_DIR$\..\..\examples\cc2530dk\udp-ipv6\server.c</file>
+      <file>$PROJ_DIR$\..\..\examples\cc2530dk\udp-ipv6\client.c</file>
+      <file>$PROJ_DIR$\..\..\examples\cc2530dk\border-router\slip-bridge.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</file>
+      <file>$PROJ_DIR$\..\..\examples\cc2530dk\timer-test.c</file>
       <file>$PROJ_DIR$\..\..\examples\cc2530dk\udp-ipv6\ping6.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\cc253x.h</file>
+      <file>$PROJ_DIR$\..\..\dev\ad7689\ad7689-sensor.c</file>
+      <file>$PROJ_DIR$\..\..\examples\cc2530dk\hello-world.c</file>
+      <file>$PROJ_DIR$\..\..\examples\cc2530dk\sensors-demo.c</file>
       <file>$PROJ_DIR$\..\..\platform\cc2530dk\dev\button-sensor.c</file>
       <file>$PROJ_DIR$\..\..\platform\cc2530dk\dev\slip-arch.c</file>
       <file>$PROJ_DIR$\..\..\platform\cc2530dk\debug.c</file>
@@ -338,6 +395,7 @@
       <file>$PROJ_DIR$\Release\Obj\usb-serial.r51</file>
       <file>$TOOLKIT_DIR$\inc\dlib\c\xlocale.h</file>
       <file>$PROJ_DIR$\Release\Obj\me.pbi</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\polite-announcement.c</file>
       <file>$PROJ_DIR$\..\..\core\net\ip\udp-socket.h</file>
       <file>$PROJ_DIR$\Release\Obj\slip.r51</file>
       <file>$PROJ_DIR$\Release\Obj\mac-sequence.pbi</file>
@@ -662,21 +720,21 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 121</file>
+          <file> 147</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 375</file>
+          <file> 433</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 531</file>
+          <file> 589</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 364 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 412 433 402 87 217 90</file>
+          <file> 422 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 470 491 460 113 271 116</file>
         </tool>
       </inputs>
     </file>
@@ -685,21 +743,21 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 464</file>
+          <file> 522</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 540</file>
+          <file> 598</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 346</file>
+          <file> 404</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 240 493 133 97 247 115 597 107 535 462 327</file>
+          <file> 297 551 159 123 304 141 655 133 593 520 384</file>
         </tool>
       </inputs>
     </file>
@@ -708,15 +766,15 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 117</file>
+          <file> 143</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 555</file>
+          <file> 613</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 580</file>
+          <file> 638</file>
         </tool>
       </outputs>
     </file>
@@ -725,25 +783,25 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 372</file>
+          <file> 430</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 248</file>
+          <file> 305</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 581</file>
+          <file> 639</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 570 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 262 455 258 543 648 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 313 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626</file>
+          <file> 494 123 304 141 655 133 593 520 384 628 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 319 513 315 601 706 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 370 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 535 97 514 397 315 412 507 106 327 166 209 463 610 480 129 639 107 556 247 557 402 455 126 313 562 547 526 116 626 596 408 628 597 291 256 436 293 636 589 482 495 255 543 488 627 550 332 148 288 294 449 398 424 570 115 462 262 598 615 345 433 62 366 87 217 90 258 648 236 239 281 612 128 481 501 321 493 267 151 344 118 617 572 460 474 212 112 96 133 644 70 163 469 478 338 80 250 103 271 404 421 461</file>
+          <file> 593 123 572 455 372 470 565 132 384 192 255 521 668 538 155 697 133 614 304 615 460 513 152 370 620 605 584 142 684 654 466 686 655 348 313 494 350 694 647 540 553 312 601 546 685 608 390 174 345 351 507 456 482 628 141 520 319 656 673 403 491 88 424 113 271 116 315 706 293 296 338 670 154 539 559 378 551 324 177 402 144 675 630 518 532 263 138 122 159 702 96 189 527 536 396 106 307 129 328 462 479 519</file>
         </tool>
       </inputs>
     </file>
@@ -752,21 +810,21 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 105</file>
+          <file> 131</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 328</file>
+          <file> 385</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 423</file>
+          <file> 481</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 507 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 480 610 313 627 463 648 523 595 81 330 307 309 302 298 409 471 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112</file>
+          <file> 565 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 538 668 370 685 521 706 581 653 107 387 364 366 359 355 467 529 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138</file>
         </tool>
       </inputs>
     </file>
@@ -775,21 +833,21 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 575</file>
+          <file> 633</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 576</file>
+          <file> 634</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 336</file>
+          <file> 394</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 74</file>
+          <file> 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 100</file>
         </tool>
       </inputs>
     </file>
@@ -798,21 +856,21 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 599</file>
+          <file> 657</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 156</file>
+          <file> 182</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 434</file>
+          <file> 492</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 455</file>
+          <file> 513</file>
         </tool>
       </inputs>
     </file>
@@ -821,21 +879,21 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 323</file>
+          <file> 380</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 587</file>
+          <file> 645</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 65</file>
+          <file> 91</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 287 514 596 628 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 151 639 271 129 482 598 412 495 615 62 366 404 398 421 106 644 70 480 610 507 562 291 166 256 402 87 217 90 315 345 433 424 617 572 408 344 103 461 455 449 258 163 116 460 338 474 288 469 478 118 294 80 250 267 493 133 626 523 595</file>
+          <file> 344 572 654 686 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 177 697 328 155 540 656 470 553 673 88 424 462 456 479 132 702 96 538 668 565 620 348 192 313 460 113 271 116 372 403 491 482 675 630 466 402 129 519 513 507 315 189 142 518 396 532 345 527 536 144 351 106 307 324 551 159 684 581 653</file>
         </tool>
       </inputs>
     </file>
@@ -844,714 +902,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 275</file>
+          <file> 332</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 322</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 290</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 258</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\dev\serial-line.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 414</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 69</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 569</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 78 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 254</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\tcp-socket.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 68</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 512</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 280</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\me.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 60</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 229</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 331</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 75</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ccm-star.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 320</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 584</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 603</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 149 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 509</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\mmem.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 226</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 422</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 586</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 543 455 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\sensors.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 84</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 551</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 608</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 384</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\aes-128.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 468</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 361</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 99</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 509 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\ip64-addr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 340</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 357</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 355</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 143 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 523 595</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 166 436 97 597 247 315 255 217 507 589 535 107 557 129 366 495 87 523 480 610 209 556 293 636 115 462 327 562 291 256 402 412 615 62 598 90 143 482 345 433 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ringbuf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 295</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 289</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 538</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 254 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ifft.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 388</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 494</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 353</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 135 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\simple-udp.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 444</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 381</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 447</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 397 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\tcpip.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 297</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 476</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 318</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 397 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 316 304 492 283 230 539 367 577 533 88 269 225 573 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\trickle-timer.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 431</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 157</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 420</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 489 129 482 598 412 495 615 62 366 648</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\dhcpc.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 591</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 515</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 376</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 523 97 247 115 597 107 535 462 327 595 436 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 564</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 116 639 598 255 96 366 480 526 543 97 115 247 433 495 612 562 626 564 615 236 106 596 644 617 398 129 408 421 327 462 482 345 589 62 402 281 128 507 212 148 628 133 288 294 449 404 436 397 595 535 597 107 291 166 256 315 412 209 556 293 636 557 239 570 481 112 267 70 455 151 344 118 271 461 460 474 163 523 87 217 90 488 126 627 463 550 313 332 514 610 501 321 547 493 262 258 648 469 478 338 80 250 103 424 572</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ringbufindex.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 374</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 429</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 246</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 548 255 209 636 589 557 556 293</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\crc16.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 285</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 452</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 337</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\dev\slip.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 333</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 498</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 98</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 523 97 247 115 597 107 535 462 327 595 436 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 480 610 507 488 552</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\gcr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 373</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 646</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 300</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\udp-socket.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 158</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 242</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 400</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 397 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\settings.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 325</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 620</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 609</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 467 625</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\assert.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 451</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 413</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 279</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 523 97 247 115 597 107 535 462 327 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\me_tabs.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 224</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 161</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 378</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6-nbr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 64</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 130</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 583</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 302 133 455 137 628 255 209 636 589 557 556 293 106 644 70 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 424 112 526 481 321 267 493 547 96 148 612 212 501 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ipv6\sicslowpan.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 419</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 445</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 574</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 261 137 628 507 480 610 612 148 212 501 526 481 321 267 493 133 547 644 70 96 455 112 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 258 163 116 460 338 474 288 469 478 118 294 80 250 626 487 523 595 506 146</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\uip-split.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 94</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 560</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 622</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 316 480 610 255 209 636 589 557 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 488 319</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 310</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 274</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 63</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 302 133 648 212 480 610 255 209 636 589 557 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 148 612 501 526 628 481 321 267 493 547 644 70 96 455 112 367 577 533 88 269 225 573 304 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\uip-nameserver.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 314</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 141</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 104</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip6.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 354</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 590</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 160</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 589 255 209 636 97 247 115 597 107 535 462 436 327 556 293 557 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 319 550 212 148 612 501 526 628 481 321 267 493 133 547 644 70 96 455 112 367 577 533 88 269 225 573 492 283 230 539 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\uiplib.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 382</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 635</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 147</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 239 506 146 628 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-icmp6.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 71</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 513</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 282</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 612 480 610 255 209 636 589 557 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 550 492 283</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\llsec\nullsec.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 272</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 308</file>
+          <file> 379</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -1561,269 +916,673 @@
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 484 321 267 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 493 133 70 628 481 547 644 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 96 106 424</file>
+          <file> 494 123 304 141 655 133 593 520 384 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 315</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\csma.c</name>
+      <name>$PROJ_DIR$\..\..\core\dev\serial-line.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 633</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
           <file> 472</file>
         </tool>
         <tool>
+          <name>__cstat</name>
+          <file> 95</file>
+        </tool>
+        <tool>
           <name>BICOMP</name>
-          <file> 585</file>
+          <file> 627</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 276 267 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 493 133 106 628 644 70 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 424 408 648 481 321 547 96 455 258 523 595</file>
+          <file> 104 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 311</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\uip-packetqueue.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\ip\tcp-socket.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
+          <file> 94</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 570</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 337</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\me.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 86</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
           <file> 286</file>
         </tool>
         <tool>
-          <name>__cstat</name>
-          <file> 238</file>
-        </tool>
-        <tool>
           <name>BICOMP</name>
-          <file> 503</file>
+          <file> 388</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 523 97 247 115 597 107 535 462 327 595 480 610 255 209 636 589 557 436 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 258 304</file>
+          <file> 101</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\ip\uip-udp-packet.c</name>
+      <name>$PROJ_DIR$\..\..\core\lib\ccm-star.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 530</file>
+          <file> 377</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 443</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 113</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 627 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 367 577 533 88 269 225 573</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-nd6.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 61</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 385</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 601</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 550 480 610 255 209 636 589 557 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 212 148 612 501 526 628 481 321 267 493 133 547 644 70 96 455 112 463 648 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\llsec\anti-replay.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 89</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 578</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 359</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 632 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 106 628 644 70 480 610 507 424</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\llsec\ccm-star-packetbuf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 430</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 528</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 390</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 284 149 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 628 106 644 70 480 610 507 424</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6-route.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 546</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 418</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 292</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 612 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 258 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nordc.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
           <file> 642</file>
         </tool>
         <tool>
-          <name>__cstat</name>
-          <file> 619</file>
-        </tool>
-        <tool>
           <name>BICOMP</name>
-          <file> 86</file>
+          <file> 661</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 547 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 267 493 133 644 70 628 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 481 321 96</file>
+          <file> 175 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 567</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\framer-nullmac.c</name>
+      <name>$PROJ_DIR$\..\..\core\lib\mmem.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 317</file>
+          <file> 283</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 629</file>
+          <file> 480</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 456</file>
+          <file> 644</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 152 96 106 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 628 644 70 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 424</file>
+          <file> 601 513 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\mac.c</name>
+      <name>$PROJ_DIR$\..\..\core\lib\sensors.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 518</file>
+          <file> 110</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 362</file>
+          <file> 609</file>
         </tool>
         <tool>
           <name>BICOMP</name>
+          <file> 666</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 442</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\aes-128.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 526</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 419</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 125</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 567 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\ip64-addr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 398</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 415</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 413</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 169 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 581 653</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 192 494 123 655 304 372 312 271 565 647 593 133 615 155 424 553 113 581 538 668 255 614 350 694 141 520 384 620 348 313 460 470 673 88 656 116 169 540 403 491 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\ringbuf.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 352</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 346</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 596</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 311 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\ifft.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 446</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 552</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 411</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 161 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\simple-udp.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 502</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 439</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 505</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 455 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\tcpip.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 354</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
           <file> 534</file>
         </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 375</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 267 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 493 133</file>
+          <file> 455 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 373 361 550 340 287 597 425 635 591 114 326 282 631 564 172 581 653</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\mac-sequence.c</name>
+      <name>$PROJ_DIR$\..\..\core\lib\trickle-timer.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 265</file>
+          <file> 489</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 92</file>
+          <file> 183</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 334</file>
+          <file> 478</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 397 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 438</file>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 547 155 540 656 470 553 673 88 424 706</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nullmac.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\ip\dhcpc.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 483</file>
+          <file> 649</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 573</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 434</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 581 123 304 141 655 133 593 520 384 653 494 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 622</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 142 697 656 312 122 424 538 584 601 123 141 304 491 553 670 620 684 622 673 293 132 654 702 675 456 155 466 479 384 520 540 403 647 88 460 338 154 565 263 174 686 159 345 351 507 462 494 455 653 593 655 133 348 192 313 372 470 255 614 350 694 615 296 628 539 138 324 96 513 177 402 144 328 519 518 532 189 581 113 271 116 546 152 685 521 608 370 390 572 668 559 378 605 551 319 315 706 527 536 396 106 307 129 482 630</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\ringbufindex.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 432</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 487</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 303</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 606 312 255 694 647 615 614 350</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\crc16.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 342</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 510</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 395</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\dev\slip.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 391</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 556</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 124</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 581 123 304 141 655 133 593 520 384 653 494 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 538 668 565 546 610</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\gcr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 431</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 704</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 357</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\udp-socket.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 184</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 299</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 458</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 455 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\settings.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 382</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 678</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 667</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 525 683</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\assert.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 509</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 471</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 336</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 581 123 304 141 655 133 593 520 384 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\me_tabs.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 281</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 187</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 436</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6-nbr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 90</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 156</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 641</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 359 159 513 163 686 312 255 694 647 615 614 350 132 702 96 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 482 138 584 539 378 324 551 605 122 174 670 263 559 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ipv6\sicslowpan.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 477</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 503</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 632</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 318 163 686 565 538 668 670 174 263 559 584 539 378 324 551 159 605 702 96 122 513 138 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 315 189 142 518 396 532 345 527 536 144 351 106 307 684 545 581 653 564 172</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\uip-split.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 120</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 618</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 680</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 373 538 668 312 255 694 647 615 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 546 376</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 367</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 331</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 89</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 359 159 706 263 538 668 312 255 694 647 615 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 174 670 559 584 686 539 378 324 551 605 702 96 122 513 138 425 635 591 114 326 282 631 361 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\uip-nameserver.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 371</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 167</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 130</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip6.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 412</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 648</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 186</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 647 312 255 694 123 304 141 655 133 593 520 494 384 614 350 615 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 376 608 263 174 670 559 584 686 539 378 324 551 159 605 702 96 122 513 138 425 635 591 114 326 282 631 550 340 287 597 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\uiplib.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 440</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 693</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 173</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 296 564 172 686 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-icmp6.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 97</file>
         </tool>
         <tool>
           <name>__cstat</name>
@@ -1837,388 +1596,20 @@
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 641 267 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 493 133 481 321 547 644 70 628 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 96 106 424</file>
+          <file> 494 123 304 141 655 133 593 520 384 670 538 668 312 255 694 647 615 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 608 550 340</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\phase.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\llsec\nullsec.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 348</file>
+          <file> 329</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 582</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 522</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 306 628 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 598 412 402 87 217 90 455 258 481 321 267 493 133 547 644 70 480 610 507 562 291 166 495 615 62 366 256 129 482 315 345 433 96 106 424 408 526</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\framer-802154.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 370</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 465</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 500</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 100 96 70 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 628 644 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 106 424 648</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 594</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 616</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 567</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 438 93 547 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 267 493 133 644 70 628 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 106 424 408 481 321 96 478 261</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154e-ie.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 312</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 356</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 268</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 138 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 473 628 358 424 146 480 610 507 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 59</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 273</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 516</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 504 547 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 267 493 133 644 70 628 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 106 424 408 481 321 96</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 83</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 558</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 139</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 589 255 209 636 97 247 115 597 107 535 462 436 327 556 293 557 70 628 644 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-dag-root.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 154</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 393</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 466</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 492 283 230 539 367 577 533 88 269 225 573 519 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-nbr-policy.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 145</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 79</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 237</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 230 492 283 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 455 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 539 367 577 533 88 269 225 573 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-dag.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 391</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 568</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 605</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 137 628 230 492 283 455 480 610 507 612 148 212 501 526 481 321 267 493 133 547 644 70 96 112 539 367 577 533 88 269 225 573 258 602 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-mrhof.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 427</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 470</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 486</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 492 283 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 455 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 230 539 367 577 533 88 269 225 573 137 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-timers.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 614</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 249</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 505</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 230 492 283 455 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 539 367 577 533 88 269 225 573 137 648 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-ns.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 606</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 95</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 371</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 283 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 550 230 492 539 367 577 533 88 269 225 573 258</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 228</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 403</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 91</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 550 230 492 283 539 367 577 533 88 269 225 573 506 146 523 595 602</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\linkaddr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 66</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 425</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 257</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 628 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-of0.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 368</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 351</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 623</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 492 283 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 455 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 230 539 367 577 533 88 269 225 573 137 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\link-stats.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 645</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 630</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 496</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 106 628 644 70 480 610 507 424 526 481 321 267 493 133 547 96 137 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\nbr-table.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 510</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 450</file>
+          <file> 365</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -2228,641 +1619,227 @@
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 133 258 455 526 628 481 321 267 493 547 644 70 480 610 507 96</file>
+          <file> 542 378 324 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 551 159 96 686 539 605 702 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 122 132 482</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\net-debug.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\csma.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 164</file>
+          <file> 691</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 296</file>
+          <file> 530</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 140</file>
+          <file> 643</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 146 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 628 523 595</file>
+          <file> 333 324 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 551 159 132 686 702 96 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 482 466 706 539 378 605 122 513 315 581 653</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\packetbuf.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\ip\uip-packetqueue.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 102</file>
+          <file> 343</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 537</file>
+          <file> 295</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 251</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 436 97 247 115 597 107 535 462 327 397 562 291 255 209 636 589 557 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\rimestats.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 440</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 638</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 607</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 478</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-icmp6.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 439</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 72</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 647</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 507 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 480 610 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 550 230 492 283 539 367 577 533 88 269 225 573 106 424 648 602 506 146 523 595</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\netstack.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 380</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 553</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 479</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 481 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 321 267 493 133 547 644 70 628 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 96</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\arg.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
           <file> 561</file>
         </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 581 123 304 141 655 133 593 520 384 653 538 668 312 255 694 647 615 494 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 315 361</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\ip\uip-udp-packet.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 588</file>
+        </tool>
         <tool>
           <name>__cstat</name>
-          <file> 377</file>
+          <file> 501</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 76</file>
+          <file> 139</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 243</file>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 685 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 425 635 591 114 326 282 631</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\queuebuf.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-nd6.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 649</file>
+          <file> 87</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 491</file>
+          <file> 443</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 454</file>
+          <file> 659</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 397 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 313 570 262 258 543 648 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626</file>
+          <file> 494 123 304 141 655 133 593 520 384 608 538 668 312 255 694 647 615 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 263 174 670 559 584 686 539 378 324 551 159 605 702 96 122 513 138 521 706 564 172 581 653</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-ext-header.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\llsec\anti-replay.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 490</file>
+          <file> 115</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 153</file>
+          <file> 636</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 109</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 455 112 230 492 283 539 367 577 533 88 269 225 573 106 424 506 146 523 595 602</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\compower.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 253</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 401</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 544</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 433 402 87 217 90 631 106 628 644 70 480 610 507 562 291 166 495 615 62 366 256 598 412 129 482 315 345 424</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\timer.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 621</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 167</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 432</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 412 598</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\cc2530-rf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 524</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 545</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 475</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 493 133 162 305 106 628 644 70 480 610 507 424 478 481 321 267 547 96</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2-intr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 349</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 565</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 341</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 217 90 350 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 315 345 433</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\procinit.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 244</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 389</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 82</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\rtimer.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 365</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 386</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 618</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 402 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 87 217 90 562 291 166 495 615 62 366 256 598 412 129 482 315 345 433</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\mt.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 396</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 245</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 611</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 549 343</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\process.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 352</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 497</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 637</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 523 97 247 115 597 107 535 462 327 595 495 615 62 366 589 255 209 636 436 556 293 557 243</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart0.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 395</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 640</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 136</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 302 97 247 115 597 107 535 462 327 436 217 90 305 437 255 209 636 589 557 556 293 441</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\energest.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 394</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 342</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 132</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 433 402 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 87 217 90</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\sys\autostart.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 499</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 77</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 123</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 256 495 615 62 366 589 255 209 636 97 247 115 597 107 535 462 436 327 556 293 557</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma_intr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 541</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 108</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 101</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 523 97 247 115 597 107 535 462 327 595 562 291 255 209 636 589 557 436 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 326 305</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart-intr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 127</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 120</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 58</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 217 90 437 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 441 324 433 402 87</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart1.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 442</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 542</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 517</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 302 97 247 115 597 107 535 462 327 436 217 90 305 324 255 209 636 589 557 556 293 441</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\random.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 144</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 508</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 299</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 217 90 305 162 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 315 345 433 493 133</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\watchdog.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 119</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
           <file> 417</file>
         </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 690 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 132 686 702 96 538 668 565 482</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\llsec\ccm-star-packetbuf.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 488</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 586</file>
+        </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 252</file>
+          <file> 448</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 217 90 305 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293</file>
+          <file> 341 175 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 686 132 702 96 538 668 565 482</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\sys\stimer.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\ipv6\uip-ds6-route.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 457</file>
+          <file> 604</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 122</file>
+          <file> 476</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 485</file>
+          <file> 349</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 412 148</file>
+          <file> 670 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 315 564 172 581 653</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nordc.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 406</file>
+          <file> 700</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 369</file>
+          <file> 677</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 363</file>
+          <file> 112</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 217 90 350 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 315 345 433</file>
+          <file> 605 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 324 551 159 702 96 686 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 539 378 122</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\sys\etimer.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\framer-nullmac.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 311</file>
+          <file> 374</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 360</file>
+          <file> 687</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 134</file>
+          <file> 514</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 482 598 412 495 615 62 366</file>
+          <file> 178 122 132 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 686 702 96 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 482</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\mac.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 221</file>
+          <file> 576</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 588</file>
+          <file> 420</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -2872,89 +1849,296 @@
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 326 305</file>
+          <file> 324 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 551 159</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\clock.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\mac-sequence.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 604</file>
+          <file> 322</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 277</file>
+          <file> 118</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 511</file>
+          <file> 392</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 305 412 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 482 598 495 615 62 366 217 90 433 402 87</file>
+          <file> 494 123 304 141 655 133 593 520 384 455 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 496</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\sys\ctimer.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nullmac.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 634</file>
+          <file> 541</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 407</file>
+          <file> 629</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 142</file>
+          <file> 397</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 129 482 598 412 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 495 615 62 366 562 291 166 256 402 87 217 90 315 345 433 455</file>
+          <file> 699 324 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 551 159 539 378 605 702 96 686 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 122 132 482</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\soc.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\phase.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 529</file>
+          <file> 406</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 435</file>
+          <file> 640</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 536</file>
+          <file> 580</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 217 90 209 636 97 247 115 597 107 535 462 305</file>
+          <file> 363 686 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 656 470 460 113 271 116 513 315 539 378 324 551 159 605 702 96 538 668 565 620 348 192 553 673 88 424 313 155 540 372 403 491 122 132 482 466 584</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\adc-sensor.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\mac\framer-802154.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 150</file>
+          <file> 428</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 270</file>
+          <file> 523</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 558</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 126 122 96 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 686 702 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 132 482 706</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 652</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 674</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 625</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 496 119 605 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 324 551 159 702 96 686 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 132 482 466 539 378 122 536 318</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154e-ie.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 369</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 414</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 325</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 164 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 531 686 416 482 172 538 668 565 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 85</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 330</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 574</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 562 605 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 324 551 159 702 96 686 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 132 482 466 539 378 122</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 109</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 616</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 165</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 647 312 255 694 123 304 141 655 133 593 520 494 384 614 350 615 96 686 702 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-dag-root.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 180</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 451</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 524</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 550 340 287 597 425 635 591 114 326 282 631 577 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-nbr-policy.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 171</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 105</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 294</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 287 550 340 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 513 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 597 425 635 591 114 326 282 631 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-dag.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 449</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 626</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 663</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 163 686 287 550 340 513 538 668 565 670 174 263 559 584 539 378 324 551 159 605 702 96 122 138 597 425 635 591 114 326 282 631 315 660 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-mrhof.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 485</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 528</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 544</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 550 340 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 513 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 287 597 425 635 591 114 326 282 631 163 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-timers.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 672</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 306</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -2964,208 +2148,112 @@
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 305 217 90 477 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 384 562 291 166 495 615 62 366 256 598 412 129 482 402 87 315 345 433</file>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 287 550 340 513 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 597 425 635 591 114 326 282 631 163 706 564 172 581 653</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\leds-arch.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-ns.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 392</file>
+          <file> 664</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 521</file>
+          <file> 121</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 303</file>
+          <file> 429</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 364 411 428 217 90 305</file>
+          <file> 340 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 608 287 550 597 425 635 591 114 326 282 631 315</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\examples\cc2530dk\udp-ipv6\server.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 263</file>
+          <file> 285</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 155</file>
+          <file> 461</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 73</file>
+          <file> 117</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 262 455 258 543 648 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 313 570 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 506 146 523 595 261 364 492 283 301 384 260 324 441</file>
+          <file> 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 608 287 550 340 597 425 635 591 114 326 282 631 564 172 581 653 660</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\linkaddr.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 223</file>
+          <file> 92</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 527</file>
+          <file> 483</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 264</file>
+          <file> 314</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 402 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 87 217 90 305 433 260 324 441 523 595</file>
+          <file> 686 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\examples\cc2530dk\udp-ipv6\ping6.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-of0.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 458</file>
+          <file> 426</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 559</file>
+          <file> 409</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 525</file>
+          <file> 681</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 262 455 258 543 648 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 313 570 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 523 595 301 384 260 324 441 506 146</file>
+          <file> 550 340 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 513 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 287 597 425 635 591 114 326 282 631 163 564 172 581 653</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\button-sensor.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\link-stats.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 159</file>
+          <file> 703</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 613</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 415</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 428 217 90 305 301 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 384 562 291 166 495 615 62 366 256 598 412 129 482 402 87 315 345 433 261</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\slip-arch.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 67</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 600</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 579</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 552 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 410 437 441</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\debug.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 387</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 241</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 278</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 209 636 97 247 115 597 107 535 462 260 324 255 589 557 436 327 556 293 217 90 441</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\smartrf-sensors.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 259</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 624</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 131</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 301 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 384 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 477</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 636 247 327 402 436 291 412 293 256 255 209 556 115 462 557 97 562 166 129 315 615 366 384 589 535 597 107 495 598 482 345 217 301 62 87 90 477 433</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\uip-debug.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 379</file>
-        </tool>
-        <tool>
-          <name>__cstat</name>
-          <file> 416</file>
+          <file> 688</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -3175,39 +2263,545 @@
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 506 146 480 610 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 507 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 628 523 595 260 324 441</file>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 132 686 702 96 538 668 565 482 584 539 378 324 551 159 605 122 163 581 653</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\putchar.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\nbr-table.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 165</file>
+          <file> 568</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 85</file>
+          <file> 508</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 111</file>
+          <file> 463</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 410 562 291 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 437 441</file>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 159 315 513 584 686 539 378 324 551 605 702 96 538 668 565 122</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\contiki-main.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\net-debug.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 110</file>
+          <file> 190</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 353</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 166</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 172 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 686 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\packetbuf.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 128</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 595</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 308</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 494 123 304 141 655 133 593 520 384 455 620 348 312 255 694 647 615 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\rimestats.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 498</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 696</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 665</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 536</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-icmp6.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 497</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 98</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 705</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 565 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 538 668 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 608 287 550 340 597 425 635 591 114 326 282 631 132 482 706 660 564 172 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\netstack.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 438</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 611</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 537</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 539 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 378 324 551 159 605 702 96 686 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 122</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\arg.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 619</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 435</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 102</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 300</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\queuebuf.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 707</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 549</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 512</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 455 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 370 628 319 315 601 706 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rpl\rpl-ext-header.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 548</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 179</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 135</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 513 138 287 550 340 597 425 635 591 114 326 282 631 132 482 564 172 581 653 660</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\compower.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 310</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 459</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 602</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 491 460 113 271 116 689 132 686 702 96 538 668 565 620 348 192 553 673 88 424 313 656 470 155 540 372 403 482</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\timer.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 679</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 193</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 490</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 470 656</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\cc2530-rf.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 582</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 603</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 533</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 551 159 188 362 132 686 702 96 538 668 565 482 536 539 378 324 605 122</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2-intr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 407</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 623</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 399</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 271 116 408 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 372 403 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\procinit.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 301</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 447</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 108</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\rtimer.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 423</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 444</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 676</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 460 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 113 271 116 620 348 192 553 673 88 424 313 656 470 155 540 372 403 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\mt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 454</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 302</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 669</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 607 401</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\process.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 410</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 555</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 695</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 581 123 304 141 655 133 593 520 384 653 553 673 88 424 647 312 255 694 494 614 350 615 300</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart0.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 453</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 698</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 162</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 359 123 304 141 655 133 593 520 384 494 271 116 362 495 312 255 694 647 615 614 350 499</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\energest.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 452</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 400</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 158</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 491 460 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 113 271 116</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\autostart.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 557</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 103</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 149</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 313 553 673 88 424 647 312 255 694 123 304 141 655 133 593 520 494 384 614 350 615</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma_intr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 599</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 134</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 127</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 581 123 304 141 655 133 593 520 384 653 620 348 312 255 694 647 615 494 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 383 362</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart-intr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 153</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 146</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 84</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 271 116 495 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 499 381 491 460 113</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart1.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 500</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 600</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 575</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 359 123 304 141 655 133 593 520 384 494 271 116 362 381 312 255 694 647 615 614 350 499</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\random.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 170</file>
         </tool>
         <tool>
           <name>__cstat</name>
@@ -3215,53 +2809,371 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 124</file>
+          <file> 356</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 114 383 78 552 364 410 437 441 326 305 162 493 133 261 399 350 459 301 384 477 411 428 514 596 628 151 639 271 404 398 421 106 644 70 480 610 507 424 617 572 408 344 103 461 455 449 258 163 116 460 338 474 288 469 478 118 294 80 250 267 626 481 321 547 96 260 324 262 543 648 397 488 236 126 239 627 281 463 550 612 148 212 501 526 112 313 570 332 128</file>
+          <file> 271 116 362 188 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 372 403 491 551 159</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\usb-serial.c</name>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\watchdog.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 329</file>
+          <file> 145</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 520</file>
+          <file> 475</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 502</file>
+          <file> 309</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 446 426 453 125 448</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 97 462 412 482 115 125 495 345 589 446 255 598 615 433 247 366 426 448 291 166 256 129 402 315 209 436 556 293 636 535 597 107 217 453 562 557 327 62 87 90</file>
+          <file> 271 116 362 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\platform\cc2530dk\viztool.c</name>
+      <name>$PROJ_DIR$\..\..\core\sys\stimer.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 643</file>
+          <file> 515</file>
         </tool>
         <tool>
           <name>__cstat</name>
-          <file> 266</file>
+          <file> 148</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 543</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 470 174</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 464</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 427</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 421</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 271 116 408 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 372 403 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\etimer.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 368</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 418</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 160</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 540 656 470 553 673 88 424</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 278</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 646</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 650</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 383 362</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\clock.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 662</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 334</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 569</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 362 470 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 540 656 553 673 88 424 271 116 491 460 113</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\sys\ctimer.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 692</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 465</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 168</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 155 540 656 470 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 553 673 88 424 620 348 192 313 460 113 271 116 372 403 491 513</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\soc.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 587</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 493</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 594</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 271 116 255 694 123 304 141 655 133 593 520 362</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\adc-sensor.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 176</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 327</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 621</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 362 271 116 535 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 442 620 348 192 553 673 88 424 313 656 470 155 540 460 113 372 403 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\leds-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 450</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 579</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 360</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 422 469 486 271 116 362</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\examples\cc2530dk\udp-ipv6\server.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 320</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 181</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 99</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 319 513 315 601 706 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 370 628 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 564 172 581 653 318 422 550 340 358 442 317 381 499</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 280</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 585</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 321</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 460 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 113 271 116 362 491 317 381 499 581 653</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\examples\cc2530dk\udp-ipv6\ping6.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 516</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 617</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 583</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 319 513 315 601 706 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 370 628 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 581 653 358 442 317 381 499 564 172</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\button-sensor.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 185</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 671</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 473</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 486 271 116 362 358 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 442 620 348 192 553 673 88 424 313 656 470 155 540 460 113 372 403 491 318</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\slip-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 93</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 658</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 637</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 610 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 468 495 499</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\debug.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 445</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 298</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -3271,7 +3183,153 @@
       <inputs>
         <tool>
           <name>ICC8051</name>
-          <file> 562 291 255 209 636 97 247 115 597 107 535 462 589 557 436 327 556 293 166 495 615 62 366 256 598 412 129 482 402 87 217 90 315 345 433 262 455 258 543 648 397 507 480 610 488 236 126 239 627 281 463 550 612 148 212 501 526 628 481 321 267 493 133 547 644 70 96 112 313 570 332 128 514 596 151 639 271 404 398 421 106 424 617 572 408 344 103 461 449 163 116 460 338 474 288 469 478 118 294 80 250 626 506 146 523 595</file>
+          <file> 255 694 123 304 141 655 133 593 520 317 381 312 647 615 494 384 614 350 271 116 499</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\smartrf-sensors.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 316</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 682</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 157</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 358 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 442 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 535</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 694 304 384 460 494 348 470 350 313 312 255 614 141 520 615 123 620 192 155 372 673 424 442 647 593 655 133 553 656 540 403 271 358 88 113 116 535 491</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\uip-debug.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 437</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 474</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 612</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 564 172 538 668 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 565 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 686 581 653 317 381 499</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\putchar.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 191</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 111</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 137</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 468 620 348 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 495 499</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\contiki-main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 136</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 624</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 150</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 140 441 104 610 422 468 495 499 383 362 188 551 159 318 457 408 517 358 442 535 469 486 572 654 686 177 697 328 462 456 479 132 702 96 538 668 565 482 675 630 466 402 129 519 513 507 315 189 142 518 396 532 345 527 536 144 351 106 307 324 684 539 378 605 122 317 381 319 601 706 455 546 293 152 296 685 338 521 608 670 174 263 559 584 138 370 628 390 154</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\dev\usb-serial.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 386</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 578</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 560</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 504 484 511 151 506</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 123 520 470 540 141 151 553 403 647 504 312 656 673 491 304 424 484 506 348 192 313 155 460 372 255 494 614 350 694 593 655 133 271 511 620 615 384 88 113 116</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\cc2530dk\viztool.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 701</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 323</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 393</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 620 348 312 255 694 123 304 141 655 133 593 520 647 615 494 384 614 350 192 553 673 88 424 313 656 470 155 540 460 113 271 116 372 403 491 319 513 315 601 706 455 565 538 668 546 293 152 296 685 338 521 608 670 174 263 559 584 686 539 378 324 551 159 605 702 96 122 138 370 628 390 154 572 654 177 697 328 462 456 479 132 482 675 630 466 402 129 519 507 189 142 518 396 532 345 527 536 144 351 106 307 684 564 172 581 653</file>
         </tool>
       </inputs>
     </file>
@@ -3280,7 +3338,7 @@
       <outputs>
         <tool>
           <name>XLINK</name>
-          <file> 532</file>
+          <file> 590</file>
         </tool>
       </outputs>
     </file>
@@ -3289,7 +3347,7 @@
       <inputs>
         <tool>
           <name>XLINK</name>
-          <file> 593 150 468 89 561 451 499 159 524 430 320 604 253 110 285 633 634 387 591 221 541 394 311 83 312 370 317 373 388 340 392 121 645 66 599 265 518 60 224 275 226 396 510 164 380 642 483 464 59 594 272 102 117 348 458 349 406 323 352 244 372 165 649 144 105 440 295 374 154 391 490 439 427 145 606 368 614 228 223 365 84 414 263 325 419 444 67 333 575 259 529 457 68 297 621 431 127 395 442 158 379 64 546 310 71 314 61 286 94 530 354 382 329 643 119 222</file>
+          <file> 651 176 526 115 619 509 557 185 582 488 377 662 310 136 342 691 692 445 649 278 599 452 368 109 369 428 374 431 446 398 450 147 703 92 657 322 576 86 281 332 283 454 568 190 438 700 541 522 85 652 329 128 143 406 516 407 464 380 410 301 430 191 707 170 131 498 352 432 180 449 548 497 485 171 664 426 672 285 280 423 110 472 320 382 477 502 93 391 633 316 587 515 94 354 679 489 153 453 500 184 437 90 604 367 97 371 87 343 120 588 412 440 386 701 145 279</file>
         </tool>
       </inputs>
     </file>
