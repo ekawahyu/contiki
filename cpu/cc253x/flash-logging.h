@@ -19,8 +19,9 @@
 /* FLASH LOGGING Globals */
 enum
 {
-  LOGGING_INIT = 0x00,    // initialization
-  LOGGING_REF  = 0x01,    // reference timestamp
+  LOGGING_RES  = 0x00,    // reserved
+  LOGGING_INIT = 0x01,    // initialization
+  LOGGING_REF  = 0x02,    // reference timestamp
 };
 
 // logging component ID's

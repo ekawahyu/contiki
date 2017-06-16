@@ -7,16 +7,15 @@
 
 #include "contiki.h"
 #include <stdio.h> /* For printf() */
-#include "flash.h"
 #include "flash-logging.h"
 
 /*---------------*/
 
-extern volatile uint8_t deep_sleep_requested;
+extern volatile uint16_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(flash_log_process, "Flash Log process");
-// AUTOSTART_PROCESSES(&flash_log_process);
+AUTOSTART_PROCESSES(&flash_log_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(flash_log_process, ev, data)
 {
@@ -36,3 +35,10 @@ PROCESS_THREAD(flash_log_process, ev, data)
 
   PROCESS_END();
 }
+
+/*---------------------------------------------------------------------------*/
+void invoke_process_before_sleep(void)
+{
+  deep_sleep_requested = 0;
+}
+/*---------------------------------------------------------------------------*/

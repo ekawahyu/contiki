@@ -294,6 +294,7 @@
         <option>
           <name>CCDefines</name>
           <state>chip=cc2530</state>
+          <state>WATCHDOG=0</state>
           <state>AUTOSTART_ENABLE=1</state>
           <state>PROJECT_CONF_H="project-conf.h"</state>
           <state>CONTIKI_WITH_RIME=1</state>
@@ -824,11 +825,11 @@
         </option>
         <option>
           <name>XclOverride</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>XclFile</name>
-          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\lnk51ew_CC2530F256_banked.xcl</state>
+          <state>$PROJ_DIR$\..\..\platform\conectric\CC2530F256_banked.xcl</state>
         </option>
         <option>
           <name>XclFileSlave</name>
@@ -964,7 +965,7 @@
         </option>
         <option>
           <name>ExtraOutputFile</name>
-          <state>conectric-rime-abc-sub.a51</state>
+          <state>conectric-rime-sub.a51</state>
         </option>
         <option>
           <name>ExtraOutputFormat</name>
@@ -1613,6 +1614,9 @@
           <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma_intr.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\flash.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\gpio.c</name>
         </file>
         <file>
@@ -1677,7 +1681,7 @@
         <name>$PROJ_DIR$\..\..\cpu\cc253x\cc253x.h</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-logging.h</name>
+        <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-logging.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>
@@ -1720,9 +1724,6 @@
         <excluded>
           <configuration>Release</configuration>
         </excluded>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\examples\conectric\flash-log.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\examples\conectric\hello-world.c</name>

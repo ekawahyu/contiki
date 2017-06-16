@@ -65,7 +65,7 @@ enum
 
 static uint8_t message[72];
 static uint8_t * pmessage = NULL;
-extern volatile uint8_t deep_sleep_requested;
+extern volatile uint16_t deep_sleep_requested;
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 static int pos;
@@ -75,6 +75,7 @@ static uint8_t submeter_data[BUFSIZE];
 PROCESS(sub_process, "Submeter");
 PROCESS(serial_in_process, "Serial example");
 PROCESS(modbus_in_process, "Modbus example");
+PROCESS(flash_log_process, "Flash Log process");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
 AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &buttons_test_process, &flash_log_process);
@@ -327,6 +328,25 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     //puthex(*(unsigned char*)data & 0x7F);
     submeter_data[pos++] = *(unsigned char*)data & 0x7F;
 
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(flash_log_process, ev, data)
+{
+  static struct etimer et;
+  
+  PROCESS_BEGIN();
+
+  flashlogging_init();
+  
+  while (1)
+  {
+    etimer_set(&et, 1 * CLOCK_SECOND * 60);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    
+    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
   }
 
   PROCESS_END();
