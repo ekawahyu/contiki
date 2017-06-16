@@ -111,7 +111,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     NETSTACK_MAC.off(0);
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
-    dec = sane;
+    dec = (int) sane;
     frac = sane - dec;
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_ACQ);
     deep_sleep_requested = CLOCK_SECOND / 32;
