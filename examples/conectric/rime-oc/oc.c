@@ -41,6 +41,7 @@
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "random.h"
+#include "flash-logging.h"
 
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
@@ -51,13 +52,24 @@
 static uint8_t message[40];
 extern volatile uint16_t deep_sleep_requested;
 
+/* Flash Logging */
+static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+enum
+{
+  OC_RESERVED = 0x00,    // reserved
+  OC_SEND     = 0x01,    // send data event 
+};
+
 /*---------------------------------------------------------------------------*/
 PROCESS(pir_abc_process, "PIR Sensor");
+PROCESS(flash_log_process, "Flash Log process");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&pir_abc_process, &buttons_test_process);
+AUTOSTART_PROCESSES(&pir_abc_process, &buttons_test_process, &flash_log_process);
 #else
-AUTOSTART_PROCESSES(&pir_abc_process);
+AUTOSTART_PROCESSES(&pir_abc_process, &flash_log_process);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -135,6 +147,13 @@ PROCESS_THREAD(pir_abc_process, ev, data)
     message[6] = (char)(dec*10)+(char)(frac*10);
     message[7] = *sensor_data;
 
+    // Log data that will be sent out over the air
+    logData[0] = (char)(dec*10)+(char)(frac*10);
+    logData[1] = *sensor_data;
+    logData[2] = 0x00;
+    logData[3] = 0x00;
+    flashlogging_write4(RIME_OC_CMP_ID, OC_SEND, logData);  
+    
     loop = CONECTRIC_BURST_NUMBER;
 
     while(loop--) {
@@ -193,7 +212,27 @@ PROCESS_THREAD(buttons_test_process, ev, data)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-void invoke_process_before_sleep(void)
+PROCESS_THREAD(flash_log_process, ev, data)
+{
+  static struct etimer et;
+  
+  PROCESS_BEGIN();
+
+  flashlogging_init();
+  
+  while (1)
+  {
+    etimer_set(&et, LOGGING_REF_TIME_PD);  
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    
+    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+void
+invoke_process_before_sleep(void)
 {
   process_post_synch(&pir_abc_process, PROCESS_EVENT_CONTINUE, NULL);
 

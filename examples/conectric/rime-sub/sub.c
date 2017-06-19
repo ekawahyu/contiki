@@ -57,13 +57,6 @@
 #define BUFSIZE 256
 #define TRICKLE_CHANNEL 145
 
-/* Flash Logging */
-enum
-{
-  SUB_RESERVED = 0x00,    // reserved
-  SUB_SEND     = 0x01,    // send data event 
-};
-
 static uint8_t message[72];
 static uint8_t * pmessage = NULL;
 extern volatile uint16_t deep_sleep_requested;
@@ -71,6 +64,14 @@ static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
 
 static int pos;
 static uint8_t submeter_data[BUFSIZE];
+
+/* Flash Logging */
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))  
+enum
+{
+  SUB_RESERVED = 0x00,    // reserved
+  SUB_SEND     = 0x01,    // send data event 
+};
 
 /*---------------------------------------------------------------------------*/
 PROCESS(sub_process, "Submeter");
@@ -344,7 +345,7 @@ PROCESS_THREAD(flash_log_process, ev, data)
   
   while (1)
   {
-    etimer_set(&et, 1 * CLOCK_SECOND * 60);
+    etimer_set(&et, LOGGING_REF_TIME_PD);  
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
