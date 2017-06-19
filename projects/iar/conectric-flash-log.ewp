@@ -293,8 +293,8 @@
         </option>
         <option>
           <name>CCDefines</name>
-          <state>chip=cc2530</state>
           <state>WATCHDOG=0</state>
+          <state>chip=cc2530</state>
           <state>AUTOSTART_ENABLE=1</state>
           <state>PROJECT_CONF_H="project-conf.h"</state>
           <state>CONTIKI_WITH_RIME=1</state>
@@ -477,7 +477,7 @@
         <option>
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$\..\..\</state>
-          <state>$PROJ_DIR$\..\..\examples\conectric\rime-sub\</state>
+          <state>$PROJ_DIR$\..\..\examples\conectric\</state>
           <state>$PROJ_DIR$\..\..\platform\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\dev\</state>
@@ -763,7 +763,7 @@
         </option>
         <option>
           <name>OutputFile</name>
-          <state>conectric-rime-sub.d51</state>
+          <state>conectric-flash-log.d51</state>
         </option>
         <option>
           <name>OutputFormat</name>
@@ -965,7 +965,7 @@
         </option>
         <option>
           <name>ExtraOutputFile</name>
-          <state>conectric-rime-sub.a51</state>
+          <state>conectric-flash-log.a51</state>
         </option>
         <option>
           <name>ExtraOutputFormat</name>
@@ -1710,15 +1710,6 @@
     <name>examples</name>
     <group>
       <name>conectric</name>
-      <group>
-        <name>rime-sub</name>
-        <file>
-          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sub\project-conf.h</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sub\sub.c</name>
-        </file>
-      </group>
       <file>
         <name>$PROJ_DIR$\..\..\examples\conectric\blink-hello.c</name>
         <excluded>
@@ -1726,10 +1717,16 @@
         </excluded>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\examples\conectric\flash-log.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\examples\conectric\hello-world.c</name>
         <excluded>
           <configuration>Release</configuration>
         </excluded>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\examples\conectric\project-conf.h</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\examples\conectric\sensors-demo.c</name>

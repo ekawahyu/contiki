@@ -41,6 +41,7 @@
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "random.h"
+#include "flash-logging.h"
 
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
@@ -56,10 +57,17 @@
 #define BUFSIZE 256
 #define TRICKLE_CHANNEL 145
 
-/* Sub Globals */
+/* Flash Logging */
+enum
+{
+  SUB_RESERVED = 0x00,    // reserved
+  SUB_SEND     = 0x01,    // send data event 
+};
+
 static uint8_t message[72];
 static uint8_t * pmessage = NULL;
-extern volatile uint8_t deep_sleep_requested;
+extern volatile uint16_t deep_sleep_requested;
+static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
 
 static int pos;
 static uint8_t submeter_data[BUFSIZE];
@@ -68,11 +76,12 @@ static uint8_t submeter_data[BUFSIZE];
 PROCESS(sub_process, "Submeter");
 PROCESS(serial_in_process, "Serial example");
 PROCESS(modbus_in_process, "Modbus example");
+PROCESS(flash_log_process, "Flash Log process");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &buttons_test_process);
+AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &buttons_test_process, &flash_log_process);
 #else
-AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process);
+AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &flash_log_process);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -254,6 +263,13 @@ PROCESS_THREAD(sub_process, ev, data)
     packetbuf_copyfrom(message, 72);
     trickle_send(&trickle);
 
+    // Log data that was sent out over the air
+    logData[0] = counter;
+    logData[1] = (char)(dec*10)+(char)(frac*10);
+    logData[2] = 0x84;
+    logData[3] = 0x00;
+    flashlogging_write4(RIME_SUB_CMP_ID, SUB_SEND, logData);  
+    
     for (pos_counter=0; pos_counter<BUFSIZE; pos_counter++)
       puthex(submeter_data[pos_counter]);
   }
@@ -318,7 +334,27 @@ PROCESS_THREAD(modbus_in_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-void invoke_process_before_sleep(void)
+PROCESS_THREAD(flash_log_process, ev, data)
+{
+  static struct etimer et;
+  
+  PROCESS_BEGIN();
+
+  flashlogging_init();
+  
+  while (1)
+  {
+    etimer_set(&et, 1 * CLOCK_SECOND * 60);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    
+    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+void
+invoke_process_before_sleep(void)
 {
   deep_sleep_requested = 0;
 }
