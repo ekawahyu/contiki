@@ -127,6 +127,7 @@ trickle_recv(struct trickle_conn *c)
   } msg;
   uint8_t message[128];
   uint8_t packetbuf_len, header_len;
+  static char request;
 
   /* Copy the packet attributes to avoid them being overwritten or
      cleared by an application program that uses the packet buffer for
@@ -152,10 +153,11 @@ trickle_recv(struct trickle_conn *c)
   packetbuf_len = packetbuf_len; /* suppressed warning */
 
   header_len = message[0];
-  if (message[header_len] == CONECTRIC_ROUTE_REQUEST) {
+  request = message[header_len];
+  if (request == CONECTRIC_ROUTE_REQUEST) {
     if (message[header_len-1] == linkaddr_node_addr.u8[0] &&
         message[header_len-2] == linkaddr_node_addr.u8[1]) {
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, NULL);
+      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, &request);
       leds_toggle(LEDS_RED);
     }
   }
