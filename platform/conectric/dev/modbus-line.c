@@ -39,8 +39,10 @@
 
 #define BUFSIZE 276
 
-static int pos;
-static uint8_t modbus_rx_data[BUFSIZE];
+static int pos, postidx;
+static uint8_t post_size, modbus_rx_data[BUFSIZE];
+// post 0: *data; 1: *size
+static uint8_t *post_data[2];
 
 PROCESS(modbus_line_process, "MODBUS driver");
 
@@ -50,12 +52,15 @@ process_event_t modbus_line_event_message;
 int
 modbus_line_input_byte(unsigned char c)
 {
-  if(++pos >= 270) {
-    pos = 0;
-  }
+  // don't allow circular writes - must use reset
+//  if(++pos >= 270) {
+//    pos = 0;
+//    postidx = 0xFF;
+//  }
 
-  modbus_rx_data[pos] = c;
-
+  if(++pos < BUFSIZE)
+    modbus_rx_data[pos] = c;
+  
   /* Wake up consumer process */
   process_poll(&modbus_line_process);
   return 1;
@@ -64,7 +69,7 @@ modbus_line_input_byte(unsigned char c)
 PROCESS_THREAD(modbus_line_process, ev, data)
 {
   PROCESS_BEGIN();
-
+  
   modbus_line_event_message = process_alloc_event();
 
   while(1) {
@@ -72,9 +77,24 @@ PROCESS_THREAD(modbus_line_process, ev, data)
     /* if no end-of-modbus frame detected */
     PROCESS_YIELD();
 
-    /* else */
-    process_post(PROCESS_BROADCAST, modbus_line_event_message, &modbus_rx_data[pos]);
+    if(postidx == 0xFF)  // start of buffer (starts writing at 1)
+    {
+      post_size = pos;
+      postidx = 1;
+    }
+    else 
+    {
+       post_size = pos - postidx;
+       postidx++;
+    }
+     
+    post_data[0] = &modbus_rx_data[postidx];
+    post_data[1] = &post_size;
+    
+    process_post(PROCESS_BROADCAST, modbus_line_event_message, &post_data);
 
+    postidx = pos;
+    
     /* Wait until all processes have handled the modbus line event */
     if(PROCESS_ERR_OK ==
       process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
@@ -89,4 +109,12 @@ void
 modbus_line_init(void)
 {
   process_start(&modbus_line_process, NULL);
+}
+/*---------------------------------------------------------------------------*/
+void
+modbus_line_reset(void)
+{
+    pos = 0;
+    postidx = 0xFF;
+    // any reason to clear modbus_rx_data?
 }

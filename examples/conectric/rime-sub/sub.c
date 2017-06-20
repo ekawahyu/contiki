@@ -69,7 +69,7 @@ static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 // EKM 
 #define BUFSIZE 256
-static uint8_t ekm_in_pos;
+static uint16_t ekm_in_pos;
 static uint8_t submeter_data[BUFSIZE];
 
 /* Flash Logging */
@@ -92,34 +92,6 @@ AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &butto
 AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &flash_log_process);
 #endif
 /*---------------------------------------------------------------------------*/
-
-///// DEBUG
-char *
-itoa (int value, char *result, int base)
-{
-    // check that the base if valid
-    if (base < 2 || base > 36) { *result = '\0'; return result; }
-
-    char* ptr = result, *ptr1 = result, tmp_char;
-    int tmp_value;
-
-    do {
-        tmp_value = value;
-        value /= base;
-        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
-    } while ( value );
-
-    // Apply negative sign
-    if (tmp_value < 0) *ptr++ = '-';
-    *ptr-- = '\0';
-    while (ptr1 < ptr) {
-        tmp_char = *ptr;
-        *ptr--= *ptr1;
-        *ptr1++ = tmp_char;
-    }
-    return result;
-}
-
 
 // sub send data.  Note size is currently always 64 (added flexibility)
 static void sub_send(struct trickle_conn *c, uint8_t counter, uint8_t battery, uint8_t *tx_data, uint8_t size)
@@ -194,6 +166,9 @@ PROCESS_THREAD(sub_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     ekm_in_pos = 0;
+    
+    // reset modbus to beginning of collection buffer
+    modbus_line_reset();
 
     /* Low level RS485 test */
     uart_arch_writeb(0x2F);
@@ -219,7 +194,7 @@ PROCESS_THREAD(sub_process, ev, data)
     // wait for event 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    if(*(uint8_t *)data == 0xFF)
+    if(*(uint16_t *)data == 0x100)
     {
       // collect battery data
       batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
@@ -307,20 +282,28 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  static uint8_t hexVal;
-  
+  static uint8_t datasize;
+  static uint8_t* dataptr;
+
   while(1) {
     
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
     
-    hexVal = ((uint8_t *)data)[0] & 0x7F;
+    dataptr = ((uint8_t **)data)[0];
+    datasize = *((uint8_t **)data)[1];
     //printf("Modbus_RX: %#02x ", hexVal);
-    puthex(hexVal);
-    submeter_data[ekm_in_pos++] = *(unsigned char*)data & 0x7F;
-    if(ekm_in_pos == 0xFF)
+    
+    for(uint8_t cnt = 0; cnt < datasize; cnt++)
+    {
+      puthex((dataptr[cnt]) & 0x7F);
+      submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
+    }
+    
+    if(ekm_in_pos >= 0xFF)
     {
       // verify S/N match (bytes 4 through 15)
       
+      ekm_in_pos = 0x100;  // known value
       process_post(&sub_process, PROCESS_EVENT_CONTINUE, &ekm_in_pos);
     }
   }
