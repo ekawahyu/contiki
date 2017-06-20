@@ -62,6 +62,7 @@ rtimer_init(void)
 {
   rtimer_arch_init();
 }
+#if RTIMER_CONF_MULTIPLE
 /*---------------------------------------------------------------------------*/
 int
 rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
@@ -151,6 +152,33 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 
   return RTIMER_OK;
 }
+#else
+/*---------------------------------------------------------------------------*/
+int
+rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
+     rtimer_clock_t duration,
+     rtimer_callback_t func, void *ptr)
+{
+  int first = 0;
+
+  PRINTF("rtimer_set time %d\n", time);
+
+  if(next_rtimer == NULL) {
+    first = 1;
+  }
+
+  rtimer->func = func;
+  rtimer->ptr = ptr;
+
+  rtimer->time = time;
+  next_rtimer = rtimer;
+
+  if(first == 1) {
+    rtimer_arch_schedule(time);
+  }
+  return RTIMER_OK;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 void
 rtimer_run_next(void)
@@ -160,7 +188,11 @@ rtimer_run_next(void)
     return;
   }
   t = next_rtimer;
+#if RTIMER_CONF_MULTIPLE
   next_rtimer = t->next;
+#else
+  next_rtimer = NULL;
+#endif
   t->func(t, t->ptr);
   if(next_rtimer != NULL) {
     rtimer_arch_schedule(next_rtimer->time);
