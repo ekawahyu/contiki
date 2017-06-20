@@ -54,19 +54,26 @@
 
 #include <stdio.h>
 
-#define BUFSIZE 256
-#define TRICKLE_CHANNEL 145
 
-static uint8_t message[72];
-static uint8_t * pmessage = NULL;
+// Device
 extern volatile uint16_t deep_sleep_requested;
-static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
+static struct etimer et;
+//static int pos_counter;
 
-static int pos;
+// Messaging 
+static uint8_t message[72];
+static uint8_t pkt_counter = 0;
+
+// Logging
+static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+
+// EKM 
+#define BUFSIZE 256
+static uint8_t ekm_in_pos;
 static uint8_t submeter_data[BUFSIZE];
 
 /* Flash Logging */
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))  
+#define CLOCK_HR_MULT ((clock_time_t)(60 * 60))  
 enum
 {
   SUB_RESERVED = 0x00,    // reserved
@@ -85,6 +92,60 @@ AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &butto
 AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &flash_log_process);
 #endif
 /*---------------------------------------------------------------------------*/
+
+///// DEBUG
+char *
+itoa (int value, char *result, int base)
+{
+    // check that the base if valid
+    if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+    char* ptr = result, *ptr1 = result, tmp_char;
+    int tmp_value;
+
+    do {
+        tmp_value = value;
+        value /= base;
+        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+    } while ( value );
+
+    // Apply negative sign
+    if (tmp_value < 0) *ptr++ = '-';
+    *ptr-- = '\0';
+    while (ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr--= *ptr1;
+        *ptr1++ = tmp_char;
+    }
+    return result;
+}
+
+
+// sub send data.  Note size is currently always 64 (added flexibility)
+static void sub_send(struct trickle_conn *c, uint8_t counter, uint8_t battery, uint8_t *tx_data, uint8_t size)
+{
+  uint8_t * pmessage = message;
+  uint8_t cnt;
+  
+  /* 1st chunk */
+  pmessage = message;
+  memset(message, 0, size+8);
+  *pmessage++ = 0;
+  *pmessage++ = 0;
+  *pmessage++ = 0xFF;
+  *pmessage++ = 0xFF;
+  *pmessage++ = 0x80;
+  *pmessage++ = counter;
+  *pmessage++ = battery;
+  *pmessage++ = 0x81;
+
+  for (cnt=0; cnt<size; cnt++)
+    *pmessage++ = tx_data[cnt];
+
+  packetbuf_copyfrom(message, size+8);
+  trickle_send(c);
+}
+
 static void
 trickle_recv(struct trickle_conn *c)
 {
@@ -98,19 +159,16 @@ static struct trickle_conn trickle;
 PROCESS_THREAD(sub_process, ev, data)
 {
   static unsigned int batt;
-  static uint8_t counter;
   static float sane;
   static int dec;
   static float frac;
   static uint8_t *sensor_data;
-  static struct etimer et;
-  static int pos_counter;
-
+  
   PROCESS_EXITHANDLER(trickle_close(&trickle);)
 
   PROCESS_BEGIN();
 
-  trickle_open(&trickle, CLOCK_SECOND, TRICKLE_CHANNEL, &trickle_call);
+  trickle_open(&trickle, CLOCK_SECOND, 128, &trickle_call);
 
   etimer_set(&et, CLOCK_SECOND);
 
@@ -122,7 +180,7 @@ PROCESS_THREAD(sub_process, ev, data)
   message[2] = 0xFF;
   message[3] = 0xFF;
   message[4] = 0x60;
-  message[5] = counter++;
+  message[5] = pkt_counter++;
   message[6] = clock_reset_cause();
 
   packetbuf_copyfrom(message, 7);
@@ -132,10 +190,10 @@ PROCESS_THREAD(sub_process, ev, data)
 
   while(1) {
 
-    etimer_set(&et, 10 * CLOCK_SECOND);
+    etimer_set(&et, 1 * CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    pos = 0;
+    ekm_in_pos = 0;
 
     /* Low level RS485 test */
     uart_arch_writeb(0x2F);
@@ -154,127 +212,53 @@ PROCESS_THREAD(sub_process, ev, data)
     uart_arch_writeb(0x38);
     uart_arch_writeb(0x39);
 
-    /*uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x33);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x32);
-    uart_arch_writeb(0x39);
-    uart_arch_writeb(0x33);
-    uart_arch_writeb(0x32);
-
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);*/
-
     uart_arch_writeb(0x21);
     uart_arch_writeb(0x0D);
     uart_arch_writeb(0x0A);
 
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    // wait for event 
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-    sane = batt * 3 * 1.15 / 2047;
-    dec = sane;
-    frac = sane - dec;
-    sensor_data = (uint8_t*)data;
-
-    /* 1st chunk */
-    pmessage = message;
-    memset(message, 0, 72);
-    *pmessage++ = 0;
-    *pmessage++ = 0;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0x80;
-    *pmessage++ = counter++;
-    *pmessage++ = (char)(dec*10)+(char)(frac*10);
-    *pmessage++ = 0x81;
-
-    for (pos_counter=0; pos_counter<64; pos_counter++)
-      *pmessage++ = submeter_data[pos_counter];
-
-    packetbuf_copyfrom(message, 72);
-    trickle_send(&trickle);
-
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    /* 2nd chunk */
-    pmessage = message;
-    memset(message, 0, 72);
-    *pmessage++ = 0;
-    *pmessage++ = 0;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0x80;
-    *pmessage++ = counter++;
-    *pmessage++ = (char)(dec*10)+(char)(frac*10);
-    *pmessage++ = 0x82;
-
-    for (pos_counter=64; pos_counter<128; pos_counter++)
-      *pmessage++ = submeter_data[pos_counter];
-
-    packetbuf_copyfrom(message, 72);
-    trickle_send(&trickle);
-
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    /* 3rd chunk */
-    pmessage = message;
-    memset(message, 0, 72);
-    *pmessage++ = 0;
-    *pmessage++ = 0;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0x80;
-    *pmessage++ = counter++;
-    *pmessage++ = (char)(dec*10)+(char)(frac*10);
-    *pmessage++ = 0x83;
-
-    for (pos_counter=128; pos_counter<192; pos_counter++)
-      *pmessage++ = submeter_data[pos_counter];
-
-    packetbuf_copyfrom(message, 72);
-    trickle_send(&trickle);
-
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    /* 4th chunk */
-    pmessage = message;
-    memset(message, 0, 72);
-    *pmessage++ = 0;
-    *pmessage++ = 0;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0xFF;
-    *pmessage++ = 0x80;
-    *pmessage++ = counter++;
-    *pmessage++ = (char)(dec*10)+(char)(frac*10);
-    *pmessage++ = 0x84;
-
-    for (pos_counter=192; pos_counter<256; pos_counter++)
-      *pmessage++ = submeter_data[pos_counter];
-
-    packetbuf_copyfrom(message, 72);
-    trickle_send(&trickle);
-
-    // Log data that was sent out over the air
-    logData[0] = counter;
-    logData[1] = (char)(dec*10)+(char)(frac*10);
-    logData[2] = 0x84;
-    logData[3] = 0x00;
-    flashlogging_write4(RIME_SUB_CMP_ID, SUB_SEND, logData);  
+    if(*(uint8_t *)data == 0xFF)
+    {
+      // collect battery data
+      batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+      sane = batt * 3 * 1.15 / 2047;
+      dec = sane;
+      frac = sane - dec;
+      sensor_data = (uint8_t*)data;
+      batt = (char)(dec*10)+(char)(frac*10);
+  
+      // Log data prior to sending out over the air
+      logData[0] = pkt_counter;
+      logData[1] = batt;
+      logData[2] = 0x84;
+      logData[3] = 0x00;
+      flashlogging_write4(RIME_SUB_CMP_ID, SUB_SEND, logData);  
     
-    for (pos_counter=0; pos_counter<BUFSIZE; pos_counter++)
-      puthex(submeter_data[pos_counter]);
-  }
+      sub_send(&trickle, pkt_counter++, batt, &submeter_data[0], 64);
 
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+      sub_send(&trickle, pkt_counter++, batt, &submeter_data[64], 64);
+
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+      sub_send(&trickle, pkt_counter++, batt, &submeter_data[128], 64);
+
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+      sub_send(&trickle, pkt_counter++, batt, &submeter_data[192], 64);
+    }
+    
+//  for (cnt=0; pos_counter<BUFSIZE; pos_counter++)
+//    puthex(submeter_data[pos_counter]);
+
+  }
+  
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
@@ -323,13 +307,22 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 {
   PROCESS_BEGIN();
 
+  static uint8_t hexVal;
+  
   while(1) {
-
+    
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
-    //printf("Modbus_RX: %s\n", (char*)data);
-    //puthex(*(unsigned char*)data & 0x7F);
-    submeter_data[pos++] = *(unsigned char*)data & 0x7F;
-
+    
+    hexVal = ((uint8_t *)data)[0] & 0x7F;
+    //printf("Modbus_RX: %#02x ", hexVal);
+    puthex(hexVal);
+    submeter_data[ekm_in_pos++] = *(unsigned char*)data & 0x7F;
+    if(ekm_in_pos == 0xFF)
+    {
+      // verify S/N match (bytes 4 through 15)
+      
+      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &ekm_in_pos);
+    }
   }
 
   PROCESS_END();
@@ -345,7 +338,7 @@ PROCESS_THREAD(flash_log_process, ev, data)
   
   while (1)
   {
-    etimer_set(&et, LOGGING_REF_TIME_PD);  
+    etimer_set(&et, /*CLOCK_HR_MULT * (clock_time_t)*/ 10 * (CLOCK_SECOND));  
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
@@ -354,8 +347,7 @@ PROCESS_THREAD(flash_log_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-void
-invoke_process_before_sleep(void)
+void invoke_process_before_sleep(void)
 {
   deep_sleep_requested = 0;
 }
