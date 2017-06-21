@@ -313,7 +313,7 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(flash_log_process, ev, data)
 {
-  static struct etimer et;
+  static struct etimer ft;
   
   PROCESS_BEGIN();
 
@@ -321,8 +321,8 @@ PROCESS_THREAD(flash_log_process, ev, data)
   
   while (1)
   {
-    etimer_set(&et, /*CLOCK_HR_MULT * (clock_time_t)*/ 10 * (CLOCK_SECOND));  
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    etimer_set(&ft, /*CLOCK_HR_MULT * (clock_time_t)*/ 10 * (CLOCK_SECOND));  
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ft));
     
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
   }

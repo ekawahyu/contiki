@@ -55,6 +55,10 @@ static CC_AT_DATA uint16_t len;
 volatile uint16_t deep_sleep_requested = 0;
 void invoke_process_before_sleep(void);
 /*---------------------------------------------------------------------------*/
+#ifndef WATCHDOG
+#define WATCHDOG 1
+#endif
+/*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
 static unsigned long irq_energest = 0;
 #define ENERGEST_IRQ_SAVE(a) do { \
@@ -211,7 +215,6 @@ main(void) CC_NON_BANKED
   uart_arch_init();
 
   uart_arch_set_input(modbus_line_input_byte);
-  modbus_line_init();
 
 #if DMA_ON
   dma_init();
@@ -315,10 +318,15 @@ main(void) CC_NON_BANKED
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
+  // modbus uses etimer so must be initialized after
+  modbus_line_init();
+
   autostart_start(autostart_processes);
 
+#if WATCHDOG
   watchdog_start();
-
+#endif
+  
   fade(LEDS_YELLOW);
 
   /* TODO not supposed to be here for Anaren A2530E */
