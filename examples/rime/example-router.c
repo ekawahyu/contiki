@@ -127,7 +127,7 @@ trickle_recv(struct trickle_conn *c)
   } msg;
   uint8_t message[128];
   uint8_t packetbuf_len, header_len;
-  static char request;
+  uint8_t request;
 
   /* Copy the packet attributes to avoid them being overwritten or
      cleared by an application program that uses the packet buffer for
@@ -174,7 +174,7 @@ const static struct trickle_callbacks trickle_call = {trickle_recv};
 static struct trickle_conn trickle;
 /*---------------------------------------------------------------------------*/
 /*
- * This function is called at the final recepient of the message.
+ * This function is called at the final recepient of the multihop message.
  */
 static void
 multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
@@ -212,6 +212,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
   header_len = message[0];
   header_len = header_len; /* suppressed warning */
 }
+/*---------------------------------------------------------------------------*/
 /*
  * This function is called to forward a packet. It returns a forwarding address
  * determined by trickle message ranking. If no neighbor is found, the function
@@ -291,33 +292,37 @@ PROCESS_THREAD(example_abc_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_trickle_process, ev, data)
 {
+  static linkaddr_t to;
   static uint8_t message[128];
   static uint8_t * header;
   static uint8_t counter = 0;
-  static uint8_t * mydata;
+  static uint8_t request;
 
   PROCESS_EXITHANDLER(trickle_close(&trickle);)
+
   PROCESS_BEGIN();
 
+  /* Open a trickle connection */
   trickle_open(&trickle, CLOCK_SECOND, 145, &trickle_call);
 
+  /* Loop forever */
   while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
+
+    request = *(uint8_t *)data;
+
+    if (request == 0x31) request = CONECTRIC_ROUTE_REQUEST;
+    if (request == 0x32) request = CONECTRIC_TIME_SYNC;
 
     memset(message, 0, sizeof(message));
-
-    mydata = (uint8_t *)data;
-    if (mydata[0] == 0x31)
-      message[0] = CONECTRIC_ROUTE_REQUEST;
-    if (mydata[0] == 0x32)
-      message[0] = CONECTRIC_TIME_SYNC;
-
+    message[0] = request;
     packetbuf_copyfrom(message, 1);
 
-    printf("%d.%d: trickle send %s - %lu\n",
-        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        (char *)data,
-        clock_seconds());
+    /* Set the Rime address of the final receiver */
+    esender_addr.u8[1] = 0;
+    esender_addr.u8[0] = 49;
+    to.u8[0] = esender_addr.u8[0];
+    to.u8[1] = esender_addr.u8[1];
 
     packetbuf_hdralloc(6);
 
@@ -326,64 +331,86 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     *header++ = counter++;  /* seqno */
     *header++ = 0;          /* hop count */
     *header++ = 0;          /* number of hops */
-    *header++ = 0;          /* destination addr H */
-    *header++ = 49;         /* destination addr L */
+    *header++ = to.u8[1];   /* destination addr H */
+    *header++ = to.u8[0];   /* destination addr L */
 
+    /* Send the rank to 1 (source of trickle) */
     trickle_set_rank(1);
+
+    /* Send the packet */
     trickle_send(&trickle);
+
+    /* For debugging purposes */
+    if (request == CONECTRIC_ROUTE_REQUEST) {
+      printf("%d.%d: route request sent to %d.%d - %lu\n",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+          esender_addr.u8[0], esender_addr.u8[1],
+          clock_seconds());
+    }
   }
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_multihop_process, ev, data)
 {
   static struct etimer et;
+
   static linkaddr_t to;
   static uint8_t message[128];
-  static uint8_t counter;
   static uint8_t * header;
+  static uint8_t counter = 0;
+  static uint8_t request;
+  static uint8_t reply;
 
   PROCESS_EXITHANDLER(multihop_close(&multihop);)
 
   PROCESS_BEGIN();
 
-  /* Open a multihop connection on Rime channel CHANNEL. */
+  /* Open a multihop connection */
   multihop_open(&multihop, 135, &multihop_call);
 
-  /* Loop forever, send a packet when the button is pressed. */
+  /* Loop forever */
   while(1) {
 
-    /* Wait until we get trickle message */
-    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    /* Delay 1 seconds */
-    etimer_set(&et, CLOCK_SECOND);
+    request = *(uint8_t *)data;
 
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    if (request == CONECTRIC_ROUTE_REQUEST) {
+      reply = CONECTRIC_ROUTE_REPLY;
+      /* TODO delay count (for now) 1 seconds for trickle to subside */
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
 
     memset(message, 0, sizeof(message));
-    message[0] = CONECTRIC_ROUTE_REPLY;
+    message[0] = reply;
     packetbuf_copyfrom(message, 1);
-
-    packetbuf_hdralloc(6);
-
-    header = (uint8_t *)packetbuf_hdrptr();
-    *header++ = 6;                  /* header len */
-    *header++ = counter++;          /* seqno */
-    *header++ = 0;                  /* hop count */
-    *header++ = 0;                  /* number of hops */
-    *header++ = esender_addr.u8[1]; /* destination addr H */
-    *header++ = esender_addr.u8[0]; /* destination addr L */
 
     /* Set the Rime address of the final receiver */
     to.u8[0] = esender_addr.u8[0];
     to.u8[1] = esender_addr.u8[1];
 
+    packetbuf_hdralloc(6);
+
+    header = (uint8_t *)packetbuf_hdrptr();
+    *header++ = 6;          /* header len */
+    *header++ = counter++;  /* seqno */
+    *header++ = 0;          /* hop count */
+    *header++ = 0;          /* number of hops */
+    *header++ = to.u8[1];   /* destination addr H */
+    *header++ = to.u8[0];   /* destination addr L */
+
     /* Send the packet. */
     multihop_send(&multihop, &to);
-    printf("%d.%d: multihop sent to %d.%d - %lu\n",
-        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        to.u8[0], to.u8[1], clock_seconds());
+
+    /* For debugging purposes */
+    if (reply == CONECTRIC_ROUTE_REPLY) {
+      printf("%d.%d: replying route request to %d.%d - %lu\n",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+          to.u8[0], to.u8[1], clock_seconds());
+    }
   }
 
   PROCESS_END();
@@ -391,18 +418,34 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
-  static char * mydata = NULL;
+  static uint8_t * request = NULL;
+  static uint8_t counter;
+  static uint8_t hexnumber[2];
 
   PROCESS_BEGIN();
 
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
-    printf("Serial_RX: %s (len=%d)\n", (char*)data, strlen(data));
-    mydata = (char*)data;
-    if (mydata[0] == '<') {
-      mydata++;
-      process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, mydata);
+    printf("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    request = (uint8_t *)data;
+
+    counter = 0;
+    if (request[0] == '<') {
+      printf("< ");
+      while(*++request != '\0') {
+        if (*request == ' ') continue;
+
+        hexnumber[counter%2] = *request;
+        if (counter++ % 2) printf("%c%c ", hexnumber[0], hexnumber[1]);
+
+      }
+      printf("\n");
+
+      //process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, mydata);
+    }
+    else {
+      /* commands for local execution */
     }
   }
 
