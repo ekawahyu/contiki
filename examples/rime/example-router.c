@@ -311,9 +311,6 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 
     request = *(uint8_t *)data;
 
-    if (request == 0x31) request = CONECTRIC_ROUTE_REQUEST;
-    if (request == 0x32) request = CONECTRIC_TIME_SYNC;
-
     memset(message, 0, sizeof(message));
     message[0] = request;
     packetbuf_copyfrom(message, 1);
@@ -421,6 +418,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
   static uint8_t * request = NULL;
   static uint8_t counter;
   static uint8_t hex_string[2];
+  static uint8_t hex_num;
 
   PROCESS_BEGIN();
 
@@ -431,6 +429,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
     request = (uint8_t *)data;
 
     counter = 0;
+
     if (request[0] == '<') {
       printf("< ");
       while(*++request != '\0') {
@@ -446,12 +445,13 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
         hex_string[counter%2] = *request;
 
-        if (counter++ % 2) printf("%x ", (hex_string[0] << 4) + hex_string[1]);
-
+        /* do conversion here and execute */
+        if (counter++ % 2) {
+          hex_num = (hex_string[0] << 4) + hex_string[1];
+          if (hex_num == CONECTRIC_ROUTE_REQUEST)
+            process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &hex_num);
+        }
       }
-      printf("\n");
-
-      //process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, mydata);
     }
     else {
       /* commands for local execution */
