@@ -225,10 +225,6 @@ PROCESS_THREAD(sub_process, ev, data)
 
       sub_send(&trickle, pkt_counter++, batt, &submeter_data[192], 64);
     }
-    
-//  for (cnt=0; pos_counter<BUFSIZE; pos_counter++)
-//    puthex(submeter_data[pos_counter]);
-
   }
   
   PROCESS_END();
@@ -281,7 +277,8 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 
   static uint8_t datasize;
   static uint8_t* dataptr;
-
+  static uint16_t crc;
+  
   while(1) {
     
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
@@ -289,17 +286,21 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     dataptr = &((uint8_t *)data)[1];
     datasize = ((uint8_t *)data)[0];
     
-    for(uint8_t cnt = 0; cnt < datasize; cnt++)
+    // copy data into submeter buffer (mask high bit)
+    for(uint8_t cnt = 0; cnt < datasize-2; cnt++)
     {
       puthex((dataptr[cnt]) & 0x7F);
       submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
     }
+    // copy crc without masking
+    puthex((dataptr[datasize-2]));
+    submeter_data[ekm_in_pos++] = (dataptr[datasize-2]);
+    puthex((dataptr[datasize-1]));
+    submeter_data[ekm_in_pos++] = (dataptr[datasize-1]);
     printf("\n");
     
     if(ekm_in_pos >= 0xFF)
-    {
-      // verify S/N match (bytes 4 through 15)
-      
+    {        
       ekm_in_pos = 0x100;  // known value
       process_post(&sub_process, PROCESS_EVENT_CONTINUE, &ekm_in_pos);
     }
