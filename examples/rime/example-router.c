@@ -50,6 +50,7 @@ enum {
   CONECTRIC_ATTR_NONE,
   CONECTRIC_SENSOR_BROADCAST,
   CONECTRIC_ROUTE_REQUEST,
+  CONECTRIC_ROUTE_REQUEST_BY_SN,
   CONECTRIC_ROUTE_REPLY,
   CONECTRIC_TIME_SYNC,
   CONECTRIC_POLL_SENSORS,
@@ -418,7 +419,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
   static uint8_t * request = NULL;
   static uint8_t counter;
   static uint8_t hex_string[2];
-  static uint8_t hex_num;
+  static uint8_t bytereq[32];
 
   PROCESS_BEGIN();
 
@@ -429,29 +430,36 @@ PROCESS_THREAD(serial_in_process, ev, data)
     request = (uint8_t *)data;
 
     counter = 0;
+    memset(bytereq, 0, sizeof(bytereq));
 
     if (request[0] == '<') {
-      printf("< ");
+
+      bytereq[0] = '<';
+
+      /* do conversion from hex string to hex bytes */
       while(*++request != '\0') {
         if (*request == ' ') continue;
 
-        /* do conversion here 0-9-0x30 A-F-0x37 a-f-0x57 */
+        /* single digit hex string 0-9, A-F, a-f adjustment */
         if (*request >= 0x30 && *request <= 0x39)
           *request -= 0x30;
         else if (*request >= 0x41 && *request <= 0x46)
           *request -= 0x37;
         else if (*request >= 0x61 && *request <= 0x66)
                   *request -= 0x57;
+        else /* skip all input other than hex number */
+          continue;
 
-        hex_string[counter%2] = *request;
+        hex_string[counter % 2] = *request;
 
-        /* do conversion here and execute */
-        if (counter++ % 2) {
-          hex_num = (hex_string[0] << 4) + hex_string[1];
-          if (hex_num == CONECTRIC_ROUTE_REQUEST)
-            process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &hex_num);
-        }
+        /* combinining two digits hex bytes into one and store it */
+        if (counter++ % 2 && counter < sizeof(bytereq))
+          bytereq[counter >> 1] = (hex_string[0] << 4) + hex_string[1];
       }
+
+      /* interpreting request bytes */
+      if (bytereq[1] == CONECTRIC_ROUTE_REQUEST)
+        process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &bytereq[1]);
     }
     else {
       /* commands for local execution */
