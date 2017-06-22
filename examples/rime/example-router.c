@@ -420,7 +420,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 {
   static uint8_t * request = NULL;
   static uint8_t counter;
-  static uint8_t hexnumber[2];
+  static uint8_t hex_string[2];
 
   PROCESS_BEGIN();
 
@@ -436,8 +436,17 @@ PROCESS_THREAD(serial_in_process, ev, data)
       while(*++request != '\0') {
         if (*request == ' ') continue;
 
-        hexnumber[counter%2] = *request;
-        if (counter++ % 2) printf("%c%c ", hexnumber[0], hexnumber[1]);
+        /* do conversion here 0-9-0x30 A-F-0x37 a-f-0x57 */
+        if (*request >= 0x30 && *request <= 0x39)
+          *request -= 0x30;
+        else if (*request >= 0x41 && *request <= 0x46)
+          *request -= 0x37;
+        else if (*request >= 0x61 && *request <= 0x66)
+                  *request -= 0x57;
+
+        hex_string[counter%2] = *request;
+
+        if (counter++ % 2) printf("%x ",hex_string[0] << 8 + hex_string[1]);
 
       }
       printf("\n");
