@@ -63,7 +63,7 @@ AUTOSTART_PROCESSES(&pir_abc_process);
 static void
 abc_recv(struct abc_conn *c)
 {
-  memset(message, 0, strlen(message));
+  memset(message, 0, sizeof(message));
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
   printf("abc message received (%d) '%s'\n", strlen(message), message);
 }
