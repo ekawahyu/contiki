@@ -47,7 +47,6 @@ extern process_event_t modbus_line_event_message;
 
 int modbus_line_input_byte(unsigned char c);
 void modbus_line_init(void);
-void modbus_line_reset(void);
 
 PROCESS_NAME(modbus_line_process);
 

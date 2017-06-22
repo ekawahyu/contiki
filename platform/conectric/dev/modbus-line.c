@@ -40,10 +40,8 @@
 #define BUFSIZE 276
 
 // data management
-static int pos, postidx;
-static uint8_t post_size, modbus_rx_data[BUFSIZE];
-// post 0: *data; 1: *size
-static uint8_t *post_data[2];
+static int pos;
+static uint8_t modbus_rx_data[BUFSIZE];  // index 0 used for data buffer length
 
 // Modbus timers
 static struct etimer mt;
@@ -56,19 +54,12 @@ process_event_t modbus_line_event_message;
 int
 modbus_line_input_byte(unsigned char c)
 {
-  // don't allow circular writes - must use reset
-//  if(++pos >= 270) {
-//    pos = 0;
-//    postidx = 0xFF;
-//  }
-
   if(++pos < BUFSIZE)
     modbus_rx_data[pos] = c;
 
+  // refresh timer as long as data keeps coming in
   etimer_adjust(&mt, (CLOCK_SECOND/10));
   
-  /* Wake up consumer process */
-//  process_poll(&modbus_line_process);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -80,31 +71,17 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 
   while(1) {
 
-    /* if no end-of-modbus frame detected */
-//    PROCESS_YIELD();
-
     etimer_set(&mt, 2 * CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&mt));
 
     if(pos > 0) {
       
-      if(postidx >= 0xFF)  // start of buffer (starts writing at 1)
-      {
-        post_size = pos;
-        postidx = 1;
-      }
-      else 
-      {
-         post_size = pos - postidx;
-         postidx++;
-      }
+      modbus_rx_data[0] = pos;
        
-      post_data[0] = &modbus_rx_data[postidx];
-      post_data[1] = &post_size;
-      
-      process_post(PROCESS_BROADCAST, modbus_line_event_message, &post_data);
+      process_post(PROCESS_BROADCAST, modbus_line_event_message, modbus_rx_data);
 
-      postidx = pos;
+      // reset for next input
+      pos = 0;
       
       /* Wait until all processes have handled the modbus line event */
       if(PROCESS_ERR_OK ==
@@ -120,13 +97,6 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 void
 modbus_line_init(void)
 {
+  pos = 0;
   process_start(&modbus_line_process, NULL);
-}
-/*---------------------------------------------------------------------------*/
-void
-modbus_line_reset(void)
-{
-    pos = 0;
-    postidx = 0xFF;
-    // any reason to clear modbus_rx_data?
 }

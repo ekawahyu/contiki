@@ -167,9 +167,6 @@ PROCESS_THREAD(sub_process, ev, data)
 
     ekm_in_pos = 0;
     
-    // reset modbus to beginning of collection buffer
-    modbus_line_reset();
-
     /* Low level RS485 test */
     uart_arch_writeb(0x2F);
     uart_arch_writeb(0x3F);
@@ -289,15 +286,15 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
     
-    dataptr = ((uint8_t **)data)[0];
-    datasize = *((uint8_t **)data)[1];
-    //printf("Modbus_RX: %#02x ", hexVal);
+    dataptr = &((uint8_t *)data)[1];
+    datasize = ((uint8_t *)data)[0];
     
     for(uint8_t cnt = 0; cnt < datasize; cnt++)
     {
       puthex((dataptr[cnt]) & 0x7F);
       submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
     }
+    printf("\n");
     
     if(ekm_in_pos >= 0xFF)
     {
