@@ -446,7 +446,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
         hex_string[counter%2] = *request;
 
-        if (counter++ % 2) printf("%x ",hex_string[0] << 8 + hex_string[1]);
+        if (counter++ % 2) printf("%x ", (hex_string[0] << 4) + hex_string[1]);
 
       }
       printf("\n");
