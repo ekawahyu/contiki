@@ -65,6 +65,8 @@ static linkaddr_t forward_addr = {{1, 0}};
 static linkaddr_t prevhop_addr = {{1, 0}};
 static linkaddr_t esender_addr = {{1, 0}};
 static uint8_t sensors[128];
+/* for cooja serial number testing purpose */
+static uint8_t serial_number[12] = {0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30};
 /*---------------------------------------------------------------------------*/
 static void
 dump_packetbuf(void)
@@ -159,7 +161,16 @@ trickle_recv(struct trickle_conn *c)
     if (message[header_len-1] == linkaddr_node_addr.u8[0] &&
         message[header_len-2] == linkaddr_node_addr.u8[1]) {
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, &request);
-      leds_toggle(LEDS_RED);
+    }
+  }
+  if (request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+    if (message[header_len-1] == 0xFF &&
+      message[header_len-2] == 0xFF) {
+      /* for cooja serial number testing purpose */
+      if (message[header_len+1] == serial_number[0] &&
+          message[header_len+2] == serial_number[1]) {
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, &request);
+      }
     }
   }
   if (message[header_len] == CONECTRIC_TIME_SYNC) {
@@ -168,7 +179,6 @@ trickle_recv(struct trickle_conn *c)
         ((uint32_t)message[header_len+2] << 16) +
         ((uint32_t)message[header_len+3] << 8) +
         ((uint32_t)message[header_len+4]));
-    leds_toggle(LEDS_RED);
   }
 }
 const static struct trickle_callbacks trickle_call = {trickle_recv};
@@ -297,7 +307,7 @@ PROCESS_THREAD(example_trickle_process, ev, data)
   static uint8_t message[128];
   static uint8_t * header;
   static uint8_t counter = 0;
-  static uint8_t request;
+  static uint8_t * request;
 
   PROCESS_EXITHANDLER(trickle_close(&trickle);)
 
@@ -310,17 +320,35 @@ PROCESS_THREAD(example_trickle_process, ev, data)
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    request = *(uint8_t *)data;
+    request = (uint8_t *)data;
 
     memset(message, 0, sizeof(message));
-    message[0] = request;
-    packetbuf_copyfrom(message, 1);
+    message[0] = *request++;
 
     /* Set the Rime address of the final receiver */
-    esender_addr.u8[1] = 0;
-    esender_addr.u8[0] = 49;
+    esender_addr.u8[1] = *request++;
+    esender_addr.u8[0] = *request++;
     to.u8[0] = esender_addr.u8[0];
     to.u8[1] = esender_addr.u8[1];
+
+    if (message[0] == CONECTRIC_ROUTE_REQUEST) {
+      packetbuf_copyfrom(message, 1);
+    }
+    if (message[0] == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+      message[1]   = *request++;
+      message[2]   = *request++;
+      message[3]   = *request++;
+      message[4]   = *request++;
+      message[5]   = *request++;
+      message[6]   = *request++;
+      message[7]   = *request++;
+      message[8]   = *request++;
+      message[9]   = *request++;
+      message[10]  = *request++;
+      message[11]  = *request++;
+      message[12]  = *request++;
+      packetbuf_copyfrom(message, 13);
+    }
 
     packetbuf_hdralloc(6);
 
@@ -339,8 +367,17 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     trickle_send(&trickle);
 
     /* For debugging purposes */
-    if (request == CONECTRIC_ROUTE_REQUEST) {
+
+    request = (uint8_t *)data;
+
+    if (*request == CONECTRIC_ROUTE_REQUEST) {
       printf("%d.%d: route request sent to %d.%d - %lu\n",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+          esender_addr.u8[0], esender_addr.u8[1],
+          clock_seconds());
+    }
+    if (*request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+      printf("%d.%d: route request by S/N sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           esender_addr.u8[0], esender_addr.u8[1],
           clock_seconds());
@@ -353,7 +390,6 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 PROCESS_THREAD(example_multihop_process, ev, data)
 {
   static struct etimer et;
-
   static linkaddr_t to;
   static uint8_t message[128];
   static uint8_t * header;
@@ -375,7 +411,7 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 
     request = *(uint8_t *)data;
 
-    if (request == CONECTRIC_ROUTE_REQUEST) {
+    if (request == CONECTRIC_ROUTE_REQUEST || request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
       reply = CONECTRIC_ROUTE_REPLY;
       /* TODO delay count (for now) 1 seconds for trickle to subside */
       etimer_set(&et, CLOCK_SECOND);
@@ -416,12 +452,28 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
-  static uint8_t * request = NULL;
+  static uint8_t * request;
   static uint8_t counter;
   static uint8_t hex_string[2];
   static uint8_t bytereq[32];
 
   PROCESS_BEGIN();
+
+  /* for cooja serial number testing purpose */
+  serial_number[1] = ((linkaddr_node_addr.u8[0] & 0xF0) >> 4);
+  if (serial_number[1] > 9)
+    serial_number[1] += 0x37;
+  else
+    serial_number[1] += 0x30;
+
+  serial_number[0] = (linkaddr_node_addr.u8[0] & 0x0F);
+  if (serial_number[0] > 9)
+    serial_number[0] += 0x37;
+  else
+    serial_number[0] += 0x30;
+  /*******************************************/
+
+  printf("Meter S/N=%s\n", serial_number);
 
   while(1) {
 
@@ -459,6 +511,8 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
       /* interpreting request bytes */
       if (bytereq[1] == CONECTRIC_ROUTE_REQUEST)
+        process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &bytereq[1]);
+      if (bytereq[1] == CONECTRIC_ROUTE_REQUEST_BY_SN)
         process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &bytereq[1]);
     }
     else {
