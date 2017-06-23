@@ -38,6 +38,7 @@
  */
 
 #include "contiki.h"
+#include "debug.h"
 #include "net/rime/rime.h"
 #include "random.h"
 
@@ -45,6 +46,24 @@
 #include "dev/leds.h"
 
 #include <stdio.h>
+
+#define DEBUG 0
+
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#define PUTSTRING(...) putstring(__VA_ARGS__)
+#define PUTHEX(...) puthex(__VA_ARGS__)
+#define PUTBIN(...) putbin(__VA_ARGS__)
+#define PUTDEC(...) putdec(__VA_ARGS__)
+#define PUTCHAR(...) putchar(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#define PUTSTRING(...)
+#define PUTHEX(...)
+#define PUTBIN(...)
+#define PUTDEC(...)
+#define PUTCHAR(...)
+#endif
 
 enum {
   CONECTRIC_ATTR_NONE,
@@ -74,17 +93,17 @@ dump_packetbuf(void)
   static uint16_t len;
   static char * packetbuf;
 
+  putstring("> ");
+
   len = packetbuf_hdrlen();
   packetbuf = (char *)packetbuf_hdrptr();
-
-  printf("> ");
   while(len--) puthex(*packetbuf++);
 
   len = packetbuf_datalen();
   packetbuf = (char *)packetbuf_dataptr();
-
   while(len--) puthex(*packetbuf++);
-  printf("\n");
+
+  putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
@@ -113,7 +132,7 @@ abc_recv(struct abc_conn *c)
 
   dump_packetbuf();
 
-  printf("%d.%d: found sensor %d.%d (%d) - %lu\n",
+  PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       msg.src.u8[0], msg.src.u8[1], msg.rssi, msg.timestamp);
 }
@@ -142,11 +161,11 @@ trickle_recv(struct trickle_conn *c)
   msg.rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
   msg.timestamp = clock_seconds();
 
-  /*printf("%d.%d: found neighbor %d.%d (%d) - %d\n",
+  PRINTF("%d.%d: found neighbor %d.%d (%d) - %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       msg.src.u8[0], msg.src.u8[1],
       packetbuf_attr(PACKETBUF_ATTR_EPACKET_TYPE),
-      msg.timestamp);*/
+      msg.timestamp);
 
   rank = trickle_rank(c);
 
@@ -209,7 +228,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
 
   dump_packetbuf();
 
-  printf("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
+  PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         packetbuf_addr(PACKETBUF_ADDR_ESENDER)->u8[0],
         packetbuf_addr(PACKETBUF_ADDR_ESENDER)->u8[1],
@@ -253,9 +272,9 @@ multihop_forward(struct multihop_conn *c,
   else
     linkaddr_copy(&prevhop_addr, prevhop);
 
-  /*printf("%d.%d: multihop to forward from %d.%d - len=%d - %d hops\n",
+  PRINTF("%d.%d: multihop to forward from %d.%d - len=%d - %d hops\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        prevhop_addr.u8[0], prevhop_addr.u8[1], packetbuf_datalen(), mhops);*/
+        prevhop_addr.u8[0], prevhop_addr.u8[1], packetbuf_datalen(), mhops);
 
   memset(message, 0, sizeof(message));
   packetbuf_len = packetbuf_copyto(message);
@@ -370,18 +389,21 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 
     request = (uint8_t *)data;
 
+#if DEBUG
     if (*request == CONECTRIC_ROUTE_REQUEST) {
-      printf("%d.%d: route request sent to %d.%d - %lu\n",
+      PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           esender_addr.u8[0], esender_addr.u8[1],
           clock_seconds());
     }
     if (*request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-      printf("%d.%d: route request by S/N sent to %d.%d - %lu\n",
+      PRINTF("%d.%d: route request by S/N sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           esender_addr.u8[0], esender_addr.u8[1],
           clock_seconds());
     }
+#endif
+
   }
 
   PROCESS_END();
@@ -439,12 +461,14 @@ PROCESS_THREAD(example_multihop_process, ev, data)
     /* Send the packet. */
     multihop_send(&multihop, &to);
 
-    /* For debugging purposes */
+#if DEBUG
     if (reply == CONECTRIC_ROUTE_REPLY) {
-      printf("%d.%d: replying route request to %d.%d - %lu\n",
+      PRINTF("%d.%d: replying route request to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           to.u8[0], to.u8[1], clock_seconds());
     }
+#endif
+
   }
 
   PROCESS_END();
@@ -471,14 +495,14 @@ PROCESS_THREAD(serial_in_process, ev, data)
     serial_number[0] += 0x37;
   else
     serial_number[0] += 0x30;
-  /*******************************************/
 
   printf("Meter S/N=%s\n", serial_number);
+  /*******************************************/
 
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
-    printf("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
     request = (uint8_t *)data;
 
     counter = 0;
@@ -510,10 +534,14 @@ PROCESS_THREAD(serial_in_process, ev, data)
       }
 
       /* interpreting request bytes */
-      if (bytereq[1] == CONECTRIC_ROUTE_REQUEST)
+      if (bytereq[1] == CONECTRIC_ROUTE_REQUEST ||
+          bytereq[1] == CONECTRIC_ROUTE_REQUEST_BY_SN)
         process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &bytereq[1]);
-      if (bytereq[1] == CONECTRIC_ROUTE_REQUEST_BY_SN)
-        process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &bytereq[1]);
+      else
+        /* unknown request */
+        PRINTF("%d.%d: Unknown request - %lu\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+            clock_seconds());
     }
     else {
       /* commands for local execution */
