@@ -58,11 +58,20 @@
 // Device
 extern volatile uint16_t deep_sleep_requested;
 static struct etimer et;
-//static int pos_counter;
+// BMB - move this to .h
+#define SN_SIZE 12
+static uint8_t sn_data[SN_SIZE];
 
 // Messaging 
 static uint8_t message[72];
 static uint8_t pkt_counter = 0;
+
+// BMB - move this to .h for messages
+enum {
+     SUB_MSG_TYPE_BOOT = 0x01,
+     SUB_MSG_TYPE_EKM_DATA = 0x02,
+     GW_MSG_TYPE_SN = 0x80
+};
 
 // Logging
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
@@ -84,17 +93,18 @@ enum
 PROCESS(sub_process, "Submeter");
 PROCESS(serial_in_process, "Serial example");
 PROCESS(modbus_in_process, "Modbus example");
+PROCESS(modbus_out_process, "Modbus write");
 PROCESS(flash_log_process, "Flash Log process");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &buttons_test_process, &flash_log_process);
+AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &modbus_out_process, &buttons_test_process, &flash_log_process);
 #else
-AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &flash_log_process);
+AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &modbus_out_process, &flash_log_process);
 #endif
 /*---------------------------------------------------------------------------*/
 
 // sub send data.  Note size is currently always 64 (added flexibility)
-static void sub_send(struct trickle_conn *c, uint8_t counter, uint8_t battery, uint8_t *tx_data, uint8_t size)
+static void sub_send(struct trickle_conn *c, uint8_t type, uint8_t counter, uint8_t battery, uint8_t *tx_data, uint8_t size)
 {
   uint8_t * pmessage = message;
   uint8_t cnt;
@@ -106,25 +116,36 @@ static void sub_send(struct trickle_conn *c, uint8_t counter, uint8_t battery, u
   *pmessage++ = 0;
   *pmessage++ = 0xFF;
   *pmessage++ = 0xFF;
-  *pmessage++ = 0x80;
+  *pmessage++ = type;
   *pmessage++ = counter;
   *pmessage++ = battery;
-  *pmessage++ = 0x81;
 
   for (cnt=0; cnt<size; cnt++)
     *pmessage++ = tx_data[cnt];
 
-  packetbuf_copyfrom(message, size+8);
+  packetbuf_copyfrom(message, size+7);
   trickle_send(c);
 }
 
 static void
 trickle_recv(struct trickle_conn *c)
 {
+  uint8_t *ekm_sn;
+  
   printf("%d.%d: trickle message received '%s'\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	 (char *)packetbuf_dataptr());
+  printf("/n");
+  ekm_sn = packetbuf_dataptr();
+  
+  // handle S/N request message from GW
+  if(ekm_sn[4] == GW_MSG_TYPE_SN)
+  {
+    memcpy(sn_data, &ekm_sn[6], SN_SIZE);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, sn_data);
+  }
 }
+
 const static struct trickle_callbacks trickle_call = {trickle_recv};
 static struct trickle_conn trickle;
 /*---------------------------------------------------------------------------*/
@@ -135,7 +156,8 @@ PROCESS_THREAD(sub_process, ev, data)
   static int dec;
   static float frac;
   static uint8_t *sensor_data;
-  
+  uint8_t boot_reason;
+    
   PROCESS_EXITHANDLER(trickle_close(&trickle);)
 
   PROCESS_BEGIN();
@@ -143,50 +165,14 @@ PROCESS_THREAD(sub_process, ev, data)
   trickle_open(&trickle, CLOCK_SECOND, 128, &trickle_call);
 
   etimer_set(&et, CLOCK_SECOND);
-
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  memset(message, 0, 72);
-  message[0] = 0;
-  message[1] = 0;
-  message[2] = 0xFF;
-  message[3] = 0xFF;
-  message[4] = 0x60;
-  message[5] = pkt_counter++;
-  message[6] = clock_reset_cause();
-
-  packetbuf_copyfrom(message, 7);
-  trickle_send(&trickle);
+  boot_reason = clock_reset_cause();
+  sub_send(&trickle, SUB_MSG_TYPE_BOOT, pkt_counter++, 0, &boot_reason, 1);
 
   deep_sleep_requested = 0;
 
   while(1) {
-
-    etimer_set(&et, 1 * CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    ekm_in_pos = 0;
-    
-    /* Low level RS485 test */
-    uart_arch_writeb(0x2F);
-    uart_arch_writeb(0x3F);
-
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x30);
-    uart_arch_writeb(0x31);
-    uart_arch_writeb(0x35);
-    uart_arch_writeb(0x36);
-    uart_arch_writeb(0x38);
-    uart_arch_writeb(0x39);
-
-    uart_arch_writeb(0x21);
-    uart_arch_writeb(0x0D);
-    uart_arch_writeb(0x0A);
 
     // wait for event 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
@@ -208,22 +194,22 @@ PROCESS_THREAD(sub_process, ev, data)
       logData[3] = 0x00;
       flashlogging_write4(RIME_SUB_CMP_ID, SUB_SEND, logData);  
     
-      sub_send(&trickle, pkt_counter++, batt, &submeter_data[0], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[0], 64);
 
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      sub_send(&trickle, pkt_counter++, batt, &submeter_data[64], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[64], 64);
 
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      sub_send(&trickle, pkt_counter++, batt, &submeter_data[128], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[128], 64);
 
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      sub_send(&trickle, pkt_counter++, batt, &submeter_data[192], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[192], 64);
     }
   }
   
@@ -309,6 +295,45 @@ PROCESS_THREAD(modbus_in_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+PROCESS_THREAD(modbus_out_process, ev, data)
+{
+  uint8_t *serial_data;
+  PROCESS_BEGIN();
+
+  while(1) {
+    
+    // wait for event 
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
+    serial_data = (uint8_t *)data;
+    
+    // reset modbus input index
+    ekm_in_pos = 0;
+    
+    /* modbus write */
+    uart_arch_writeb(0x2F);
+    uart_arch_writeb(0x3F);
+
+    uart_arch_writeb(serial_data[0]);
+    uart_arch_writeb(serial_data[1]);
+    uart_arch_writeb(serial_data[2]);
+    uart_arch_writeb(serial_data[3]);
+    uart_arch_writeb(serial_data[4]);
+    uart_arch_writeb(serial_data[5]);
+    uart_arch_writeb(serial_data[6]);
+    uart_arch_writeb(serial_data[7]);
+    uart_arch_writeb(serial_data[8]);
+    uart_arch_writeb(serial_data[9]);
+    uart_arch_writeb(serial_data[10]);
+    uart_arch_writeb(serial_data[11]);
+
+    uart_arch_writeb(0x21);
+    uart_arch_writeb(0x0D);
+    uart_arch_writeb(0x0A);  
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(flash_log_process, ev, data)
 {
   static struct etimer ft;
@@ -319,7 +344,7 @@ PROCESS_THREAD(flash_log_process, ev, data)
   
   while (1)
   {
-    etimer_set(&ft, /*CLOCK_HR_MULT * (clock_time_t)*/ 10 * (CLOCK_SECOND));  
+    etimer_set(&ft, 12 * CLOCK_HR_MULT * (CLOCK_SECOND));  
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ft));
     
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
