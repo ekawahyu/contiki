@@ -69,7 +69,10 @@ static uint8_t pkt_counter = 0;
 // BMB - move this to .h for messages
 enum {
      SUB_MSG_TYPE_BOOT = 0x01,
-     SUB_MSG_TYPE_EKM_DATA = 0x02,
+     SUB_MSG_TYPE_EKM_DATA1 = 0x10,
+     SUB_MSG_TYPE_EKM_DATA2 = 0x11,
+     SUB_MSG_TYPE_EKM_DATA3 = 0x12,
+     SUB_MSG_TYPE_EKM_DATA4 = 0x13,
      GW_MSG_TYPE_SN = 0x80
 };
 
@@ -103,7 +106,7 @@ AUTOSTART_PROCESSES(&sub_process, &serial_in_process, &modbus_in_process, &modbu
 #endif
 /*---------------------------------------------------------------------------*/
 
-// sub send data.  Note size is currently always 64 (added flexibility)
+// sub send data using trickle
 static void sub_send(struct trickle_conn *c, uint8_t type, uint8_t counter, uint8_t battery, uint8_t *tx_data, uint8_t size)
 {
   uint8_t * pmessage = message;
@@ -194,22 +197,22 @@ PROCESS_THREAD(sub_process, ev, data)
       logData[3] = 0x00;
       flashlogging_write4(RIME_SUB_CMP_ID, SUB_SEND, logData);  
     
-      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[0], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA1, pkt_counter++, batt, &submeter_data[0], 64);
 
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[64], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA2, pkt_counter++, batt, &submeter_data[64], 64);
 
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[128], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA3, pkt_counter++, batt, &submeter_data[128], 64);
 
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA, pkt_counter++, batt, &submeter_data[192], 64);
+      sub_send(&trickle, SUB_MSG_TYPE_EKM_DATA4, pkt_counter++, batt, &submeter_data[192], 64);
     }
   }
   

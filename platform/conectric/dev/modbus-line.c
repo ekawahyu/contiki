@@ -71,7 +71,7 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 
   while(1) {
 
-    etimer_set(&mt, 2 * CLOCK_SECOND);
+    etimer_set(&mt, 1 * CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&mt));
 
     if(pos > 0) {

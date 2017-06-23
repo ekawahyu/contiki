@@ -64,7 +64,6 @@ enum {
      GW_MSG_TYPE_SN = 0x80
 };
 
-
 // Messaging 
 static uint8_t message[72];
 static uint8_t pkt_counter = 0;
