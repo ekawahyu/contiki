@@ -185,9 +185,8 @@ trickle_recv(struct trickle_conn *c)
   if (request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
     if (message[header_len-1] == 0xFF &&
       message[header_len-2] == 0xFF) {
-      /* for cooja serial number testing purpose */
-      if (message[header_len+1] == serial_number[0] &&
-          message[header_len+2] == serial_number[1]) {
+      if (message[header_len+11] == serial_number[10] &&
+          message[header_len+12] == serial_number[11]) {
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, &request);
       }
     }
@@ -347,8 +346,8 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     /* Set the Rime address of the final receiver */
     esender_addr.u8[1] = *request++;
     esender_addr.u8[0] = *request++;
-    to.u8[0] = esender_addr.u8[0];
     to.u8[1] = esender_addr.u8[1];
+    to.u8[0] = esender_addr.u8[0];
 
     if (message[0] == CONECTRIC_ROUTE_REQUEST) {
       packetbuf_copyfrom(message, 1);
@@ -484,17 +483,17 @@ PROCESS_THREAD(serial_in_process, ev, data)
   PROCESS_BEGIN();
 
   /* for cooja serial number testing purpose */
-  serial_number[1] = ((linkaddr_node_addr.u8[0] & 0xF0) >> 4);
-  if (serial_number[1] > 9)
-    serial_number[1] += 0x37;
+  serial_number[10] = ((linkaddr_node_addr.u8[0] & 0xF0) >> 4);
+  if (serial_number[10] > 9)
+    serial_number[10] += 0x37;
   else
-    serial_number[1] += 0x30;
+    serial_number[10] += 0x30;
 
-  serial_number[0] = (linkaddr_node_addr.u8[0] & 0x0F);
-  if (serial_number[0] > 9)
-    serial_number[0] += 0x37;
+  serial_number[11] = (linkaddr_node_addr.u8[0] & 0x0F);
+  if (serial_number[11] > 9)
+    serial_number[11] += 0x37;
   else
-    serial_number[0] += 0x30;
+    serial_number[11] += 0x30;
 
   printf("Meter S/N=%s\n", serial_number);
   /*******************************************/
