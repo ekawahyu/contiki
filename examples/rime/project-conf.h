@@ -42,7 +42,13 @@ extern "C" {
 #endif
 
 #define STARTUP_CONF_VERBOSE            1
+#ifdef NETSTACK_CONF_MAC
+#undef NETSTACK_CONF_MAC
+#endif
 #define NETSTACK_CONF_MAC               csma_driver
+#ifdef NETSTACK_CONF_RDC
+#undef NETSTACK_CONF_RDC
+#endif
 #define NETSTACK_CONF_RDC               nullrdc_driver
 
 #ifdef __cplusplus

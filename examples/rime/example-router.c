@@ -82,6 +82,7 @@ enum {
 static uint16_t rank = 255;
 static linkaddr_t forward_addr = {{1, 0}};
 static linkaddr_t prevhop_addr = {{1, 0}};
+static linkaddr_t sender_addr  = {{1, 0}};
 static linkaddr_t esender_addr = {{1, 0}};
 static uint8_t sensors[128];
 /* for cooja serial number testing purpose */
@@ -93,7 +94,7 @@ dump_packetbuf(void)
   static uint16_t len;
   static char * packetbuf;
 
-  putstring("> ");
+  putstring(">");
 
   len = packetbuf_hdrlen();
   packetbuf = (char *)packetbuf_hdrptr();
@@ -145,21 +146,46 @@ trickle_recv(struct trickle_conn *c)
   struct {
     clock_time_t timestamp;
     linkaddr_t src;
+    linkaddr_t dest;
     uint16_t rssi;
   } msg;
-  uint8_t message[128];
-  uint8_t packetbuf_len, header_len;
+  static uint8_t message[128];
+  uint8_t hdrlen, datalen;
+  uint8_t * hdrptr;
+  static uint8_t * dataptr;
   uint8_t request;
 
   /* Copy the packet attributes to avoid them being overwritten or
-     cleared by an application program that uses the packet buffer for
-     its own needs */
+   * cleared by an application program that uses the packet buffer for
+   * its own needs
+   */
   memset(&msg, 0, sizeof(msg));
   linkaddr_copy(&msg.src, packetbuf_addr(PACKETBUF_ADDR_SENDER));
-  linkaddr_copy(&forward_addr, &msg.src);
-  linkaddr_copy(&esender_addr, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
   msg.rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
   msg.timestamp = clock_seconds();
+
+  /* Copy the trickle source and end-to-end sender address */
+  linkaddr_copy(&sender_addr, &msg.src);
+  linkaddr_copy(&esender_addr, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
+
+  /* Set the multihop forwarding address to the trickle source */
+  linkaddr_copy(&forward_addr, &sender_addr);
+
+  /* Copy packetbuf to message */
+  memset(message, 0, sizeof(message));
+  packetbuf_copyto(message);
+
+  /* Decoding message */
+  hdrptr = &message[0];
+  hdrlen = message[0];
+  dataptr = &message[0] + hdrlen;
+  datalen = message[hdrlen];
+  request = *++dataptr;
+  dataptr -= 3;
+  msg.dest.u8[1] = *dataptr++;
+  msg.dest.u8[0] = *dataptr++;
+
+  rank = trickle_rank(c);
 
   PRINTF("%d.%d: found neighbor %d.%d (%d) - %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -167,37 +193,27 @@ trickle_recv(struct trickle_conn *c)
       packetbuf_attr(PACKETBUF_ATTR_EPACKET_TYPE),
       msg.timestamp);
 
-  rank = trickle_rank(c);
-
-  /* Copy packetbuf to message */
-  memset(message, 0, sizeof(message));
-  packetbuf_len = packetbuf_copyto(message);
-  packetbuf_len = packetbuf_len; /* suppressed warning */
-
-  header_len = message[0];
-  request = message[header_len];
   if (request == CONECTRIC_ROUTE_REQUEST) {
-    if (message[header_len-1] == linkaddr_node_addr.u8[0] &&
-        message[header_len-2] == linkaddr_node_addr.u8[1]) {
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, &request);
+    if (msg.dest.u8[1] == linkaddr_node_addr.u8[1] &&
+        msg.dest.u8[0] == linkaddr_node_addr.u8[0]) {
+      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, dataptr);
     }
   }
   if (request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-    if (message[header_len-1] == 0xFF &&
-      message[header_len-2] == 0xFF) {
-      if (message[header_len+11] == serial_number[10] &&
-          message[header_len+12] == serial_number[11]) {
-        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, &request);
+    if (msg.dest.u8[1] == 0xFF && msg.dest.u8[0] == 0xFF) {
+      if (message[hdrlen+12] == serial_number[10] &&
+          message[hdrlen+13] == serial_number[11]) {
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, dataptr);
       }
     }
   }
-  if (message[header_len] == CONECTRIC_TIME_SYNC) {
+  /*if (request == CONECTRIC_TIME_SYNC) {
     clock_set_seconds(
-        ((uint32_t)message[header_len+1] << 24) +
-        ((uint32_t)message[header_len+2] << 16) +
-        ((uint32_t)message[header_len+3] << 8) +
-        ((uint32_t)message[header_len+4]));
-  }
+        ((uint32_t)message[hdrlen+2] << 24) +
+        ((uint32_t)message[hdrlen+3] << 16) +
+        ((uint32_t)message[hdrlen+4] << 8) +
+        ((uint32_t)message[hdrlen+5]));
+  }*/
 }
 const static struct trickle_callbacks trickle_call = {trickle_recv};
 static struct trickle_conn trickle;
@@ -212,18 +228,17 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
 {
   linkaddr_t msender, mreceiver;
   uint8_t message[128];
-  uint8_t packetbuf_len, header_len;
+  uint8_t packetlen;
   uint8_t mhops;
-  int i;
 
   /* Copy the packet attributes to avoid them being overwritten or
-     cleared by an application program that uses the packet buffer for
-     its own needs */
+   * cleared by an application program that uses the packet buffer for
+   * its own needs
+   */
   linkaddr_copy(&msender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
   linkaddr_copy(&mreceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
   linkaddr_copy(&prevhop_addr, prevhop);
   mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
-  mhops = mhops; /* suppressed warning */
 
   dump_packetbuf();
 
@@ -236,10 +251,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
 
   /* Copy packetbuf to message */
   memset(message, 0, sizeof(message));
-  packetbuf_len = packetbuf_copyto(message);
-
-  header_len = message[0];
-  header_len = header_len; /* suppressed warning */
+  packetlen = packetbuf_copyto(message);
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -254,13 +266,14 @@ multihop_forward(struct multihop_conn *c,
 {
   linkaddr_t msender, mreceiver;
   uint8_t message[128];
-  uint8_t mhops, packetbuf_len, header_len;
+  uint8_t mhops, packetlen, hdrlen;
   uint8_t * header;
   int i;
 
   /* Copy the packet attributes to avoid them being overwritten or
-     cleared by an application program that uses the packet buffer for
-     its own needs */
+   * cleared by an application program that uses the packet buffer for
+   * its own needs
+   */
   linkaddr_copy(&msender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
   linkaddr_copy(&mreceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
   mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
@@ -275,15 +288,18 @@ multihop_forward(struct multihop_conn *c,
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         prevhop_addr.u8[0], prevhop_addr.u8[1], packetbuf_datalen(), mhops);
 
+  /* Copy packetbuf to message */
   memset(message, 0, sizeof(message));
-  packetbuf_len = packetbuf_copyto(message);
+  packetlen = packetbuf_copyto(message);
 
-  header_len = message[0];
-  packetbuf_copyfrom(&message[header_len], packetbuf_len - header_len);
-  packetbuf_hdralloc(header_len + 2);
+  /* Discard current packet header */
+  hdrlen = message[0];
+  packetbuf_copyfrom(&message[hdrlen], packetlen - hdrlen);
+
+  /* Add new packet header */
+  packetbuf_hdralloc(hdrlen + 2);
   header = (uint8_t *)packetbuf_hdrptr();
-
-  *header++ = header_len + 2;
+  *header++ = hdrlen + 2;
   *header++ = message[1];
   *header++ = message[2] + 1;
   *header++ = message[3] + 1;
@@ -291,7 +307,7 @@ multihop_forward(struct multihop_conn *c,
   *header++ = message[5];
   *header++ = linkaddr_node_addr.u8[1];
   *header++ = linkaddr_node_addr.u8[0];
-  for (i = 6; i < header_len; i++) {
+  for (i = 6; i < hdrlen; i++) {
     *header++ = message[i];
   }
 
@@ -323,6 +339,7 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 {
   static linkaddr_t to;
   static uint8_t message[128];
+  static uint8_t message_len;
   static uint8_t * header;
   static uint8_t counter = 0;
   static uint8_t * request;
@@ -339,9 +356,12 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
     request = (uint8_t *)data;
-
     memset(message, 0, sizeof(message));
-    message[0] = *request++;
+
+    /* if (*request == '<') then it's from serial port, do as follow */
+    request++; /* skip the '<' */
+    message[0] = *request++; /* message_len */
+    message[1] = *request++; /* bytereq */
 
     /* Set the Rime address of the final receiver */
     esender_addr.u8[1] = *request++;
@@ -349,11 +369,10 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     to.u8[1] = esender_addr.u8[1];
     to.u8[0] = esender_addr.u8[0];
 
-    if (message[0] == CONECTRIC_ROUTE_REQUEST) {
-      packetbuf_copyfrom(message, 1);
+    if (message[1] == CONECTRIC_ROUTE_REQUEST) {
+      message_len = 2;
     }
-    if (message[0] == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-      message[1]   = *request++;
+    if (message[1] == CONECTRIC_ROUTE_REQUEST_BY_SN) {
       message[2]   = *request++;
       message[3]   = *request++;
       message[4]   = *request++;
@@ -365,8 +384,12 @@ PROCESS_THREAD(example_trickle_process, ev, data)
       message[10]  = *request++;
       message[11]  = *request++;
       message[12]  = *request++;
-      packetbuf_copyfrom(message, 13);
+      message[13]  = *request++;
+      message_len = 14;
     }
+
+    message[0] = message_len;
+    packetbuf_copyfrom(message, message_len);
 
     packetbuf_hdralloc(6);
 
@@ -384,11 +407,10 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     /* Send the packet */
     trickle_send(&trickle);
 
-    /* For debugging purposes */
-
-    request = (uint8_t *)data;
-
 #if DEBUG
+    request = (uint8_t *)data;
+    request++; request++;
+
     if (*request == CONECTRIC_ROUTE_REQUEST) {
       PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -413,9 +435,10 @@ PROCESS_THREAD(example_multihop_process, ev, data)
   static struct etimer et;
   static linkaddr_t to;
   static uint8_t message[128];
+  static uint8_t message_len;
   static uint8_t * header;
   static uint8_t counter = 0;
-  static uint8_t request;
+  static uint8_t * request;
   static uint8_t reply;
 
   PROCESS_EXITHANDLER(multihop_close(&multihop);)
@@ -430,22 +453,44 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    request = *(uint8_t *)data;
-
-    if (request == CONECTRIC_ROUTE_REQUEST || request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-      reply = CONECTRIC_ROUTE_REPLY;
-      /* TODO delay count (for now) 1 seconds for trickle to subside */
-      etimer_set(&et, CLOCK_SECOND);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
-
+    request = (uint8_t *)data;
     memset(message, 0, sizeof(message));
-    message[0] = reply;
-    packetbuf_copyfrom(message, 1);
+
+    /* if (*request == '<') then it's from serial port, do as follow */
+    //request++; /* skip the '<' */
+    //message[0] = *request++; /* message_len */
+    //message[1] = *request++; /* bytereq */
+
+    /*
+     * TODO handler for request coming from serial port
+     */
+
+    /* else */
+    message[0] = *request++; /* message_len */
+    message[1] = *request++; /* bytereq */
 
     /* Set the Rime address of the final receiver */
     to.u8[0] = esender_addr.u8[0];
     to.u8[1] = esender_addr.u8[1];
+
+    if (message[1] == CONECTRIC_ROUTE_REQUEST) {
+      reply = CONECTRIC_ROUTE_REPLY;
+      message_len = 2;
+      /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+    if (message[1] == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+      reply = CONECTRIC_ROUTE_REPLY;
+      message_len = 2;
+      /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+    message[0] = message_len;
+    message[1] = reply;
+    packetbuf_copyfrom(message, message_len);
 
     packetbuf_hdralloc(6);
 
@@ -504,7 +549,8 @@ PROCESS_THREAD(serial_in_process, ev, data)
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
     request = (uint8_t *)data;
 
-    counter = 0;
+    counter = 2;
+
     memset(bytereq, 0, sizeof(bytereq));
 
     if (request[0] == '<') {
@@ -513,6 +559,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
       /* do conversion from hex string to hex bytes */
       while(*++request != '\0') {
+
         if (*request == ' ') continue;
 
         /* single digit hex string 0-9, A-F, a-f adjustment */
@@ -528,14 +575,14 @@ PROCESS_THREAD(serial_in_process, ev, data)
         hex_string[counter % 2] = *request;
 
         /* combinining two digits hex bytes into one and store it */
-        if (counter++ % 2 && counter < sizeof(bytereq))
-          bytereq[counter >> 1] = (hex_string[0] << 4) + hex_string[1];
+        if (counter++ % 2)
+          bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
       }
 
       /* interpreting request bytes */
-      if (bytereq[1] == CONECTRIC_ROUTE_REQUEST ||
-          bytereq[1] == CONECTRIC_ROUTE_REQUEST_BY_SN)
-        process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, &bytereq[1]);
+      if (bytereq[2] == CONECTRIC_ROUTE_REQUEST ||
+          bytereq[2] == CONECTRIC_ROUTE_REQUEST_BY_SN)
+        process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
       else
         /* unknown request */
         PRINTF("%d.%d: Unknown request - %lu\n",
