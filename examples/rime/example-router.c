@@ -47,7 +47,7 @@
 
 #include <stdio.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -322,8 +322,8 @@ multihop_forward(struct multihop_conn *c,
     for (i = 6; i < hdrlen; i++) {
       *header++ = message[i];
     }
-    forward_addr.u8[1] = message[4 + (mhops << 2)];
-    forward_addr.u8[0] = message[5 + (mhops << 2)];
+    forward_addr.u8[1] = message[4 + (mhops << 1)];
+    forward_addr.u8[0] = message[5 + (mhops << 1)];
   }
 
   if (request == CONECTRIC_ROUTE_REPLY) {
@@ -346,6 +346,10 @@ multihop_forward(struct multihop_conn *c,
   packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &msender);
   packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mreceiver);
   packetbuf_set_attr(PACKETBUF_ATTR_HOPS, mhops);
+
+  PRINTF("%d.%d: forwarding address is %d.%d - %d hops\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      forward_addr.u8[0], forward_addr.u8[1], mhops);
 
   return &forward_addr;
 }
@@ -513,14 +517,18 @@ PROCESS_THREAD(example_multihop_process, ev, data)
       packetbuf_hdralloc(6 + routing_len);
 
       header = (uint8_t *)packetbuf_hdrptr();
-      *header++ = 6;            /* header len */
-      *header++ = counter++;    /* seqno */
-      *header++ = 0;            /* hop count */
-      *header++ = 0;            /* number of hops */
-      *header++ = to.u8[1];     /* destination addr H */
-      *header++ = to.u8[0];     /* destination addr L */
+      *header++ = 6 + routing_len;  /* header len */
+      *header++ = counter++;        /* seqno */
+      *header++ = 0;                /* hop count */
+      *header++ = 0;                /* number of hops */
+      *header++ = to.u8[1];         /* destination addr H */
+      *header++ = to.u8[0];         /* destination addr L */
       while(routing_len--)
-        *header++ = *request++;  /* routing table */
+        *header++ = *request++;     /* routing table */
+
+      printf("%d.%d: multihop ping: ",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+      dump_packetbuf();
     }
 
     /* request comes from radio */
@@ -561,9 +569,13 @@ PROCESS_THREAD(example_multihop_process, ev, data)
       *header++ = 0;          /* number of hops */
       *header++ = to.u8[1];   /* destination addr H */
       *header++ = to.u8[0];   /* destination addr L */
+
+      printf("%d.%d: route request: ",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+      dump_packetbuf();
     }
 
-    /* Send the packet. */
+    /* Send the packet */
     multihop_send(&multihop, &to);
 
     PRINTF("%d.%d: multihop send to %d.%d - %lu\n",
