@@ -129,7 +129,7 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   linkaddr_copy(&message->esender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
   linkaddr_copy(&message->ereceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
   message->rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
-  linkaddr_copy(&message->hops, packetbuf_attr(PACKETBUF_ATTR_HOPS));
+  message->hops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
 
   /* Maybe this is not necessary because the whole message struct was zeroed */
   //memset(message->message, 0, sizeof(message->message));
