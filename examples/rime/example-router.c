@@ -81,10 +81,6 @@ enum {
   CONECTRIC_ATTR_MAX
 };
 
-#define MESSAGE_ABC_RECV      1
-#define MESSAGE_TRICKLE_RECV  2
-#define MESSAGE_MHOP_RECV     3
-
 static uint16_t rank = 255;
 static uint8_t sensors[128];
 
@@ -97,19 +93,50 @@ typedef struct {
   linkaddr_t    esender;
   linkaddr_t    ereceiver;
   uint16_t      rssi;
+  uint8_t       hops;
 } message_recv;
+
+#define MESSAGE_ABC_RECV      1
+#define MESSAGE_TRICKLE_RECV  2
+#define MESSAGE_MHOP_RECV     3
+#define MESSAGE_MHOP_FWD      4
 
 static message_recv abc_message_recv;
 static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
+static message_recv mhop_message_fwd;
 
 static linkaddr_t forward_addr = {{1, 0}};
 static linkaddr_t prevhop_addr = {{1, 0}};
-static linkaddr_t sender_addr  = {{1, 0}};
 static linkaddr_t esender_addr = {{1, 0}};
 
 /* for cooja serial number testing purpose */
-static uint8_t serial_number[12] = {0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30};
+static uint8_t serial_number[12] = {
+    0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30
+};
+/*---------------------------------------------------------------------------*/
+static uint8_t
+packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
+{
+  /* Copy the packet attributes to avoid them being overwritten or
+   * cleared by an application program that uses the packet buffer for
+   * its own needs
+   */
+  memset(message, 0, sizeof(message));
+  message->timestamp = clock_seconds();
+  message->message_type = message_type;
+  linkaddr_copy(&message->sender, packetbuf_addr(PACKETBUF_ADDR_SENDER));
+  linkaddr_copy(&message->esender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
+  linkaddr_copy(&message->ereceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
+  message->rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
+  linkaddr_copy(&message->hops, packetbuf_attr(PACKETBUF_ATTR_HOPS));
+
+  /* Maybe this is not necessary because the whole message struct was zeroed */
+  //memset(message->message, 0, sizeof(message->message));
+
+  /* Copy packetbuf to message */
+  return packetbuf_copyto(message->message);
+}
 /*---------------------------------------------------------------------------*/
 static void
 dump_packetbuf(void)
@@ -147,11 +174,7 @@ abc_recv(struct abc_conn *c)
    * cleared by an application program that uses the packet buffer for
    * its own needs
    */
-  memset(&abc_message_recv, 0, sizeof(abc_message_recv));
-  abc_message_recv.timestamp = clock_seconds();
-  abc_message_recv.message_type = MESSAGE_ABC_RECV;
-  linkaddr_copy(&abc_message_recv.sender, packetbuf_addr(PACKETBUF_ADDR_SENDER));
-  abc_message_recv.rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
+  packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
 
   dump_packetbuf();
 
@@ -175,16 +198,7 @@ trickle_recv(struct trickle_conn *c)
    * cleared by an application program that uses the packet buffer for
    * its own needs
    */
-  memset(&trickle_message_recv, 0, sizeof(trickle_message_recv));
-  trickle_message_recv.timestamp = clock_seconds();
-  trickle_message_recv.message_type = MESSAGE_TRICKLE_RECV;
-  linkaddr_copy(&trickle_message_recv.sender, packetbuf_addr(PACKETBUF_ADDR_SENDER));
-  linkaddr_copy(&trickle_message_recv.esender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
-  trickle_message_recv.rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
-
-  /* Copy packetbuf to message */
-  memset(trickle_message_recv.message, 0, sizeof(trickle_message_recv.message));
-  packetbuf_copyto(trickle_message_recv.message);
+  packetbuf_and_attr_copyto(&trickle_message_recv, MESSAGE_TRICKLE_RECV);
 
   /* Decoding message */
   hdrptr = &trickle_message_recv.message[0];
@@ -243,20 +257,10 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
    * cleared by an application program that uses the packet buffer for
    * its own needs
    */
-  memset(&mhop_message_recv, 0, sizeof(mhop_message_recv));
-  mhop_message_recv.timestamp = clock_seconds();
-  mhop_message_recv.message_type = MESSAGE_MHOP_RECV;
-  linkaddr_copy(&mhop_message_recv.sender, prevhop);
-  linkaddr_copy(&mhop_message_recv.esender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
-  linkaddr_copy(&mhop_message_recv.ereceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
-  mhop_message_recv.rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
-  mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
+  packetlen = packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
+  mhops = mhop_message_recv.hops;
 
   dump_packetbuf();
-
-  /* Copy packetbuf to message */
-  memset(mhop_message_recv.message, 0, sizeof(mhop_message_recv.message));
-  packetbuf_copyto(mhop_message_recv.message);
 
   /* Decoding message */
   hdrptr = &mhop_message_recv.message[0];
@@ -295,14 +299,8 @@ multihop_forward(struct multihop_conn *c,
    * cleared by an application program that uses the packet buffer for
    * its own needs
    */
-  memset(&mhop_message_recv, 0, sizeof(mhop_message_recv));
-  mhop_message_recv.timestamp = clock_seconds();
-  mhop_message_recv.message_type = MESSAGE_MHOP_RECV;
-  linkaddr_copy(&mhop_message_recv.sender, prevhop);
-  linkaddr_copy(&mhop_message_recv.esender, packetbuf_addr(PACKETBUF_ADDR_ESENDER));
-  linkaddr_copy(&mhop_message_recv.ereceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
-  mhop_message_recv.rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
-  mhops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
+  packetlen = packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
+  mhops = mhop_message_recv.hops;
 
   /* If I am the originator, prevhop_addr == self linkaddr */
   if (prevhop == NULL)
@@ -313,10 +311,6 @@ multihop_forward(struct multihop_conn *c,
   PRINTF("%d.%d: multihop to forward from %d.%d - len=%d - %d hops\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         prevhop_addr.u8[0], prevhop_addr.u8[1], packetbuf_datalen(), mhops);
-
-  /* Copy packetbuf to message */
-  memset(mhop_message_recv.message, 0, sizeof(mhop_message_recv.message));
-  packetlen = packetbuf_copyto(mhop_message_recv.message);
 
   /* Decoding message */
   hdrptr = &mhop_message_recv.message[0];
