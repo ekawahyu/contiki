@@ -92,8 +92,11 @@ typedef struct {
   linkaddr_t    receiver;
   linkaddr_t    esender;
   linkaddr_t    ereceiver;
-  uint16_t      rssi;
+  uint8_t       *payload;
+  uint8_t       length;
+  uint8_t       request;
   uint8_t       hops;
+  uint16_t      rssi;
 } message_recv;
 
 #define MESSAGE_ABC_RECV      1
@@ -118,6 +121,9 @@ static uint8_t serial_number[12] = {
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
+  uint8_t packetlen, hdrlen;
+  uint8_t *dataptr;
+
   /* Copy the packet attributes to avoid them being overwritten or
    * cleared by an application program that uses the packet buffer for
    * its own needs
@@ -131,11 +137,24 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   message->rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
   message->hops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
 
-  /* Maybe this is not necessary because the whole message struct was zeroed */
-  //memset(message->message, 0, sizeof(message->message));
-
   /* Copy packetbuf to message */
-  return packetbuf_copyto(message->message);
+  packetlen = packetbuf_copyto(message->message);
+
+  /* Getting payload and its length */
+  hdrlen = message->message[0];
+  message->payload = &message->message[0] + hdrlen;
+  message->length = message->message[hdrlen];
+
+  /* Decoding trickle ereceiver address */
+  if (message_type == MESSAGE_TRICKLE_RECV) {
+    dataptr = message->payload;
+    message->request = *++dataptr;
+    dataptr--;
+    message->ereceiver.u8[0] = *--dataptr;
+    message->ereceiver.u8[1] = *--dataptr;
+  }
+
+  return packetlen;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -170,12 +189,7 @@ AUTOSTART_PROCESSES(
 static void
 abc_recv(struct abc_conn *c)
 {
-  /* Copy the packet attributes to avoid them being overwritten or
-   * cleared by an application program that uses the packet buffer for
-   * its own needs
-   */
   packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
-
   dump_packetbuf();
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
@@ -189,27 +203,10 @@ static struct abc_conn abc;
 static void
 trickle_recv(struct trickle_conn *c)
 {
-  uint8_t hdrlen, datalen;
-  uint8_t * hdrptr;
-  static uint8_t * dataptr;
-  uint8_t request;
+  uint8_t * payload;
 
-  /* Copy the packet attributes to avoid them being overwritten or
-   * cleared by an application program that uses the packet buffer for
-   * its own needs
-   */
   packetbuf_and_attr_copyto(&trickle_message_recv, MESSAGE_TRICKLE_RECV);
-
-  /* Decoding message */
-  hdrptr = &trickle_message_recv.message[0];
-  hdrlen = trickle_message_recv.message[0];
-  dataptr = &trickle_message_recv.message[0] + hdrlen;
-  datalen = trickle_message_recv.message[hdrlen];
-  request = *++dataptr;
-  dataptr -= 3;
-  trickle_message_recv.receiver.u8[1] = *dataptr++;
-  trickle_message_recv.receiver.u8[0] = *dataptr++;
-
+  payload = trickle_message_recv.payload;
   rank = trickle_rank(c);
 
   PRINTF("%d.%d: found neighbor %d.%d (%d) - %d\n",
@@ -219,18 +216,17 @@ trickle_recv(struct trickle_conn *c)
       packetbuf_attr(PACKETBUF_ATTR_EPACKET_TYPE),
       trickle_message_recv.rssi, trickle_message_recv.timestamp);
 
-  if (request == CONECTRIC_ROUTE_REQUEST) {
-    if (trickle_message_recv.receiver.u8[1] == linkaddr_node_addr.u8[1] &&
-        trickle_message_recv.receiver.u8[0] == linkaddr_node_addr.u8[0]) {
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, dataptr);
+  if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST) {
+    if (trickle_message_recv.ereceiver.u8[1] == linkaddr_node_addr.u8[1] &&
+        trickle_message_recv.ereceiver.u8[0] == linkaddr_node_addr.u8[0]) {
+      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
     }
   }
 
-  if (request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-    if (trickle_message_recv.receiver.u8[1] == 0xFF && trickle_message_recv.receiver.u8[0] == 0xFF) {
-      if (trickle_message_recv.message[hdrlen+12] == serial_number[10] &&
-          trickle_message_recv.message[hdrlen+13] == serial_number[11]) {
-        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, dataptr);
+  if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+    if (trickle_message_recv.ereceiver.u8[1] == 0xFF && trickle_message_recv.ereceiver.u8[0] == 0xFF) {
+      if (*(payload+12) == serial_number[10] && *(payload+13) == serial_number[11]) {
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
       }
     }
   }
@@ -247,34 +243,15 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
      const linkaddr_t *prevhop,
      uint8_t hops)
 {
-  uint8_t packetlen, hdrlen, datalen;
-  uint8_t * hdrptr;
-  static uint8_t * dataptr;
-  uint8_t request;
-  uint8_t mhops;
-
-  /* Copy the packet attributes to avoid them being overwritten or
-   * cleared by an application program that uses the packet buffer for
-   * its own needs
-   */
-  packetlen = packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
-  mhops = mhop_message_recv.hops;
-
+  packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
   dump_packetbuf();
-
-  /* Decoding message */
-  hdrptr = &mhop_message_recv.message[0];
-  hdrlen = mhop_message_recv.message[0];
-  dataptr = &mhop_message_recv.message[0] + hdrlen;
-  datalen = mhop_message_recv.message[hdrlen];
-  request = *++dataptr;
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         mhop_message_recv.esender.u8[0], mhop_message_recv.esender.u8[1],
-        mhops, clock_seconds());
+        mhop_message_recv.hops, clock_seconds());
 
-  //process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, dataptr);
+  //process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -295,10 +272,6 @@ multihop_forward(struct multihop_conn *c,
   uint8_t with_routing_table;
   int i;
 
-  /* Copy the packet attributes to avoid them being overwritten or
-   * cleared by an application program that uses the packet buffer for
-   * its own needs
-   */
   packetlen = packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
   mhops = mhop_message_recv.hops;
 
@@ -354,7 +327,6 @@ multihop_forward(struct multihop_conn *c,
     for (i = 6; i < hdrlen; i++) {
       *header++ = mhop_message_recv.message[i];
     }
-    //linkaddr_copy(&forward_addr, &sender_addr);
     linkaddr_copy(&forward_addr, &trickle_message_recv.sender);
   }
 
