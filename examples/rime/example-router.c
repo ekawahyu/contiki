@@ -109,10 +109,6 @@ static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 static message_recv mhop_message_fwd;
 
-static linkaddr_t forward_addr = {{1, 0}};
-static linkaddr_t prevhop_addr = {{1, 0}};
-static linkaddr_t esender_addr = {{1, 0}};
-
 /* for cooja serial number testing purpose */
 static uint8_t serial_number[12] = {
     0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30
@@ -209,11 +205,9 @@ trickle_recv(struct trickle_conn *c)
   payload = trickle_message_recv.payload;
   rank = trickle_rank(c);
 
-  PRINTF("%d.%d: found neighbor %d.%d (%d) - %d\n",
+  PRINTF("%d.%d: found neighbor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       trickle_message_recv.sender.u8[0], trickle_message_recv.sender.u8[1],
-      /* FIXME EPACKET is being used to strore rank */
-      packetbuf_attr(PACKETBUF_ATTR_EPACKET_TYPE),
       trickle_message_recv.rssi, trickle_message_recv.timestamp);
 
   if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST) {
@@ -264,6 +258,8 @@ multihop_forward(struct multihop_conn *c,
   const linkaddr_t *originator, const linkaddr_t *dest,
   const linkaddr_t *prevhop, uint8_t hops)
 {
+  static linkaddr_t forward_addr;
+  static linkaddr_t prevhop_addr;
   uint8_t mhops, packetlen, hdrlen, datalen;
   uint8_t * header;
   uint8_t * hdrptr;
@@ -387,10 +383,8 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     message[1] = *request++; /* bytereq */
 
     /* Set the Rime address of the final receiver */
-    esender_addr.u8[1] = *request++;
-    esender_addr.u8[0] = *request++;
-    to.u8[1] = esender_addr.u8[1];
-    to.u8[0] = esender_addr.u8[0];
+    to.u8[1] = *request++;
+    to.u8[0] = *request++;
 
     if (message[1] == CONECTRIC_ROUTE_REQUEST) {
       message_len = 2;
@@ -437,13 +431,13 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     if (*request == CONECTRIC_ROUTE_REQUEST) {
       PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          esender_addr.u8[0], esender_addr.u8[1],
+          trickle_message_recv.esender.u8[0], trickle_message_recv.esender.u8[1],
           clock_seconds());
     }
     if (*request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
       PRINTF("%d.%d: route request by S/N sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          esender_addr.u8[0], esender_addr.u8[1],
+          trickle_message_recv.esender.u8[0], trickle_message_recv.esender.u8[1],
           clock_seconds());
     }
 #endif
@@ -488,10 +482,8 @@ PROCESS_THREAD(example_multihop_process, ev, data)
       message[1] = *request++; /* bytereq */
 
       /* Set the Rime address of the final receiver */
-      esender_addr.u8[1] = *request++;
-      esender_addr.u8[0] = *request++;
-      to.u8[1] = esender_addr.u8[1];
-      to.u8[0] = esender_addr.u8[0];
+      to.u8[1] = *request++;
+      to.u8[0] = *request++;
 
       if (message[1] == CONECTRIC_MULTIHOP_PING) {
         routing_len = message[0] - 4;
@@ -526,8 +518,8 @@ PROCESS_THREAD(example_multihop_process, ev, data)
       message[1] = *request++; /* bytereq */
 
       /* Set the Rime address of the final receiver */
-      to.u8[0] = esender_addr.u8[0];
-      to.u8[1] = esender_addr.u8[1];
+      to.u8[1] = trickle_message_recv.esender.u8[1];
+      to.u8[0] = trickle_message_recv.esender.u8[0];
 
       if (message[1] == CONECTRIC_ROUTE_REQUEST) {
         reply = CONECTRIC_ROUTE_REPLY;
