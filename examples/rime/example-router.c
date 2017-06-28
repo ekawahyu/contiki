@@ -47,7 +47,7 @@
 
 #include <stdio.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -124,9 +124,11 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   uint8_t packetlen, hdrlen;
   uint8_t *dataptr;
 
-  /* Backup the previous senders */
+  /* Backup the previous senders and receivers */
   linkaddr_copy(&message->prev_sender, &message->sender);
   linkaddr_copy(&message->prev_esender, &message->esender);
+  linkaddr_copy(&message->prev_receiver, &message->receiver);
+  linkaddr_copy(&message->prev_ereceiver, &message->ereceiver);
 
   /* Copy the packet attributes to avoid them being overwritten or
    * cleared by an application program that uses the packet buffer for
@@ -140,25 +142,6 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   linkaddr_copy(&message->ereceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
   message->rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
   message->hops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
-
-  PRINTF("**********\n");
-  PRINTF("%d.%d: esender addr= %d.%d - %lu\n",
-      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      message->esender.u8[0], message->esender.u8[1],
-      clock_seconds());
-  PRINTF("%d.%d: prev_sender addr= %d.%d - %lu\n",
-      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      message->prev_sender.u8[0], message->prev_sender.u8[1],
-      clock_seconds());
-  PRINTF("%d.%d: erecv addr= %d.%d - %lu\n",
-      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      message->ereceiver.u8[0], message->ereceiver.u8[1],
-      clock_seconds());
-  PRINTF("%d.%d: prev_erecv addr= %d.%d - %lu\n",
-      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      message->prev_receiver.u8[0], message->prev_receiver.u8[1],
-      clock_seconds());
-  PRINTF("**********\n");
 
   /* Copy packetbuf to message */
   packetlen = packetbuf_copyto(message->message);
@@ -580,12 +563,9 @@ PROCESS_THREAD(example_multihop_process, ev, data)
       if (message[1] == CONECTRIC_MULTIHOP_PING) {
         reply = CONECTRIC_MULTIHOP_PING_REPLY;
         message_len = 2;
-        /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
-        etimer_set(&et, CLOCK_SECOND);
-        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
         /* Set the Rime address of the final receiver */
-        to.u8[1] = mhop_message_recv.prev_esender.u8[1];
-        to.u8[0] = mhop_message_recv.prev_esender.u8[0];
+        to.u8[1] = mhop_message_recv.esender.u8[1];
+        to.u8[0] = mhop_message_recv.esender.u8[0];
       }
 
       message[0] = message_len;
@@ -643,6 +623,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    printf("%s\n", (uint8_t *)data, strlen(data));
     request = (uint8_t *)data;
 
     counter = 2;
