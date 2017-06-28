@@ -51,6 +51,8 @@ extern "C" {
 #endif
 #define NETSTACK_CONF_RDC               nullrdc_driver
 
+#define SERIAL_LINE_CONF_BUFSIZE        256
+
 #ifdef __cplusplus
 }
 #endif
