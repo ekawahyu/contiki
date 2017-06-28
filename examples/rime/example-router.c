@@ -89,9 +89,13 @@ typedef struct {
   uint8_t       message_type;
   uint8_t       message[128];
   linkaddr_t    sender;
+  linkaddr_t    prev_sender;
   linkaddr_t    receiver;
+  linkaddr_t    prev_receiver;
   linkaddr_t    esender;
+  linkaddr_t    prev_esender;
   linkaddr_t    ereceiver;
+  linkaddr_t    prev_ereceiver;
   uint8_t       *payload;
   uint8_t       length;
   uint8_t       request;
@@ -120,6 +124,10 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   uint8_t packetlen, hdrlen;
   uint8_t *dataptr;
 
+  /* Backup the previous senders */
+  linkaddr_copy(&message->prev_sender, &message->sender);
+  linkaddr_copy(&message->prev_esender, &message->esender);
+
   /* Copy the packet attributes to avoid them being overwritten or
    * cleared by an application program that uses the packet buffer for
    * its own needs
@@ -132,6 +140,25 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   linkaddr_copy(&message->ereceiver, packetbuf_addr(PACKETBUF_ADDR_ERECEIVER));
   message->rssi = packetbuf_attr(PACKETBUF_ATTR_RSSI);
   message->hops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
+
+  PRINTF("**********\n");
+  PRINTF("%d.%d: esender addr= %d.%d - %lu\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      message->esender.u8[0], message->esender.u8[1],
+      clock_seconds());
+  PRINTF("%d.%d: prev_sender addr= %d.%d - %lu\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      message->prev_sender.u8[0], message->prev_sender.u8[1],
+      clock_seconds());
+  PRINTF("%d.%d: erecv addr= %d.%d - %lu\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      message->ereceiver.u8[0], message->ereceiver.u8[1],
+      clock_seconds());
+  PRINTF("%d.%d: prev_erecv addr= %d.%d - %lu\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      message->prev_receiver.u8[0], message->prev_receiver.u8[1],
+      clock_seconds());
+  PRINTF("**********\n");
 
   /* Copy packetbuf to message */
   packetlen = packetbuf_copyto(message->message);
@@ -268,7 +295,7 @@ multihop_forward(struct multihop_conn *c,
   const linkaddr_t *prevhop, uint8_t hops)
 {
   static linkaddr_t forward_addr;
-  static linkaddr_t prevhop_addr;
+  static linkaddr_t prevhop_addr; /* only used for PRINTF */
   uint8_t mhops, hdrlen;
   uint8_t * header;
   int i;
@@ -290,14 +317,18 @@ multihop_forward(struct multihop_conn *c,
   /* Discard current packet header */
   packetbuf_copyfrom(mhop_message_recv.payload, mhop_message_recv.length);
 
+  packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
+  packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.ereceiver);
+  packetbuf_set_attr(PACKETBUF_ATTR_HOPS, mhops);
+
   if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen);
     header = (uint8_t *)packetbuf_hdrptr();
     *header++ = hdrlen;
     *header++ = mhop_message_recv.message[1];
-    *header++ = mhops;
-    *header++ = mhop_message_recv.message[3];
+    *header++ = mhops; /******** increment by one always */
+    *header++ = mhop_message_recv.message[3]; /* FIXME this has to be the max hop */
     *header++ = mhop_message_recv.message[4];
     *header++ = mhop_message_recv.message[5];
     for (i = 6; i < hdrlen; i++) {
@@ -307,14 +338,32 @@ multihop_forward(struct multihop_conn *c,
     forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
   }
 
+  if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY) {
+    /* Add new packet header */
+    packetbuf_hdralloc(hdrlen);
+    header = (uint8_t *)packetbuf_hdrptr();
+    *header++ = hdrlen;
+    *header++ = mhop_message_recv.message[1];
+    *header++ = mhops; /******** increment by one always */
+    *header++ = mhop_message_recv.message[3]; /* FIXME this has to be the max hop */
+    *header++ = mhop_message_recv.message[4];
+    *header++ = mhop_message_recv.message[5];
+    for (i = 6; i < hdrlen; i++) {
+      *header++ = mhop_message_recv.message[i];
+    }
+    linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
+    packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
+    packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
+  }
+
   if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen + 2);
     header = (uint8_t *)packetbuf_hdrptr();
     *header++ = hdrlen + 2;
     *header++ = mhop_message_recv.message[1];
-    *header++ = mhop_message_recv.message[2] + 1;
-    *header++ = mhop_message_recv.message[3] + 1;
+    *header++ = mhop_message_recv.message[2] + 1; /******** increment by one always */
+    *header++ = mhop_message_recv.message[3] + 1; /* FIXME this has to be the max hop */
     *header++ = mhop_message_recv.message[4];
     *header++ = mhop_message_recv.message[5];
     *header++ = linkaddr_node_addr.u8[1];
@@ -324,10 +373,6 @@ multihop_forward(struct multihop_conn *c,
     }
     linkaddr_copy(&forward_addr, &trickle_message_recv.sender);
   }
-
-  packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-  packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.ereceiver);
-  packetbuf_set_attr(PACKETBUF_ATTR_HOPS, mhops);
 
   PRINTF("%d.%d: forwarding address is %d.%d - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -538,6 +583,9 @@ PROCESS_THREAD(example_multihop_process, ev, data)
         /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
         etimer_set(&et, CLOCK_SECOND);
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        /* Set the Rime address of the final receiver */
+        to.u8[1] = mhop_message_recv.prev_esender.u8[1];
+        to.u8[0] = mhop_message_recv.prev_esender.u8[0];
       }
 
       message[0] = message_len;
