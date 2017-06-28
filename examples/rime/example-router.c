@@ -141,10 +141,11 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   message->payload = &message->message[0] + hdrlen;
   message->length = message->message[hdrlen];
 
+  dataptr = message->payload;
+  message->request = *++dataptr;
+
   /* Decoding trickle ereceiver address */
   if (message_type == MESSAGE_TRICKLE_RECV) {
-    dataptr = message->payload;
-    message->request = *++dataptr;
     dataptr--;
     message->ereceiver.u8[0] = *--dataptr;
     message->ereceiver.u8[1] = *--dataptr;
@@ -237,7 +238,10 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
      const linkaddr_t *prevhop,
      uint8_t hops)
 {
+  uint8_t * payload;
+
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
+  payload = mhop_message_recv.payload;
   dump_packetbuf();
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
@@ -245,7 +249,12 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
         mhop_message_recv.esender.u8[0], mhop_message_recv.esender.u8[1],
         mhop_message_recv.hops, clock_seconds());
 
-  //process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
+  if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING) {
+    if (mhop_message_recv.ereceiver.u8[1] == linkaddr_node_addr.u8[1] &&
+        mhop_message_recv.ereceiver.u8[0] == linkaddr_node_addr.u8[0]) {
+      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -260,16 +269,13 @@ multihop_forward(struct multihop_conn *c,
 {
   static linkaddr_t forward_addr;
   static linkaddr_t prevhop_addr;
-  uint8_t mhops, packetlen, hdrlen, datalen;
+  uint8_t mhops, hdrlen;
   uint8_t * header;
-  uint8_t * hdrptr;
-  uint8_t * dataptr;
-  uint8_t request;
-  uint8_t with_routing_table;
   int i;
 
-  packetlen = packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
+  packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
   mhops = mhop_message_recv.hops;
+  hdrlen = mhop_message_recv.message[0];
 
   /* If I am the originator, prevhop_addr == self linkaddr */
   if (prevhop == NULL)
@@ -281,17 +287,10 @@ multihop_forward(struct multihop_conn *c,
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         prevhop_addr.u8[0], prevhop_addr.u8[1], packetbuf_datalen(), mhops);
 
-  /* Decoding message */
-  hdrptr = &mhop_message_recv.message[0];
-  hdrlen = mhop_message_recv.message[0];
-  dataptr = &mhop_message_recv.message[0] + hdrlen;
-  datalen = mhop_message_recv.message[hdrlen];
-  request = *++dataptr;
-
   /* Discard current packet header */
-  packetbuf_copyfrom(&mhop_message_recv.message[hdrlen], packetlen - hdrlen);
+  packetbuf_copyfrom(mhop_message_recv.payload, mhop_message_recv.length);
 
-  if (request == CONECTRIC_MULTIHOP_PING) {
+  if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen);
     header = (uint8_t *)packetbuf_hdrptr();
@@ -308,7 +307,7 @@ multihop_forward(struct multihop_conn *c,
     forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
   }
 
-  if (request == CONECTRIC_ROUTE_REPLY) {
+  if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen + 2);
     header = (uint8_t *)packetbuf_hdrptr();
@@ -431,14 +430,12 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     if (*request == CONECTRIC_ROUTE_REQUEST) {
       PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          trickle_message_recv.esender.u8[0], trickle_message_recv.esender.u8[1],
-          clock_seconds());
+          to.u8[0], to.u8[1], clock_seconds());
     }
     if (*request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
       PRINTF("%d.%d: route request by S/N sent to %d.%d - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          trickle_message_recv.esender.u8[0], trickle_message_recv.esender.u8[1],
-          clock_seconds());
+          to.u8[0], to.u8[1], clock_seconds());
     }
 #endif
 
@@ -535,6 +532,13 @@ PROCESS_THREAD(example_multihop_process, ev, data)
         etimer_set(&et, CLOCK_SECOND);
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
       }
+      if (message[1] == CONECTRIC_MULTIHOP_PING) {
+        reply = CONECTRIC_MULTIHOP_PING_REPLY;
+        message_len = 2;
+        /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
+        etimer_set(&et, CLOCK_SECOND);
+        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+      }
 
       message[0] = message_len;
       message[1] = reply;
@@ -549,11 +553,6 @@ PROCESS_THREAD(example_multihop_process, ev, data)
       *header++ = 0;          /* number of hops */
       *header++ = to.u8[1];   /* destination addr H */
       *header++ = to.u8[0];   /* destination addr L */
-#if DEBUG
-      printf("%d.%d: route request: ",
-          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-      dump_packetbuf();
-#endif
     }
 
     /* Send the packet */
@@ -632,7 +631,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
       if (bytereq[2] == CONECTRIC_ROUTE_REQUEST ||
           bytereq[2] == CONECTRIC_ROUTE_REQUEST_BY_SN)
         process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
-      if (bytereq[2] == CONECTRIC_MULTIHOP_PING)
+      else if (bytereq[2] == CONECTRIC_MULTIHOP_PING)
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
       else
         /* unknown request */
