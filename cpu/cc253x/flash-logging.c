@@ -63,8 +63,8 @@ flashlogging_write4(uint8_t componentId, uint8_t eventId, uint8_t *data)
   // put data for write into scratch buffer
   flash_logging_scratch[0] = componentId;
   flash_logging_scratch[1] = eventId;
-  flash_logging_scratch[2] = (uint8_t)(global_time >> 8 & 0x000000FF);
-  flash_logging_scratch[3] = (uint8_t)(global_time & 0x000000FF);
+  flash_logging_scratch[2] = (uint8_t)(global_time & 0x000000FF);
+  flash_logging_scratch[3] = (uint8_t)(global_time >> 8 & 0x000000FF);
   
   if(data)
     memcpy(&flash_logging_scratch[4], data, 4);

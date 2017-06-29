@@ -1,7 +1,7 @@
 /*
- * modbus-line.c
+ * project-conf.h
  *
- * Created on: Sep 2, 2014
+ * Created on: Mar 3, 2014
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
@@ -34,69 +34,38 @@
  *
  */
 
-#include "dev/modbus-line.h"
-#include "dev/leds.h"
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
-#define BUFSIZE 276
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// data management
-static int pos;
-static uint8_t modbus_rx_data[BUFSIZE];  // index 0 used for data buffer length
+#define STARTUP_CONF_VERBOSE                  1
+#define MODELS_CONF_ANAREN_A2530E_MODULE      1
 
-// Modbus timers
-static struct etimer mt;
+#define NETSTACK_CONF_MAC                     nullmac_driver
+#define NETSTACK_CONF_RDC                     nullrdc_driver
 
-PROCESS(modbus_line_process, "MODBUS driver");
+#define IEEE802154_CONF_PANID                 0x2007
+#define CC2530_RF_CONF_CHANNEL                25
+#if MODELS_CONF_ANAREN_A2530E_MODULE
+#else
+#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
+#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
+#endif
 
-process_event_t modbus_line_event_message;
+#define LPM_CONF_MODE                         2
 
-/*---------------------------------------------------------------------------*/
-int
-modbus_line_input_byte(unsigned char c)
-{
-  if(++pos < BUFSIZE)
-    modbus_rx_data[pos] = c;
+#define RS485_CONF_ENABLE                     1
+#define UART1_CONF_ENABLE                     1
 
-  // refresh timer as long as data keeps coming in
-  etimer_adjust(&mt, (CLOCK_SECOND/10));
-  
-  return 1;
+#define BUTTON_SENSOR_CONF_ON                 0
+
+#define CONECTRIC_BURST_NUMBER                5
+
+#ifdef __cplusplus
 }
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(modbus_line_process, ev, data)
-{
-  PROCESS_BEGIN();
-  
-  modbus_line_event_message = process_alloc_event();
+#endif
 
-  while(1) {
-
-    etimer_set(&mt, 1 * CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&mt));
-
-    if(pos > 0) {
-      
-      modbus_rx_data[0] = pos;
-       
-      process_post(PROCESS_BROADCAST, modbus_line_event_message, modbus_rx_data);
-
-      // reset for next input
-      pos = 0;
-      
-      /* Wait until all processes have handled the modbus line event */
-      if(PROCESS_ERR_OK ==
-        process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
-        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
-      }
-    }
-  }
-
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/
-void
-modbus_line_init(void)
-{
-  pos = 0;
-  process_start(&modbus_line_process, NULL);
-}
+#endif /* PROJECT_CONF_H_ */
