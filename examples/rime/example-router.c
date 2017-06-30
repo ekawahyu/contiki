@@ -516,10 +516,6 @@ compose_packetbuf_with_response(uint8_t * radio_request,
   reqlen = *radio_request++;
   req    = *radio_request++;
 
-  /* Put the new ereceiver address */
-  dest.u8[1] = ereceiver->u8[1];
-  dest.u8[0] = ereceiver->u8[0];
-
   /* Composing payload */
   if (req == CONECTRIC_ROUTE_REQUEST) {
     response = CONECTRIC_ROUTE_REPLY;
@@ -541,6 +537,10 @@ compose_packetbuf_with_response(uint8_t * radio_request,
     ereceiver->u8[1] = mhop_message_recv.esender.u8[1];
     ereceiver->u8[0] = mhop_message_recv.esender.u8[0];
   }
+
+  /* Put the new ereceiver address */
+  dest.u8[1] = ereceiver->u8[1];
+  dest.u8[0] = ereceiver->u8[0];
 
   memset(packet_buffer, 0, sizeof(packet_buffer));
   *packet++ = 2;
