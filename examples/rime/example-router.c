@@ -270,6 +270,13 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
     }
   }
+
+  if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS) {
+    if (mhop_message_recv.ereceiver.u8[1] == linkaddr_node_addr.u8[1] &&
+        mhop_message_recv.ereceiver.u8[0] == linkaddr_node_addr.u8[0]) {
+      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -326,7 +333,42 @@ multihop_forward(struct multihop_conn *c,
     forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
   }
 
+  if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS) {
+    /* Add new packet header */
+    packetbuf_hdralloc(hdrlen);
+    header = (uint8_t *)packetbuf_hdrptr();
+    *header++ = hdrlen;
+    *header++ = mhop_message_recv.message[1];
+    *header++ = mhops; /******** increment by one always */
+    *header++ = mhop_message_recv.message[3]; /* FIXME this has to be the max hop */
+    *header++ = mhop_message_recv.message[4];
+    *header++ = mhop_message_recv.message[5];
+    for (i = 6; i < hdrlen; i++) {
+      *header++ = mhop_message_recv.message[i];
+    }
+    forward_addr.u8[1] = mhop_message_recv.message[4 + (mhops << 1)];
+    forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
+  }
+
   if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY) {
+    /* Add new packet header */
+    packetbuf_hdralloc(hdrlen);
+    header = (uint8_t *)packetbuf_hdrptr();
+    *header++ = hdrlen;
+    *header++ = mhop_message_recv.message[1];
+    *header++ = mhops; /******** increment by one always */
+    *header++ = mhop_message_recv.message[3]; /* FIXME this has to be the max hop */
+    *header++ = mhop_message_recv.message[4];
+    *header++ = mhop_message_recv.message[5];
+    for (i = 6; i < hdrlen; i++) {
+      *header++ = mhop_message_recv.message[i];
+    }
+    linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
+    packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
+    packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
+  }
+
+  if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen);
     header = (uint8_t *)packetbuf_hdrptr();
@@ -387,8 +429,8 @@ PROCESS_THREAD(example_abc_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-compose_packetbuf_from_request(uint8_t * request, uint8_t seqno,
-    linkaddr_t * ereceiver)
+compose_packetbuf_from_request(uint8_t * request,
+    uint8_t seqno, linkaddr_t * ereceiver)
 {
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
@@ -412,7 +454,8 @@ compose_packetbuf_from_request(uint8_t * request, uint8_t seqno,
     ereceiver->u8[0] = dest.u8[0];
   }
 
-  if (req == CONECTRIC_MULTIHOP_PING) {
+  if (req == CONECTRIC_MULTIHOP_PING ||
+      req == CONECTRIC_POLL_SENSORS) {
     datalen = 0;
     routinglen = reqlen - REQUEST_HEADER_LEN;
   }
@@ -435,6 +478,9 @@ compose_packetbuf_from_request(uint8_t * request, uint8_t seqno,
     while (i--) *packet++ = *request++;
   }
   if (req == CONECTRIC_MULTIHOP_PING) {
+    /* do nothing, it's been populated above */
+  }
+  if (req == CONECTRIC_POLL_SENSORS) {
     /* do nothing, it's been populated above */
   }
 
@@ -588,6 +634,12 @@ PROCESS_THREAD(example_multihop_process, ev, data)
         to.u8[1] = mhop_message_recv.esender.u8[1];
         to.u8[0] = mhop_message_recv.esender.u8[0];
       }
+      if (*(request+1) == CONECTRIC_POLL_SENSORS) {
+        reply = CONECTRIC_POLL_SENSORS_REPLY;
+        /* Set the Rime address of the final receiver */
+        to.u8[1] = mhop_message_recv.esender.u8[1];
+        to.u8[0] = mhop_message_recv.esender.u8[0];
+      }
       compose_packetbuf_with_response(request, reply, counter++, to);
     }
 
@@ -670,7 +722,9 @@ PROCESS_THREAD(serial_in_process, ev, data)
       if (bytereq[2] == CONECTRIC_ROUTE_REQUEST ||
           bytereq[2] == CONECTRIC_ROUTE_REQUEST_BY_SN)
         process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
-      else if (bytereq[2] == CONECTRIC_MULTIHOP_PING)
+      else if (
+          bytereq[2] == CONECTRIC_MULTIHOP_PING ||
+          bytereq[2] == CONECTRIC_POLL_SENSORS)
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
       else
         /* unknown request */
