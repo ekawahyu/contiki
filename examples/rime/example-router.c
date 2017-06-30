@@ -387,8 +387,8 @@ PROCESS_THREAD(example_abc_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-compose_packetbuf_from_request(
-    uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver)
+compose_packetbuf_from_request(uint8_t * request, uint8_t seqno,
+    linkaddr_t * ereceiver)
 {
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
@@ -406,8 +406,11 @@ compose_packetbuf_from_request(
   req        = *request++;
   dest.u8[1] = *request++;
   dest.u8[0] = *request++;
-  ereceiver->u8[1] = dest.u8[1];
-  ereceiver->u8[0] = dest.u8[0];
+
+  if (ereceiver) {
+    ereceiver->u8[1] = dest.u8[1];
+    ereceiver->u8[0] = dest.u8[0];
+  }
 
   if (req == CONECTRIC_MULTIHOP_PING) {
     datalen = 0;
@@ -451,17 +454,42 @@ compose_packetbuf_from_request(
 }
 /*---------------------------------------------------------------------------*/
 static void
-compose_packetbuf_from_radio_request(
-    uint8_t * packet_buffer, uint8_t * request)
+compose_packetbuf_with_response(uint8_t * radio_request, uint8_t response,
+    uint8_t seqno, linkaddr_t ereceiver)
 {
-  static linkaddr_t dest;
+  static uint8_t packet_buffer[128];
+  uint8_t * packet = packet_buffer;
+  uint8_t * header = NULL;
+  linkaddr_t dest;
+  uint8_t req;
+  uint8_t reqlen;
+  uint8_t datalen;
+  uint8_t routinglen;
+  uint8_t i;
 
-  *packet_buffer++ = *request++; /* message_len */
-  *packet_buffer++ = *request++; /* bytereq */
+  reqlen = *radio_request++;
+  req    = *radio_request++;
 
-  dest.u8[1] = *request++;
-  dest.u8[0] = *request++;
+  /* Put the new ereceiver address */
+  dest.u8[1] = ereceiver.u8[1];
+  dest.u8[0] = ereceiver.u8[0];
 
+  memset(packet_buffer, 0, sizeof(packet_buffer));
+  *packet++ = 2;
+  *packet++ = response;
+
+  /* Composing payload */
+  packetbuf_copyfrom(packet_buffer, 2);
+
+  packetbuf_hdralloc(6);
+
+  header = (uint8_t *)packetbuf_hdrptr();
+  *header++ = 6;   /* header len */
+  *header++ = seqno;            /* seqno */
+  *header++ = 0;                /* hop count */
+  *header++ = 0;                /* number of hops */
+  *header++ = dest.u8[1];       /* destination addr H */
+  *header++ = dest.u8[0];       /* destination addr L */
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_trickle_process, ev, data)
@@ -513,13 +541,8 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 PROCESS_THREAD(example_multihop_process, ev, data)
 {
   static struct etimer et;
-  //static uint8_t routing_len;
   static uint8_t reply;
-
   static linkaddr_t to;
-  static uint8_t message[128];
-  static uint8_t message_len;
-  static uint8_t * header;
   static uint8_t counter = 0;
   static uint8_t * request;
 
@@ -532,68 +555,40 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 
   /* Loop forever */
   while(1) {
-
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
     /* Compose packetbuf based on the received request */
     request = (uint8_t *)data;
-    memset(message, 0, sizeof(message));
-
-    /* request comes from serial port */
-    if (*request == '<') {
+    if (*request == '<') { /* request comes from serial port */
       compose_packetbuf_from_request(request, counter++, &to);
-#if DEBUG
-        printf("%d.%d: multihop ping: ",
-            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-        dump_packetbuf();
-#endif
     }
+    else { /* request comes from radio */
 
-    /* request comes from radio */
-    else {
-
-      message[0] = *request++; /* message_len */
-      message[1] = *request++; /* bytereq */
-
-      /* Set the Rime address of the final receiver */
-      to.u8[1] = trickle_message_recv.esender.u8[1];
-      to.u8[0] = trickle_message_recv.esender.u8[0];
-
-      if (message[1] == CONECTRIC_ROUTE_REQUEST) {
+      if (*(request+1) == CONECTRIC_ROUTE_REQUEST) {
         reply = CONECTRIC_ROUTE_REPLY;
-        message_len = 2;
+        /* Set the Rime address of the final receiver */
+        to.u8[1] = trickle_message_recv.esender.u8[1];
+        to.u8[0] = trickle_message_recv.esender.u8[0];
         /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
         etimer_set(&et, CLOCK_SECOND);
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
       }
-      if (message[1] == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+      if (*(request+1) == CONECTRIC_ROUTE_REQUEST_BY_SN) {
         reply = CONECTRIC_ROUTE_REPLY;
-        message_len = 2;
+        /* Set the Rime address of the final receiver */
+        to.u8[1] = trickle_message_recv.esender.u8[1];
+        to.u8[0] = trickle_message_recv.esender.u8[0];
         /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
         etimer_set(&et, CLOCK_SECOND);
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
       }
-      if (message[1] == CONECTRIC_MULTIHOP_PING) {
+      if (*(request+1) == CONECTRIC_MULTIHOP_PING) {
         reply = CONECTRIC_MULTIHOP_PING_REPLY;
-        message_len = 2;
         /* Set the Rime address of the final receiver */
         to.u8[1] = mhop_message_recv.esender.u8[1];
         to.u8[0] = mhop_message_recv.esender.u8[0];
       }
-
-      message[0] = message_len;
-      message[1] = reply;
-      packetbuf_copyfrom(message, message_len);
-
-      packetbuf_hdralloc(6);
-
-      header = (uint8_t *)packetbuf_hdrptr();
-      *header++ = 6;          /* header len */
-      *header++ = counter++;  /* seqno */
-      *header++ = 0;          /* hop count */
-      *header++ = 0;          /* number of hops */
-      *header++ = to.u8[1];   /* destination addr H */
-      *header++ = to.u8[0];   /* destination addr L */
+      compose_packetbuf_with_response(request, reply, counter++, to);
     }
 
     /* Send the packet */
@@ -603,7 +598,7 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 
     PRINTF("%d.%d: multihop send to %d.%d - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        *(request+2), *(request+1), clock_seconds());
+        to.u8[0], to.u8[1], clock_seconds());
   }
 
   PROCESS_END();
