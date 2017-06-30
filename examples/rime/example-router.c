@@ -111,7 +111,6 @@ typedef struct {
 static message_recv abc_message_recv;
 static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
-static message_recv mhop_message_fwd;
 
 /*****************************************************************/
 /* [REQLEN][REQ][DESTH][DESTL] [DATAN][DATAN-1]...[DATA1][DATA0] */
@@ -500,8 +499,8 @@ compose_packetbuf_from_request(uint8_t * request,
 }
 /*---------------------------------------------------------------------------*/
 static void
-compose_packetbuf_with_response(uint8_t * radio_request, uint8_t response,
-    uint8_t seqno, linkaddr_t ereceiver)
+compose_packetbuf_with_response(uint8_t * radio_request,
+    uint8_t seqno, linkaddr_t * ereceiver)
 {
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
@@ -512,19 +511,41 @@ compose_packetbuf_with_response(uint8_t * radio_request, uint8_t response,
   uint8_t datalen;
   uint8_t routinglen;
   uint8_t i;
+  uint8_t response;
 
   reqlen = *radio_request++;
   req    = *radio_request++;
 
   /* Put the new ereceiver address */
-  dest.u8[1] = ereceiver.u8[1];
-  dest.u8[0] = ereceiver.u8[0];
+  dest.u8[1] = ereceiver->u8[1];
+  dest.u8[0] = ereceiver->u8[0];
+
+  /* Composing payload */
+  if (req == CONECTRIC_ROUTE_REQUEST) {
+    response = CONECTRIC_ROUTE_REPLY;
+    ereceiver->u8[1] = trickle_message_recv.esender.u8[1];
+    ereceiver->u8[0] = trickle_message_recv.esender.u8[0];
+  }
+  if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+    response = CONECTRIC_ROUTE_REPLY;
+    ereceiver->u8[1] = trickle_message_recv.esender.u8[1];
+    ereceiver->u8[0] = trickle_message_recv.esender.u8[0];
+  }
+  if (req == CONECTRIC_MULTIHOP_PING) {
+    response = CONECTRIC_MULTIHOP_PING_REPLY;
+    ereceiver->u8[1] = mhop_message_recv.esender.u8[1];
+    ereceiver->u8[0] = mhop_message_recv.esender.u8[0];
+  }
+  if (req == CONECTRIC_POLL_SENSORS) {
+    response = CONECTRIC_POLL_SENSORS_REPLY;
+    ereceiver->u8[1] = mhop_message_recv.esender.u8[1];
+    ereceiver->u8[0] = mhop_message_recv.esender.u8[0];
+  }
 
   memset(packet_buffer, 0, sizeof(packet_buffer));
   *packet++ = 2;
   *packet++ = response;
 
-  /* Composing payload */
   packetbuf_copyfrom(packet_buffer, 2);
 
   packetbuf_hdralloc(6);
@@ -605,43 +626,16 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 
     /* Compose packetbuf based on the received request */
     request = (uint8_t *)data;
-    if (*request == '<') { /* request comes from serial port */
+    /* Request comes from serial port */
+    if (*request == '<')
       compose_packetbuf_from_request(request, counter++, &to);
-    }
-    else { /* request comes from radio */
+    /* Request receives over the air */
+    else
+      compose_packetbuf_with_response(request, counter++, &to);
 
-      if (*(request+1) == CONECTRIC_ROUTE_REQUEST) {
-        reply = CONECTRIC_ROUTE_REPLY;
-        /* Set the Rime address of the final receiver */
-        to.u8[1] = trickle_message_recv.esender.u8[1];
-        to.u8[0] = trickle_message_recv.esender.u8[0];
-        /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
-        etimer_set(&et, CLOCK_SECOND);
-        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-      }
-      if (*(request+1) == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-        reply = CONECTRIC_ROUTE_REPLY;
-        /* Set the Rime address of the final receiver */
-        to.u8[1] = trickle_message_recv.esender.u8[1];
-        to.u8[0] = trickle_message_recv.esender.u8[0];
-        /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
-        etimer_set(&et, CLOCK_SECOND);
-        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-      }
-      if (*(request+1) == CONECTRIC_MULTIHOP_PING) {
-        reply = CONECTRIC_MULTIHOP_PING_REPLY;
-        /* Set the Rime address of the final receiver */
-        to.u8[1] = mhop_message_recv.esender.u8[1];
-        to.u8[0] = mhop_message_recv.esender.u8[0];
-      }
-      if (*(request+1) == CONECTRIC_POLL_SENSORS) {
-        reply = CONECTRIC_POLL_SENSORS_REPLY;
-        /* Set the Rime address of the final receiver */
-        to.u8[1] = mhop_message_recv.esender.u8[1];
-        to.u8[0] = mhop_message_recv.esender.u8[0];
-      }
-      compose_packetbuf_with_response(request, reply, counter++, to);
-    }
+    /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
+    //etimer_set(&et, CLOCK_SECOND);
+    //PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     /* Send the packet */
     multihop_send(&multihop, &to);
