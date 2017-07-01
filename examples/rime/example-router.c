@@ -279,7 +279,6 @@ multihop_forward(struct multihop_conn *c,
   const linkaddr_t *prevhop, uint8_t hops)
 {
   static linkaddr_t forward_addr;
-  static linkaddr_t prevhop_addr; /* only used for PRINTF */
   uint8_t mhops, hdrlen;
   uint8_t * header;
   int i;
@@ -287,16 +286,6 @@ multihop_forward(struct multihop_conn *c,
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
   mhops = mhop_message_recv.hops;
   hdrlen = mhop_message_recv.message[0];
-
-  /* If I am the originator, prevhop_addr == self linkaddr */
-  if (prevhop == NULL)
-    linkaddr_copy(&prevhop_addr, originator);
-  else
-    linkaddr_copy(&prevhop_addr, prevhop);
-
-  PRINTF("%d.%d: multihop to forward from %d.%d - len=%d - %d hops\n",
-        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        prevhop_addr.u8[0], prevhop_addr.u8[1], packetbuf_datalen(), mhops);
 
   /* Discard current packet header */
   packetbuf_copyfrom(mhop_message_recv.payload, mhop_message_recv.length);
@@ -398,7 +387,7 @@ multihop_forward(struct multihop_conn *c,
     linkaddr_copy(&forward_addr, &trickle_message_recv.sender);
   }
 
-  PRINTF("%d.%d: forwarding address is %d.%d - %d hops\n",
+  PRINTF("%d.%d: multihop forwarding address is %d.%d - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       forward_addr.u8[0], forward_addr.u8[1], mhops);
 
@@ -590,8 +579,7 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_multihop_process, ev, data)
 {
-  static struct etimer et;
-  static uint8_t reply;
+  //static struct etimer et;
   static linkaddr_t to;
   static uint8_t counter = 0;
   static uint8_t * request;
@@ -662,7 +650,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
-    printf("%s\n", (uint8_t *)data, strlen(data));
+    printf("%s\n", (uint8_t *)data);
     request = (uint8_t *)data;
 
     counter = 2;
