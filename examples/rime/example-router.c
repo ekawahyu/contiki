@@ -82,7 +82,10 @@ enum {
 };
 
 static uint16_t rank = 255;
-static uint8_t sensors[128];
+static uint8_t sensors[128] = {
+    0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22, 0x33, 0x44, 0x55
+};
+static uint8_t *sensors_head, *sensors_tail;
 
 typedef struct {
   clock_time_t  timestamp;
@@ -448,10 +451,7 @@ compose_packetbuf_from_request(uint8_t * request,
   dest.u8[1] = *request++;
   dest.u8[0] = *request++;
 
-  if (ereceiver) {
-    ereceiver->u8[1] = dest.u8[1];
-    ereceiver->u8[0] = dest.u8[0];
-  }
+  if (ereceiver) linkaddr_copy(ereceiver, &dest);
 
   if (req == CONECTRIC_MULTIHOP_PING ||
       req == CONECTRIC_POLL_SENSORS) {
@@ -470,18 +470,18 @@ compose_packetbuf_from_request(uint8_t * request,
   i = datalen;
 
   /* Composing payload */
-  if (req == CONECTRIC_ROUTE_REQUEST) {
-    /* do nothing, it's been populated above */
-  }
+//  if (req == CONECTRIC_ROUTE_REQUEST) {
+//    /* do nothing, it's been populated above */
+//  }
   if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
     while (i--) *packet++ = *request++;
   }
-  if (req == CONECTRIC_MULTIHOP_PING) {
-    /* do nothing, it's been populated above */
-  }
-  if (req == CONECTRIC_POLL_SENSORS) {
-    /* do nothing, it's been populated above */
-  }
+//  if (req == CONECTRIC_MULTIHOP_PING) {
+//    /* do nothing, it's been populated above */
+//  }
+//  if (req == CONECTRIC_POLL_SENSORS) {
+//    /* do nothing, it's been populated above */
+//  }
 
   packetbuf_copyfrom(packet_buffer, datalen+2);
 
@@ -505,7 +505,6 @@ compose_packetbuf_with_response(uint8_t * radio_request,
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
   uint8_t * header = NULL;
-  linkaddr_t dest;
   uint8_t req;
   uint8_t reqlen;
   uint8_t datalen;
@@ -519,28 +518,20 @@ compose_packetbuf_with_response(uint8_t * radio_request,
   /* Composing payload */
   if (req == CONECTRIC_ROUTE_REQUEST) {
     response = CONECTRIC_ROUTE_REPLY;
-    ereceiver->u8[1] = trickle_message_recv.esender.u8[1];
-    ereceiver->u8[0] = trickle_message_recv.esender.u8[0];
+    linkaddr_copy(ereceiver, &trickle_message_recv.esender);
   }
   if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
     response = CONECTRIC_ROUTE_REPLY;
-    ereceiver->u8[1] = trickle_message_recv.esender.u8[1];
-    ereceiver->u8[0] = trickle_message_recv.esender.u8[0];
+    linkaddr_copy(ereceiver, &trickle_message_recv.esender);
   }
   if (req == CONECTRIC_MULTIHOP_PING) {
     response = CONECTRIC_MULTIHOP_PING_REPLY;
-    ereceiver->u8[1] = mhop_message_recv.esender.u8[1];
-    ereceiver->u8[0] = mhop_message_recv.esender.u8[0];
+    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
   if (req == CONECTRIC_POLL_SENSORS) {
     response = CONECTRIC_POLL_SENSORS_REPLY;
-    ereceiver->u8[1] = mhop_message_recv.esender.u8[1];
-    ereceiver->u8[0] = mhop_message_recv.esender.u8[0];
+    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
-
-  /* Put the new ereceiver address */
-  dest.u8[1] = ereceiver->u8[1];
-  dest.u8[0] = ereceiver->u8[0];
 
   memset(packet_buffer, 0, sizeof(packet_buffer));
   *packet++ = 2;
@@ -555,8 +546,8 @@ compose_packetbuf_with_response(uint8_t * radio_request,
   *header++ = seqno;            /* seqno */
   *header++ = 0;                /* hop count */
   *header++ = 0;                /* number of hops */
-  *header++ = dest.u8[1];       /* destination addr H */
-  *header++ = dest.u8[0];       /* destination addr L */
+  *header++ = ereceiver->u8[1]; /* destination addr H */
+  *header++ = ereceiver->u8[0]; /* destination addr L */
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_trickle_process, ev, data)
