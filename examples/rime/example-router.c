@@ -228,21 +228,14 @@ trickle_recv(struct trickle_conn *c)
       trickle_message_recv.sender.u8[0], trickle_message_recv.sender.u8[1],
       trickle_message_recv.rssi, trickle_message_recv.timestamp);
 
-  if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST) {
-    if (trickle_message_recv.ereceiver.u8[1] == linkaddr_node_addr.u8[1] &&
-        trickle_message_recv.ereceiver.u8[0] == linkaddr_node_addr.u8[0]) {
+  if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST)
+    if (linkaddr_cmp(&trickle_message_recv.ereceiver, &linkaddr_node_addr) == 0)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
-    }
-  }
 
-  if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-    if (trickle_message_recv.ereceiver.u8[1] == 0xFF && trickle_message_recv.ereceiver.u8[0] == 0xFF) {
-      if (*(payload+12) == serial_number[10] && *(payload+13) == serial_number[11]) {
+  if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST_BY_SN)
+    if (trickle_message_recv.ereceiver.u8[1] == 0xFF && trickle_message_recv.ereceiver.u8[0] == 0xFF)
+      if (*(payload+12) == serial_number[10] && *(payload+13) == serial_number[11])
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
-      }
-    }
-  }
-
 }
 const static struct trickle_callbacks trickle_call = {trickle_recv};
 static struct trickle_conn trickle;
@@ -266,19 +259,13 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
         mhop_message_recv.esender.u8[0], mhop_message_recv.esender.u8[1],
         mhop_message_recv.hops, clock_seconds());
 
-  if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING) {
-    if (mhop_message_recv.ereceiver.u8[1] == linkaddr_node_addr.u8[1] &&
-        mhop_message_recv.ereceiver.u8[0] == linkaddr_node_addr.u8[0]) {
+  if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING)
+    if (linkaddr_cmp(&mhop_message_recv.ereceiver, &linkaddr_node_addr) == 0)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
-    }
-  }
 
-  if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS) {
-    if (mhop_message_recv.ereceiver.u8[1] == linkaddr_node_addr.u8[1] &&
-        mhop_message_recv.ereceiver.u8[0] == linkaddr_node_addr.u8[0]) {
+  if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS)
+    if (linkaddr_cmp(&mhop_message_recv.ereceiver, &linkaddr_node_addr) == 0)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
-    }
-  }
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -318,6 +305,7 @@ multihop_forward(struct multihop_conn *c,
   packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.ereceiver);
   packetbuf_set_attr(PACKETBUF_ATTR_HOPS, mhops);
 
+  /* was serial request for multihop send with source routing */
   if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen);
@@ -335,6 +323,7 @@ multihop_forward(struct multihop_conn *c,
     forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
   }
 
+  /* was serial request for multihop send with source routing */
   if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen);
@@ -352,6 +341,7 @@ multihop_forward(struct multihop_conn *c,
     forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
   }
 
+  /* was multihop radio request with source routing */
   if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen);
@@ -370,6 +360,7 @@ multihop_forward(struct multihop_conn *c,
     packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
   }
 
+  /* was multihop radio request with source routing */
   if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen);
@@ -388,6 +379,7 @@ multihop_forward(struct multihop_conn *c,
     packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
   }
 
+  /* was trickle radio request, no source routing */
   if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
     /* Add new packet header */
     packetbuf_hdralloc(hdrlen + 2);
@@ -431,7 +423,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-compose_packetbuf_from_request(uint8_t * request,
+compose_request_to_packetbuf(uint8_t * request,
     uint8_t seqno, linkaddr_t * ereceiver)
 {
   static uint8_t packet_buffer[128];
@@ -499,7 +491,7 @@ compose_packetbuf_from_request(uint8_t * request,
 }
 /*---------------------------------------------------------------------------*/
 static void
-compose_packetbuf_with_response(uint8_t * radio_request,
+compose_response_to_packetbuf_from(uint8_t * radio_request,
     uint8_t seqno, linkaddr_t * ereceiver)
 {
   static uint8_t packet_buffer[128];
@@ -568,7 +560,7 @@ PROCESS_THREAD(example_trickle_process, ev, data)
 
     /* Compose packetbuf based on the received request */
     request = (uint8_t *)data;
-    compose_packetbuf_from_request(request, counter++, NULL);
+    compose_request_to_packetbuf(request, counter++, NULL);
 
     /* Send the rank to 1 (source of trickle) */
     trickle_set_rank(1);
@@ -619,10 +611,10 @@ PROCESS_THREAD(example_multihop_process, ev, data)
     request = (uint8_t *)data;
     /* Request comes from serial port */
     if (*request == '<')
-      compose_packetbuf_from_request(request, counter++, &to);
+      compose_request_to_packetbuf(request, counter++, &to);
     /* Request receives over the air */
     else
-      compose_packetbuf_with_response(request, counter++, &to);
+      compose_response_to_packetbuf_from(request, counter++, &to);
 
     /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
     //etimer_set(&et, CLOCK_SECOND);
