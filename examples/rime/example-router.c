@@ -190,6 +190,12 @@ dump_packetbuf(void)
   putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
+static uint8_t
+shortaddr_cmp(linkaddr_t addr1, linkaddr_t addr2)
+{
+  return (addr1.u8[1] == addr2.u8[1] && addr1.u8[0] == addr2.u8[0]);
+}
+/*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
 PROCESS(example_multihop_process, "ConMHop");
@@ -229,7 +235,7 @@ trickle_recv(struct trickle_conn *c)
       trickle_message_recv.rssi, trickle_message_recv.timestamp);
 
   if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST)
-    if (linkaddr_cmp(&trickle_message_recv.ereceiver, &linkaddr_node_addr) == 0)
+    if (shortaddr_cmp(trickle_message_recv.ereceiver, linkaddr_node_addr))
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
 
   if (trickle_message_recv.request == CONECTRIC_ROUTE_REQUEST_BY_SN)
@@ -260,11 +266,11 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
         mhop_message_recv.hops, clock_seconds());
 
   if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING)
-    if (linkaddr_cmp(&mhop_message_recv.ereceiver, &linkaddr_node_addr) == 0)
+    if (shortaddr_cmp(mhop_message_recv.ereceiver, linkaddr_node_addr))
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
 
   if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS)
-    if (linkaddr_cmp(&mhop_message_recv.ereceiver, &linkaddr_node_addr) == 0)
+    if (shortaddr_cmp(mhop_message_recv.ereceiver, linkaddr_node_addr))
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
 }
 /*---------------------------------------------------------------------------*/
