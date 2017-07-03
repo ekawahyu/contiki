@@ -107,12 +107,13 @@ typedef struct {
   uint16_t      rssi;
 } message_recv;
 
-static void call_decision_maker(message_recv * message);
+static void call_decision_maker(void * incoming, uint8_t type);
 
-#define MESSAGE_ABC_RECV      1
-#define MESSAGE_TRICKLE_RECV  2
-#define MESSAGE_MHOP_RECV     3
-#define MESSAGE_MHOP_FWD      4
+#define MESSAGE_BYTEREQ       1
+#define MESSAGE_ABC_RECV      2
+#define MESSAGE_TRICKLE_RECV  3
+#define MESSAGE_MHOP_RECV     4
+#define MESSAGE_MHOP_FWD      5
 
 static message_recv abc_message_recv;
 static message_recv trickle_message_recv;
@@ -217,7 +218,7 @@ abc_recv(struct abc_conn *c)
       abc_message_recv.sender.u8[0], abc_message_recv.sender.u8[1],
       abc_message_recv.rssi, abc_message_recv.timestamp);
 
-  call_decision_maker(&abc_message_recv);
+  call_decision_maker(&abc_message_recv, MESSAGE_ABC_RECV);
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -242,7 +243,7 @@ trickle_recv(struct trickle_conn *c)
       trickle_message_recv.sender.u8[0], trickle_message_recv.sender.u8[1],
       trickle_message_recv.rssi, trickle_message_recv.timestamp);
 
-  call_decision_maker(&trickle_message_recv);
+  call_decision_maker(&trickle_message_recv, MESSAGE_TRICKLE_RECV);
 }
 const static struct trickle_callbacks trickle_call = {trickle_recv};
 static struct trickle_conn trickle;
@@ -263,7 +264,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
         mhop_message_recv.esender.u8[0], mhop_message_recv.esender.u8[1],
         mhop_message_recv.hops, clock_seconds());
 
-  call_decision_maker(&mhop_message_recv);
+  call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_RECV);
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -479,7 +480,7 @@ compose_response_to_packetbuf_from(uint8_t * radio_request,
   packetbuf_hdralloc(6);
 
   header = (uint8_t *)packetbuf_hdrptr();
-  *header++ = 6;   /* header len */
+  *header++ = 6;                /* header len */
   *header++ = seqno;            /* seqno */
   *header++ = 0;                /* hop count */
   *header++ = 0;                /* number of hops */
@@ -639,22 +640,13 @@ PROCESS_THREAD(serial_in_process, ev, data)
           bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
       }
 
-      /* interpreting request bytes */
-      if (bytereq[2] == CONECTRIC_ROUTE_REQUEST ||
-          bytereq[2] == CONECTRIC_ROUTE_REQUEST_BY_SN)
-        process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
-      else if (
-          bytereq[2] == CONECTRIC_MULTIHOP_PING ||
-          bytereq[2] == CONECTRIC_POLL_SENSORS)
-        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
-      else
-        /* unknown request */
-        PRINTF("%d.%d: Unknown request - %lu\n",
-            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-            clock_seconds());
+      call_decision_maker(bytereq, MESSAGE_BYTEREQ);
+
     }
     else {
+
       /* commands for local execution */
+
     }
   }
 
@@ -662,31 +654,55 @@ PROCESS_THREAD(serial_in_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-call_decision_maker(message_recv * message)
+call_decision_maker(void * incoming, uint8_t type)
 {
-  /* abc message received */
-  /* TODO store sensors data as a ring buffer with timestamp */
+  message_recv * message = (message_recv *)incoming;
+  uint8_t * bytereq = (uint8_t *)incoming;
 
-  /* trickle message received */
-  if (message->request == CONECTRIC_ROUTE_REQUEST)
-    if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-          message->payload);
+  /* interpreting request bytes */
+  if (type == MESSAGE_BYTEREQ) {
 
-  if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
-    if (message->ereceiver.u8[1] == 0xFF && message->ereceiver.u8[0] == 0xFF)
-      if (*(message->payload+12) == serial_number[10] &&
-          *(message->payload+13) == serial_number[11])
+    if (bytereq[2] == CONECTRIC_ROUTE_REQUEST ||
+        bytereq[2] == CONECTRIC_ROUTE_REQUEST_BY_SN)
+      process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
+    else if (
+        bytereq[2] == CONECTRIC_MULTIHOP_PING ||
+        bytereq[2] == CONECTRIC_POLL_SENSORS)
+      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
+    else
+      /* unknown request */
+      PRINTF("%d.%d: Unknown request - %lu\n",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+          clock_seconds());
+
+  }
+  else {
+
+    /* abc message received */
+    /* TODO store sensors data as a ring buffer with timestamp */
+
+    /* trickle message received */
+    if (message->request == CONECTRIC_ROUTE_REQUEST)
+      if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
 
-  /* multihop message received */
-  if (message->request == CONECTRIC_MULTIHOP_PING)
-    if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
+    if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
+      if (message->ereceiver.u8[1] == 0xFF && message->ereceiver.u8[0] == 0xFF)
+        if (*(message->payload+12) == serial_number[10] &&
+            *(message->payload+13) == serial_number[11])
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
 
-  if (message->request == CONECTRIC_POLL_SENSORS)
-    if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
+    /* multihop message received */
+    if (message->request == CONECTRIC_MULTIHOP_PING)
+      if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
+
+    if (message->request == CONECTRIC_POLL_SENSORS)
+      if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
+
+  }
 }
 /*---------------------------------------------------------------------------*/
