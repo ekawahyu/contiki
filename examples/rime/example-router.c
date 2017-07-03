@@ -81,12 +81,6 @@ enum {
   CONECTRIC_ATTR_MAX
 };
 
-static uint16_t rank = 255;
-static uint8_t sensors[128] = {
-    0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22, 0x33, 0x44, 0x55
-};
-static uint8_t *sensors_head, *sensors_tail;
-
 typedef struct {
   clock_time_t  timestamp;
   uint8_t       message_type;
@@ -109,21 +103,23 @@ typedef struct {
 
 static linkaddr_t * call_decision_maker(void * incoming, uint8_t type);
 
+#define REQUEST_HEADER_LEN    4
+
 #define MESSAGE_BYTEREQ       1
 #define MESSAGE_ABC_RECV      2
 #define MESSAGE_TRICKLE_RECV  3
-#define MESSAGE_MHOP_RECV     4
-#define MESSAGE_MHOP_FWD      5
+#define MESSAGE_MHOP_RECV     4 /* uses mhop_message_recv to store message */
+#define MESSAGE_MHOP_FWD      5 /* uses mhop_message_recv to store message */
 
 static message_recv abc_message_recv;
 static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 
-/*****************************************************************/
-/* [REQLEN][REQ][DESTH][DESTL] [DATAN][DATAN-1]...[DATA1][DATA0] */
-/*****************************************************************/
-#define REQUEST_HEADER_LEN    4
-
+static uint16_t rank = 255;
+static uint8_t sensors[128] = {
+    0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22, 0x33, 0x44, 0x55
+};
+static uint8_t *sensors_head, *sensors_tail;
 /* for cooja serial number testing purpose */
 static uint8_t serial_number[12] = {
     0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30
@@ -211,6 +207,10 @@ static void
 abc_recv(struct abc_conn *c)
 {
   packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
+
+  /* TODO only the sink should dump packetbuf,
+   * but routers have to store sensors data
+   */
   dump_packetbuf();
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
@@ -238,6 +238,8 @@ trickle_recv(struct trickle_conn *c)
   /* Get the rank to the sink */
   rank = trickle_rank(c);
 
+  /* TODO store neighbors as a list here */
+
   PRINTF("%d.%d: found neighbor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       trickle_message_recv.sender.u8[0], trickle_message_recv.sender.u8[1],
@@ -258,7 +260,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
 {
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
 
-  /* TODO only the sink should dump packetbuff */
+  /* TODO only the sink should dump packetbuf */
   dump_packetbuf();
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
