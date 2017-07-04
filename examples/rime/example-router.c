@@ -67,11 +67,16 @@
 
 enum {
   CONECTRIC_ATTR_NONE,
+  /* abc messages */
   CONECTRIC_SENSOR_BROADCAST,
+  /* trickle messages */
   CONECTRIC_ROUTE_REQUEST,
   CONECTRIC_ROUTE_REQUEST_BY_SN,
   CONECTRIC_ROUTE_REPLY,
   CONECTRIC_TIME_SYNC,
+  /* multihop messages */
+  CONECTRIC_POLL_LONG_MAC,
+  CONECTRIC_POLL_LONG_MAC_REPLY,
   CONECTRIC_POLL_SENSORS,
   CONECTRIC_POLL_SENSORS_REPLY,
   CONECTRIC_POLL_NEIGHBORS,
@@ -427,10 +432,9 @@ PROCESS_THREAD(serial_in_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
     printf("%s\n", (uint8_t *)data);
+
     request = (uint8_t *)data;
-
     counter = 2;
-
     memset(bytereq, 0, sizeof(bytereq));
 
     if (request[0] == '<') {
@@ -496,7 +500,8 @@ compose_request_to_packetbuf(uint8_t * request,
   if (ereceiver) linkaddr_copy(ereceiver, &dest);
 
   if (req == CONECTRIC_MULTIHOP_PING ||
-      req == CONECTRIC_POLL_SENSORS) {
+      req == CONECTRIC_POLL_SENSORS  ||
+      req == CONECTRIC_POLL_LONG_MAC) {
     datalen = 0;
     routinglen = reqlen - REQUEST_HEADER_LEN;
   }
@@ -512,18 +517,21 @@ compose_request_to_packetbuf(uint8_t * request,
   i = datalen;
 
   /* Composing payload */
-//  if (req == CONECTRIC_ROUTE_REQUEST) {
-//    /* do nothing, it's been populated above */
-//  }
+  if (req == CONECTRIC_ROUTE_REQUEST) {
+    /* do nothing, it's been populated above */
+  }
   if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
     while (i--) *packet++ = *request++;
   }
-//  if (req == CONECTRIC_MULTIHOP_PING) {
-//    /* do nothing, it's been populated above */
-//  }
-//  if (req == CONECTRIC_POLL_SENSORS) {
-//    /* do nothing, it's been populated above */
-//  }
+  if (req == CONECTRIC_MULTIHOP_PING) {
+    /* do nothing, it's been populated above */
+  }
+  if (req == CONECTRIC_POLL_SENSORS) {
+    /* do nothing, it's been populated above */
+  }
+  if (req == CONECTRIC_POLL_LONG_MAC) {
+    /* do nothing, it's been populated above */
+  }
 
   packetbuf_copyfrom(packet_buffer, datalen+2);
 
@@ -550,11 +558,15 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t req;
   uint8_t reqlen;
   uint8_t response;
+  uint8_t responselen;
+  uint8_t i;
 
   reqlen = *radio_request++;
   req    = *radio_request++;
 
-  /* Composing payload */
+  responselen = 2;
+
+  /* Set the end-receiver address, response and its length */
   if (req == CONECTRIC_ROUTE_REQUEST) {
     response = CONECTRIC_ROUTE_REPLY;
     linkaddr_copy(ereceiver, &trickle_message_recv.esender);
@@ -571,12 +583,23 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     response = CONECTRIC_POLL_SENSORS_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
+  if (req == CONECTRIC_POLL_LONG_MAC) {
+    response = CONECTRIC_POLL_LONG_MAC_REPLY;
+    responselen += 8;
+    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+  }
 
   memset(packet_buffer, 0, sizeof(packet_buffer));
-  *packet++ = 2;
+  *packet++ = responselen;
   *packet++ = response;
 
-  packetbuf_copyfrom(packet_buffer, 2);
+  i = responselen-2;
+
+  if (req == CONECTRIC_POLL_LONG_MAC) {
+    while (i--) *packet++ = linkaddr_node_addr.u8[i];
+  }
+
+  packetbuf_copyfrom(packet_buffer, responselen);
 
   packetbuf_hdralloc(6);
 
@@ -609,7 +632,8 @@ call_decision_maker(void * incoming, uint8_t type)
       process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
     else if (
         bytereq[2] == CONECTRIC_MULTIHOP_PING ||
-        bytereq[2] == CONECTRIC_POLL_SENSORS)
+        bytereq[2] == CONECTRIC_POLL_SENSORS  ||
+        bytereq[2] == CONECTRIC_POLL_LONG_MAC)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
     else
       /* unknown request */
@@ -653,12 +677,9 @@ call_decision_maker(void * incoming, uint8_t type)
     *header++ = mhop_message_recv.ereceiver.u8[0];
 
     /* multihop request with built-in routing table, no payload */
-    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING) {
-      forward_addr.u8[1] = mhop_message_recv.message[4 + (mhops << 1)];
-      forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
-    }
-    /* multihop request with built-in routing table, no payload */
-    if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS) {
+    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
+        mhop_message_recv.request == CONECTRIC_POLL_SENSORS  ||
+        mhop_message_recv.request == CONECTRIC_POLL_LONG_MAC) {
       forward_addr.u8[1] = mhop_message_recv.message[4 + (mhops << 1)];
       forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
     }
@@ -670,6 +691,12 @@ call_decision_maker(void * incoming, uint8_t type)
     }
     /* multihop reply, no routing table, with payload */
     if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY) {
+      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
+      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
+      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
+    }
+    /* multihop reply, no routing table, with payload */
+    if (mhop_message_recv.request == CONECTRIC_POLL_LONG_MAC_REPLY) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
       packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
       packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
@@ -710,11 +737,9 @@ call_decision_maker(void * incoming, uint8_t type)
               message->payload);
 
     /* multihop message received */
-    if (message->request == CONECTRIC_MULTIHOP_PING)
-      if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
-        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
-
-    if (message->request == CONECTRIC_POLL_SENSORS)
+    if (message->request == CONECTRIC_MULTIHOP_PING ||
+        message->request == CONECTRIC_POLL_SENSORS  ||
+        message->request == CONECTRIC_POLL_LONG_MAC)
       if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
 
