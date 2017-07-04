@@ -285,13 +285,17 @@ multihop_forward(struct multihop_conn *c,
   const linkaddr_t *originator, const linkaddr_t *dest,
   const linkaddr_t *prevhop, uint8_t hops)
 {
+  static linkaddr_t * forward_addr;
+
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
+
+  forward_addr = call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_FWD);
 
   PRINTF("%d.%d: multihop forwarding address is %d.%d - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      forward_addr.u8[0], forward_addr.u8[1], mhop_message_recv.hops);
+      forward_addr->u8[0], forward_addr->u8[1], mhop_message_recv.hops);
 
-  return call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_FWD);
+  return forward_addr;
 }
 static const struct multihop_callbacks multihop_call = {multihop_recv, multihop_forward};
 static struct multihop_conn multihop;
@@ -313,6 +317,7 @@ PROCESS_THREAD(example_abc_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_trickle_process, ev, data)
 {
+  static linkaddr_t to;
   static uint8_t counter = 0;
   static uint8_t * request;
 
@@ -332,9 +337,9 @@ PROCESS_THREAD(example_trickle_process, ev, data)
      */
     request = (uint8_t *)data;
     if (*request == '<')
-      compose_request_to_packetbuf(request, counter++, NULL);
+      compose_request_to_packetbuf(request, counter++, &to);
     else
-      compose_response_to_packetbuf(request, counter++, NULL);
+      compose_response_to_packetbuf(request, counter++, &to);
 
     /* Send the rank to 1 (source of trickle) */
     trickle_set_rank(1);
@@ -342,21 +347,9 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     /* Send the packet */
     trickle_send(&trickle);
 
-#if DEBUG
-    request++; request++;
-
-    if (*request == CONECTRIC_ROUTE_REQUEST) {
-      PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
-          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          *(request+2), *(request+1), clock_seconds());
-    }
-    if (*request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-      PRINTF("%d.%d: route request by S/N sent to %d.%d - %lu\n",
-          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          *(request+2), *(request+1), clock_seconds());
-    }
-#endif
-
+    PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
+        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+        to.u8[0], to.u8[1], clock_seconds());
   }
 
   PROCESS_END();
@@ -396,9 +389,7 @@ PROCESS_THREAD(example_multihop_process, ev, data)
     /* Send the packet */
     multihop_send(&multihop, &to);
 
-    request++; request++;
-
-    PRINTF("%d.%d: multihop send to %d.%d - %lu\n",
+    PRINTF("%d.%d: multihop sent to %d.%d - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         to.u8[0], to.u8[1], clock_seconds());
   }
@@ -624,7 +615,7 @@ call_decision_maker(void * incoming, uint8_t type)
       /* unknown request */
       PRINTF("%d.%d: Unknown request - %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          CLOCK_SECONDS());
+          clock_seconds());
   }
 
   /*******************************************************/
