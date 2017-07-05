@@ -632,6 +632,7 @@ call_decision_maker(void * incoming, uint8_t type)
   static linkaddr_t forward_addr;
   message_recv * message = (message_recv *)incoming;
   uint8_t * bytereq = (uint8_t *)incoming;
+  uint8_t request;
   uint8_t mhops, hdrlen;
   uint8_t * header;
   int i;
@@ -641,20 +642,31 @@ call_decision_maker(void * incoming, uint8_t type)
   /*******************************************************/
   if (type == MESSAGE_BYTEREQ) {
 
-    if (bytereq[2] == CONECTRIC_ROUTE_REQUEST ||
-        bytereq[2] == CONECTRIC_ROUTE_REQUEST_BY_SN)
+    request = bytereq[2];
+
+    /* Request bytes to be sent as trickle */
+    if (request == CONECTRIC_ROUTE_REQUEST ||
+        request == CONECTRIC_ROUTE_REQUEST_BY_SN)
       process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
+
+    /* Request bytes to be sent as multihop */
     else if (
-        bytereq[2] == CONECTRIC_MULTIHOP_PING ||
-        bytereq[2] == CONECTRIC_POLL_RS485  ||
-        bytereq[2] == CONECTRIC_POLL_SENSORS  ||
-        bytereq[2] == CONECTRIC_GET_LONG_MAC)
+        request == CONECTRIC_MULTIHOP_PING ||
+        request == CONECTRIC_POLL_RS485  ||
+        request == CONECTRIC_POLL_SENSORS  ||
+        request == CONECTRIC_GET_LONG_MAC)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
-    else
-      /* unknown request */
-      PRINTF("%d.%d: Unknown request - %lu\n",
-          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          clock_seconds());
+
+    /* Unknown request */
+    else {
+      puthex(linkaddr_node_addr.u8[0]);
+      putstring(".");
+      puthex(linkaddr_node_addr.u8[0]);
+      putstring(": Unknown request - 0x");
+      puthex(request);
+      putstring("\n");
+    }
+
   }
 
   /*******************************************************/
