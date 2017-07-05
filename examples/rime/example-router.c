@@ -487,11 +487,12 @@ compose_request_to_packetbuf(uint8_t * request,
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
   uint8_t * header = NULL;
+  uint8_t * route = NULL;
   linkaddr_t dest;
   uint8_t req;
   uint8_t reqlen;
   uint8_t datalen;
-  uint8_t routinglen;
+  uint8_t routelen;
   uint8_t i;
 
   request++; /* request from serial port, skip the '<' */
@@ -500,60 +501,68 @@ compose_request_to_packetbuf(uint8_t * request,
   req        = *request++;
   dest.u8[1] = *request++;
   dest.u8[0] = *request++;
+  routelen   = *request++;
+
+  datalen = reqlen - routelen - REQUEST_HEADER_LEN;
 
   if (ereceiver) linkaddr_copy(ereceiver, &dest);
 
-  if (req == CONECTRIC_MULTIHOP_PING ||
-      req == CONECTRIC_POLL_RS485  ||
-      req == CONECTRIC_POLL_SENSORS  ||
-      req == CONECTRIC_GET_LONG_MAC) {
-    datalen = 0;
-    routinglen = reqlen - REQUEST_HEADER_LEN;
-  }
-  else {
-    routinglen = 0;
-    datalen = reqlen - REQUEST_HEADER_LEN;
-  }
+//  if (req == CONECTRIC_MULTIHOP_PING ||
+//      req == CONECTRIC_POLL_RS485  ||
+//      req == CONECTRIC_POLL_SENSORS  ||
+//      req == CONECTRIC_GET_LONG_MAC) {
+//    datalen = 0;
+//    routelen = reqlen - REQUEST_HEADER_LEN;
+//  }
+//  else {
+//    routelen = 0;
+//    datalen = reqlen - REQUEST_HEADER_LEN;
+//  }
 
   memset(packet_buffer, 0, sizeof(packet_buffer));
   *packet++ = datalen + 2;
   *packet++ = req;
 
+  route = request; /* keep the pointer to routing table */
+  request += (routelen - 1);
   i = datalen;
+  while (i--) *packet++ = *request++;
 
-  /* Composing payload */
-  if (req == CONECTRIC_ROUTE_REQUEST) {
-    /* do nothing, it's been populated above */
-  }
-  if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-    while (i--) *packet++ = *request++;
-  }
-  if (req == CONECTRIC_MULTIHOP_PING) {
-    /* do nothing, it's been populated above */
-  }
-  if (req == CONECTRIC_POLL_RS485) {
-    /* there should be a payload here later on */
-  }
-  if (req == CONECTRIC_POLL_SENSORS) {
-    /* do nothing, it's been populated above */
-  }
-  if (req == CONECTRIC_GET_LONG_MAC) {
-    /* do nothing, it's been populated above */
-  }
+//  /* Composing payload */
+//  if (req == CONECTRIC_ROUTE_REQUEST) {
+//    /* do nothing, it's been populated above */
+//  }
+//  if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+//    while (i--) *packet++ = *request++;
+//  }
+//  if (req == CONECTRIC_MULTIHOP_PING) {
+//    /* do nothing, it's been populated above */
+//  }
+//  if (req == CONECTRIC_POLL_RS485) {
+//    /* there should be a payload here later on */
+//  }
+//  if (req == CONECTRIC_POLL_SENSORS) {
+//    /* do nothing, it's been populated above */
+//  }
+//  if (req == CONECTRIC_GET_LONG_MAC) {
+//    /* do nothing, it's been populated above */
+//  }
 
   packetbuf_copyfrom(packet_buffer, datalen+2);
 
-  packetbuf_hdralloc(6 + routinglen);
+  routelen--; /* get rid of the length byte */
+
+  packetbuf_hdralloc(6 + routelen);
 
   header = (uint8_t *)packetbuf_hdrptr();
-  *header++ = 6 + routinglen;   /* header len */
-  *header++ = seqno;            /* seqno */
-  *header++ = 0;                /* hop count */
-  *header++ = 0;                /* number of hops */
-  *header++ = dest.u8[1];       /* destination addr H */
-  *header++ = dest.u8[0];       /* destination addr L */
-  while(routinglen--)
-        *header++ = *request++; /* routing table */
+  *header++ = 6 + routelen;   /* header len */
+  *header++ = seqno;          /* seqno */
+  *header++ = 0;              /* hop count */
+  *header++ = 0;              /* number of hops */
+  *header++ = dest.u8[1];     /* destination addr H */
+  *header++ = dest.u8[0];     /* destination addr L */
+  while(routelen--)
+        *header++ = *route++; /* routing table */
 }
 /*---------------------------------------------------------------------------*/
 static void
