@@ -79,6 +79,8 @@ enum {
   CONECTRIC_SET_LONG_MAC_REPLY,
   CONECTRIC_GET_LONG_MAC,
   CONECTRIC_GET_LONG_MAC_REPLY,
+  CONECTRIC_POLL_RS485,
+  CONECTRIC_POLL_RS485_REPLY,
   CONECTRIC_POLL_SENSORS,
   CONECTRIC_POLL_SENSORS_REPLY,
   CONECTRIC_POLL_NEIGHBORS,
@@ -502,6 +504,7 @@ compose_request_to_packetbuf(uint8_t * request,
   if (ereceiver) linkaddr_copy(ereceiver, &dest);
 
   if (req == CONECTRIC_MULTIHOP_PING ||
+      req == CONECTRIC_POLL_RS485  ||
       req == CONECTRIC_POLL_SENSORS  ||
       req == CONECTRIC_GET_LONG_MAC) {
     datalen = 0;
@@ -527,6 +530,9 @@ compose_request_to_packetbuf(uint8_t * request,
   }
   if (req == CONECTRIC_MULTIHOP_PING) {
     /* do nothing, it's been populated above */
+  }
+  if (req == CONECTRIC_POLL_RS485) {
+    /* there should be a payload here later on */
   }
   if (req == CONECTRIC_POLL_SENSORS) {
     /* do nothing, it's been populated above */
@@ -568,7 +574,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 
   responselen = 2;
 
-  /* Set the end-receiver address, response and its length */
+  /* Responses to trickle requests */
   if (req == CONECTRIC_ROUTE_REQUEST) {
     response = CONECTRIC_ROUTE_REPLY;
     linkaddr_copy(ereceiver, &trickle_message_recv.esender);
@@ -577,8 +583,14 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     response = CONECTRIC_ROUTE_REPLY;
     linkaddr_copy(ereceiver, &trickle_message_recv.esender);
   }
+
+  /* Responses to multihop requests */
   if (req == CONECTRIC_MULTIHOP_PING) {
     response = CONECTRIC_MULTIHOP_PING_REPLY;
+    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+  }
+  if (req == CONECTRIC_POLL_RS485) {
+    response = CONECTRIC_POLL_RS485_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
   if (req == CONECTRIC_POLL_SENSORS) {
@@ -634,6 +646,7 @@ call_decision_maker(void * incoming, uint8_t type)
       process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
     else if (
         bytereq[2] == CONECTRIC_MULTIHOP_PING ||
+        bytereq[2] == CONECTRIC_POLL_RS485  ||
         bytereq[2] == CONECTRIC_POLL_SENSORS  ||
         bytereq[2] == CONECTRIC_GET_LONG_MAC)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
@@ -680,6 +693,7 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* multihop request with built-in routing table, no payload */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
         mhop_message_recv.request == CONECTRIC_POLL_SENSORS  ||
         mhop_message_recv.request == CONECTRIC_GET_LONG_MAC) {
       forward_addr.u8[1] = mhop_message_recv.message[4 + (mhops << 1)];
@@ -687,6 +701,12 @@ call_decision_maker(void * incoming, uint8_t type)
     }
     /* multihop reply, no routing table, no payload */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY) {
+      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
+      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
+      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
+    }
+    /* multihop reply, no routing table, with payload */
+    if (mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
       packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
       packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
@@ -740,6 +760,7 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||
+        message->request == CONECTRIC_POLL_RS485  ||
         message->request == CONECTRIC_POLL_SENSORS  ||
         message->request == CONECTRIC_GET_LONG_MAC)
       if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
