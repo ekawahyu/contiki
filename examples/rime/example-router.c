@@ -75,8 +75,10 @@ enum {
   CONECTRIC_ROUTE_REPLY,
   CONECTRIC_TIME_SYNC,
   /* multihop messages */
-  CONECTRIC_POLL_LONG_MAC,
-  CONECTRIC_POLL_LONG_MAC_REPLY,
+  CONECTRIC_SET_LONG_MAC,
+  CONECTRIC_SET_LONG_MAC_REPLY,
+  CONECTRIC_GET_LONG_MAC,
+  CONECTRIC_GET_LONG_MAC_REPLY,
   CONECTRIC_POLL_SENSORS,
   CONECTRIC_POLL_SENSORS_REPLY,
   CONECTRIC_POLL_NEIGHBORS,
@@ -501,7 +503,7 @@ compose_request_to_packetbuf(uint8_t * request,
 
   if (req == CONECTRIC_MULTIHOP_PING ||
       req == CONECTRIC_POLL_SENSORS  ||
-      req == CONECTRIC_POLL_LONG_MAC) {
+      req == CONECTRIC_GET_LONG_MAC) {
     datalen = 0;
     routinglen = reqlen - REQUEST_HEADER_LEN;
   }
@@ -529,7 +531,7 @@ compose_request_to_packetbuf(uint8_t * request,
   if (req == CONECTRIC_POLL_SENSORS) {
     /* do nothing, it's been populated above */
   }
-  if (req == CONECTRIC_POLL_LONG_MAC) {
+  if (req == CONECTRIC_GET_LONG_MAC) {
     /* do nothing, it's been populated above */
   }
 
@@ -583,8 +585,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     response = CONECTRIC_POLL_SENSORS_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
-  if (req == CONECTRIC_POLL_LONG_MAC) {
-    response = CONECTRIC_POLL_LONG_MAC_REPLY;
+  if (req == CONECTRIC_GET_LONG_MAC) {
+    response = CONECTRIC_GET_LONG_MAC_REPLY;
     responselen += 8;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
@@ -595,7 +597,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 
   i = responselen-2;
 
-  if (req == CONECTRIC_POLL_LONG_MAC) {
+  if (req == CONECTRIC_GET_LONG_MAC) {
     while (i--) *packet++ = linkaddr_node_addr.u8[i];
   }
 
@@ -633,7 +635,7 @@ call_decision_maker(void * incoming, uint8_t type)
     else if (
         bytereq[2] == CONECTRIC_MULTIHOP_PING ||
         bytereq[2] == CONECTRIC_POLL_SENSORS  ||
-        bytereq[2] == CONECTRIC_POLL_LONG_MAC)
+        bytereq[2] == CONECTRIC_GET_LONG_MAC)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
     else
       /* unknown request */
@@ -679,7 +681,7 @@ call_decision_maker(void * incoming, uint8_t type)
     /* multihop request with built-in routing table, no payload */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_POLL_SENSORS  ||
-        mhop_message_recv.request == CONECTRIC_POLL_LONG_MAC) {
+        mhop_message_recv.request == CONECTRIC_GET_LONG_MAC) {
       forward_addr.u8[1] = mhop_message_recv.message[4 + (mhops << 1)];
       forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
     }
@@ -696,7 +698,7 @@ call_decision_maker(void * incoming, uint8_t type)
       packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
     }
     /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_POLL_LONG_MAC_REPLY) {
+    if (mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
       packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
       packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
@@ -739,7 +741,7 @@ call_decision_maker(void * incoming, uint8_t type)
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||
         message->request == CONECTRIC_POLL_SENSORS  ||
-        message->request == CONECTRIC_POLL_LONG_MAC)
+        message->request == CONECTRIC_GET_LONG_MAC)
       if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
 
