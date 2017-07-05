@@ -60,9 +60,10 @@ static struct abc_conn abc;
 PROCESS_THREAD(example_abc_process, ev, data)
 {
   static struct etimer et;
-  static uint8_t message[64];
+  static uint8_t message[128];
   static uint8_t loop;
   static uint16_t counter = 0;
+  static uint8_t len;
 
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
@@ -82,16 +83,31 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    memset(message, 0, 2);
+    memset(message, 0, sizeof(message));
     counter++;
-    message[0] = counter & 0xFF;
-    message[1] = (counter & 0xFF00) >> 8;
+    message[0] = 6;         /* header len */
+    message[1] = counter;   /* seqno */
+    message[2] = 0;         /* hop count */
+    message[3] = 0;         /* number of hops */
+    message[4] = 0xFF;      /* destination addr H */
+    message[5] = 0xFF;      /* destination addr L */
+    message[6] = 8;         /* message length */
+    message[7] = 0x01;      /* messsage type = sensor broadcast */
+    message[8] = 0x10;      /* device type = RHT */
+    message[9] = 0x21;      /* battery level */
+    message[10] = 0xAA;     /* RH high */
+    message[11] = 0xBB;     /* RH low */
+    message[12] = 0xCC;     /* T high */
+    message[13] = 0xDD;     /* T low */
 
-    loop = 3;
+    len = 14;
+    packetbuf_copyfrom(message, len);
+
+    loop = 5;
     while(loop--) {
       /* Delay 1-2 seconds */
       etimer_set(&et, CLOCK_SECOND + random_rand() % CLOCK_SECOND);
-      packetbuf_copyfrom(message, 2);
+      packetbuf_copyfrom(message, len);
       packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, (uint8_t)counter);
       abc_send(&abc);
     }
