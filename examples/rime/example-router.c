@@ -129,6 +129,8 @@ static message_recv abc_message_recv;
 static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 
+static uint8_t X_IEEE_ADDR[8] = {0x44, 0x33, 0x22, 0x11, 0xDD, 0xCC, 0xBB, 0xAA};
+static uint8_t * gmacp = &X_IEEE_ADDR;
 static uint16_t rank = 255;
 static uint8_t sensors[128] = {
     0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22, 0x33, 0x44, 0x55
@@ -433,7 +435,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
   PROCESS_BEGIN();
 
-  /* for cooja serial number testing purpose */
+  /* for cooja serial number and MAC address testing purpose */
   serial_number[10] = ((linkaddr_node_addr.u8[0] & 0xF0) >> 4);
   if (serial_number[10] > 9)
     serial_number[10] += 0x37;
@@ -446,8 +448,11 @@ PROCESS_THREAD(serial_in_process, ev, data)
   else
     serial_number[11] += 0x30;
 
-  printf("Meter S/N=%s\n", serial_number);
-  /*******************************************/
+  gmacp = &X_IEEE_ADDR;
+  gmacp[0] = linkaddr_node_addr.u8[0];
+  gmacp[1] = linkaddr_node_addr.u8[1];
+
+  /***********************************************************/
 
   while(1) {
 
@@ -494,12 +499,12 @@ PROCESS_THREAD(serial_in_process, ev, data)
       counter = 0;
 
       /* passthrough until end of line found */
-      while(*request != '\0') {
+      while(*++request != '\0') {
         /* remove space */
         if (*request == ' ') continue;
         if (*request >= 0x61 && *request <= 0x7A)
           *request -= 0x20;
-        bytereq[counter++] = *request++;
+        bytereq[counter++] = *request;
       }
 
       call_decision_maker(bytereq, MESSAGE_BYTECMD);
@@ -620,7 +625,12 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   i = responselen-2;
 
   if (req == CONECTRIC_GET_LONG_MAC) {
-    while (i--) *packet++ = linkaddr_node_addr.u8[i];
+    gmacp = &X_IEEE_ADDR;
+    while (i--) {
+      *packet++ = gmacp[i];
+      puthex(gmacp[i]);
+    }
+    putstring("\n");
   }
 
   packetbuf_copyfrom(packet_buffer, responselen);
@@ -655,7 +665,8 @@ call_decision_maker(void * incoming, uint8_t type)
     /* Command line interpreter */
     if (bytereq[0] == 'M') {
       if (bytereq[1] == 'R') {
-        for(i = 7; i >= 0; i--) puthex(linkaddr_node_addr.u8[i]);
+        gmacp = &X_IEEE_ADDR;
+        for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       }
       putstring("\n");
     }
@@ -664,7 +675,7 @@ call_decision_maker(void * incoming, uint8_t type)
     else {
       puthex(linkaddr_node_addr.u8[0]);
       putstring(".");
-      puthex(linkaddr_node_addr.u8[0]);
+      puthex(linkaddr_node_addr.u8[1]);
       putstring(": Bad command!\n");
     }
 
