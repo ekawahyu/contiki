@@ -119,10 +119,11 @@ static linkaddr_t * call_decision_maker(void * incoming, uint8_t type);
 #define REQUEST_HEADER_LEN    4
 
 #define MESSAGE_BYTEREQ       1
-#define MESSAGE_ABC_RECV      2
-#define MESSAGE_TRICKLE_RECV  3
-#define MESSAGE_MHOP_RECV     4 /* uses mhop_message_recv to store message */
-#define MESSAGE_MHOP_FWD      5 /* uses mhop_message_recv to store message */
+#define MESSAGE_BYTECMD       2
+#define MESSAGE_ABC_RECV      3
+#define MESSAGE_TRICKLE_RECV  4
+#define MESSAGE_MHOP_RECV     5 /* uses mhop_message_recv to store message */
+#define MESSAGE_MHOP_FWD      6 /* uses mhop_message_recv to store message */
 
 static message_recv abc_message_recv;
 static message_recv trickle_message_recv;
@@ -455,16 +456,17 @@ PROCESS_THREAD(serial_in_process, ev, data)
     printf("%s\n", (uint8_t *)data);
 
     request = (uint8_t *)data;
-    counter = 2;
     memset(bytereq, 0, sizeof(bytereq));
 
     if (request[0] == '<') {
 
       bytereq[0] = '<';
+      counter = 2;
 
       /* do conversion from hex string to hex bytes */
       while(*++request != '\0') {
 
+        /* remove space */
         if (*request == ' ') continue;
 
         /* single digit hex string 0-9, A-F, a-f adjustment */
@@ -489,7 +491,18 @@ PROCESS_THREAD(serial_in_process, ev, data)
     }
     else {
 
-      /* commands for local execution */
+      counter = 0;
+
+      /* passthrough until end of line found */
+      while(*request != '\0') {
+        /* remove space */
+        if (*request == ' ') continue;
+        if (*request >= 0x61 && *request <= 0x7A)
+          *request -= 0x20;
+        bytereq[counter++] = *request++;
+      }
+
+      call_decision_maker(bytereq, MESSAGE_BYTECMD);
 
     }
   }
@@ -633,6 +646,29 @@ call_decision_maker(void * incoming, uint8_t type)
   uint8_t mhops, hdrlen;
   uint8_t * header;
   int i;
+
+  /*******************************************************/
+  /***** INTERPRETING COMMAND LINES FROM SERIAL PORT *****/
+  /*******************************************************/
+  if (type == MESSAGE_BYTECMD) {
+
+    /* Command line interpreter */
+    if (bytereq[0] == 'M') {
+      if (bytereq[1] == 'R') {
+        for(i = 7; i >= 0; i--) puthex(linkaddr_node_addr.u8[i]);
+      }
+      putstring("\n");
+    }
+
+    /* Unknown command */
+    else {
+      puthex(linkaddr_node_addr.u8[0]);
+      putstring(".");
+      puthex(linkaddr_node_addr.u8[0]);
+      putstring(": Bad command!\n");
+    }
+
+  }
 
   /*******************************************************/
   /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
