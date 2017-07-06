@@ -200,6 +200,21 @@ dump_packetbuf(void)
   putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
+static void
+dump_payload(void)
+{
+  static uint16_t len;
+  static char * packetbuf;
+
+  putstring("p>");
+
+  len = packetbuf_datalen();
+  packetbuf = (char *)packetbuf_dataptr();
+  while(len--) puthex(*packetbuf++);
+
+  putstring("\n");
+}
+/*---------------------------------------------------------------------------*/
 static uint8_t
 shortaddr_cmp(linkaddr_t addr1, linkaddr_t addr2)
 {
@@ -225,6 +240,7 @@ abc_recv(struct abc_conn *c)
    * but routers have to store sensors data
    */
   dump_packetbuf();
+  dump_payload();
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -275,6 +291,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
 
   /* TODO only the sink should dump packetbuf */
   dump_packetbuf();
+  dump_payload();
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -495,7 +512,8 @@ compose_request_to_packetbuf(uint8_t * request,
   uint8_t routelen;
   uint8_t i;
 
-  request++; /* request from serial port, skip the '<' */
+  /* Request from serial port, skip the '<' */
+  request++;
 
   reqlen     = *request++;
   req        = *request++;
@@ -503,50 +521,17 @@ compose_request_to_packetbuf(uint8_t * request,
   dest.u8[0] = *request++;
   routelen   = *request++;
 
-  datalen = reqlen - routelen - REQUEST_HEADER_LEN;
-
   if (ereceiver) linkaddr_copy(ereceiver, &dest);
 
-//  if (req == CONECTRIC_MULTIHOP_PING ||
-//      req == CONECTRIC_POLL_RS485  ||
-//      req == CONECTRIC_POLL_SENSORS  ||
-//      req == CONECTRIC_GET_LONG_MAC) {
-//    datalen = 0;
-//    routelen = reqlen - REQUEST_HEADER_LEN;
-//  }
-//  else {
-//    routelen = 0;
-//    datalen = reqlen - REQUEST_HEADER_LEN;
-//  }
-
+  /* Filling in packetbuf with data and skip routing table */
   memset(packet_buffer, 0, sizeof(packet_buffer));
+  datalen = reqlen - routelen - REQUEST_HEADER_LEN;
   *packet++ = datalen + 2;
   *packet++ = req;
-
-  route = request; /* keep the pointer to routing table */
+  route = request;
   request += (routelen - 1);
   i = datalen;
   while (i--) *packet++ = *request++;
-
-//  /* Composing payload */
-//  if (req == CONECTRIC_ROUTE_REQUEST) {
-//    /* do nothing, it's been populated above */
-//  }
-//  if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-//    while (i--) *packet++ = *request++;
-//  }
-//  if (req == CONECTRIC_MULTIHOP_PING) {
-//    /* do nothing, it's been populated above */
-//  }
-//  if (req == CONECTRIC_POLL_RS485) {
-//    /* there should be a payload here later on */
-//  }
-//  if (req == CONECTRIC_POLL_SENSORS) {
-//    /* do nothing, it's been populated above */
-//  }
-//  if (req == CONECTRIC_GET_LONG_MAC) {
-//    /* do nothing, it's been populated above */
-//  }
 
   packetbuf_copyfrom(packet_buffer, datalen+2);
 
@@ -600,6 +585,9 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   }
   if (req == CONECTRIC_POLL_RS485) {
     response = CONECTRIC_POLL_RS485_REPLY;
+    /* TODO poll submeter over RS485 network and fill packetbuf with
+     * chunks of data
+     */
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
   if (req == CONECTRIC_POLL_SENSORS) {
