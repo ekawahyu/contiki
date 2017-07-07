@@ -226,7 +226,7 @@ dump_payload(void)
 //static uint8_t
 //shortaddr_cmp(linkaddr_t addr1, linkaddr_t addr2)
 //{
-//  return (addr1.u8[1] == addr2.u8[1] && addr1.u8[0] == addr2.u8[0]);
+//  return (addr1.u8[0] == addr2.u8[0] && addr1.u8[1] == addr2.u8[1]);
 //}
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
@@ -269,8 +269,8 @@ trickle_recv(struct trickle_conn *c)
 
   /* Decoding ereceiver address from message, no built-in trickle attribute */
   dataptr = trickle_message_recv.payload;
-  trickle_message_recv.ereceiver.u8[0] = *--dataptr;
   trickle_message_recv.ereceiver.u8[1] = *--dataptr;
+  trickle_message_recv.ereceiver.u8[0] = *--dataptr;
 
   /* Get the rank to the sink */
   rank = trickle_rank(c);
@@ -521,8 +521,8 @@ compose_request_to_packetbuf(uint8_t * request,
 
   reqlen     = *request++;
   req        = *request++;
-  dest.u8[1] = *request++;
   dest.u8[0] = *request++;
+  dest.u8[1] = *request++;
   routelen   = *request++;
 
   if (ereceiver) linkaddr_copy(ereceiver, &dest);
@@ -548,8 +548,8 @@ compose_request_to_packetbuf(uint8_t * request,
   *header++ = seqno;          /* seqno */
   *header++ = 0;              /* hop count */
   *header++ = 0;              /* number of hops */
-  *header++ = dest.u8[1];     /* destination addr H */
-  *header++ = dest.u8[0];     /* destination addr L */
+  *header++ = dest.u8[0];     /* destination addr H */
+  *header++ = dest.u8[1];     /* destination addr L */
   while(routelen--)
         *header++ = *route++; /* routing table */
 }
@@ -628,8 +628,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   *header++ = seqno;            /* seqno */
   *header++ = 0;                /* hop count */
   *header++ = 0;                /* number of hops */
-  *header++ = ereceiver->u8[1]; /* destination addr H */
-  *header++ = ereceiver->u8[0]; /* destination addr L */
+  *header++ = ereceiver->u8[0]; /* destination addr H */
+  *header++ = ereceiver->u8[1]; /* destination addr L */
 }
 /*---------------------------------------------------------------------------*/
 static linkaddr_t *
@@ -731,16 +731,16 @@ call_decision_maker(void * incoming, uint8_t type)
     *header++ = mhop_message_recv.request;
     *header++ = mhops;
     *header++ = mhop_message_recv.message[3]; /* TODO assign max hops here */
-    *header++ = mhop_message_recv.ereceiver.u8[1];
     *header++ = mhop_message_recv.ereceiver.u8[0];
+    *header++ = mhop_message_recv.ereceiver.u8[1];
 
     /* multihop request with built-in routing table, no payload */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
         mhop_message_recv.request == CONECTRIC_POLL_SENSORS  ||
         mhop_message_recv.request == CONECTRIC_GET_LONG_MAC) {
-      forward_addr.u8[1] = mhop_message_recv.message[4 + (mhops << 1)];
-      forward_addr.u8[0] = mhop_message_recv.message[5 + (mhops << 1)];
+      forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
+      forward_addr.u8[1] = mhop_message_recv.message[5 + (mhops << 1)];
     }
     /* multihop reply, no routing table, no payload */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY) {
@@ -768,8 +768,8 @@ call_decision_maker(void * incoming, uint8_t type)
     }
     /* multihop reply, build routing table, no payload */
     if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
-      *header++ = linkaddr_node_addr.u8[1];
       *header++ = linkaddr_node_addr.u8[0];
+      *header++ = linkaddr_node_addr.u8[1];
       linkaddr_copy(&forward_addr, &trickle_message_recv.sender);
     }
 
@@ -792,13 +792,13 @@ call_decision_maker(void * incoming, uint8_t type)
     if (message->request == CONECTRIC_ROUTE_REQUEST) {
       linkaddr_copy(&addr1, &message->ereceiver);
       linkaddr_copy(&addr2, &linkaddr_node_addr);
-      if (addr1.u8[1] == addr2.u8[1] && addr1.u8[0] == addr2.u8[0])
+      if (addr1.u8[0] == addr2.u8[0] && addr1.u8[1] == addr2.u8[1])
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
     }
 
     if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
-      if (message->ereceiver.u8[1] == 0xFF && message->ereceiver.u8[0] == 0xFF) {
+      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
         /* TODO send EKM packet over RS485 network and see if it gets replied */
         if (0)
           process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
@@ -812,7 +812,7 @@ call_decision_maker(void * incoming, uint8_t type)
         message->request == CONECTRIC_GET_LONG_MAC) {
       linkaddr_copy(&addr1, &message->ereceiver);
       linkaddr_copy(&addr2, &linkaddr_node_addr);
-      if (addr1.u8[1] == addr2.u8[1] && addr1.u8[0] == addr2.u8[0])
+      if (addr1.u8[0] == addr2.u8[0] && addr1.u8[1] == addr2.u8[1])
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
     }
 
