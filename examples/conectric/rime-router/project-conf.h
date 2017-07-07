@@ -61,8 +61,6 @@ extern "C" {
 
 #define CONECTRIC_BURST_NUMBER                5
 
-#define SERIAL_LINE_CONF_BUFSIZE              256
-
 #ifdef __cplusplus
 }
 #endif
