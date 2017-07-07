@@ -611,7 +611,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   i = responselen-2;
 
   if (req == CONECTRIC_GET_LONG_MAC) {
-    gmacp = X_IEEE_ADDR;
+    gmacp = &X_IEEE_ADDR;
     while (i--) {
       *packet++ = gmacp[i];
       puthex(gmacp[i]);
@@ -652,7 +652,7 @@ call_decision_maker(void * incoming, uint8_t type)
     /* Command line interpreter */
     if (bytereq[0] == 'M') {
       if (bytereq[1] == 'R') {
-        gmacp = X_IEEE_ADDR;
+        gmacp = &X_IEEE_ADDR;
         for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       }
       putstring("\n");
