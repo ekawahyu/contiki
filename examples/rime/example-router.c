@@ -219,9 +219,9 @@ dump_payload(void)
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
-shortaddr_cmp(linkaddr_t addr1, linkaddr_t addr2)
+shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
 {
-  return (addr1.u8[0] == addr2.u8[0] && addr1.u8[1] == addr2.u8[1]);
+  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
@@ -803,7 +803,7 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* trickle message received */
     if (message->request == CONECTRIC_ROUTE_REQUEST)
-      if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
 
@@ -819,7 +819,7 @@ call_decision_maker(void * incoming, uint8_t type)
         message->request == CONECTRIC_POLL_RS485  ||
         message->request == CONECTRIC_POLL_SENSORS  ||
         message->request == CONECTRIC_GET_LONG_MAC)
-      if (shortaddr_cmp(message->ereceiver, linkaddr_node_addr))
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
 
   }
