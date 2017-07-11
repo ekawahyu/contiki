@@ -512,6 +512,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 PROCESS_THREAD(rs485_emulator_process, ev, data)
 {
   uint8_t * payload;
+  uint8_t i;
 
   PROCESS_BEGIN();
 
@@ -528,6 +529,9 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
     serial_number[9] += 0x37;
   else
     serial_number[9] += 0x30;
+
+  i = 255;
+  while(i--) rs485_buffer[i] = i;
 
   /***********************************************************/
 
@@ -634,6 +638,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t reqlen;
   uint8_t response;
   uint8_t responselen;
+  uint8_t chunk_number;
+  uint8_t chunk_size;
   uint8_t i;
 
   reqlen = *radio_request++;
@@ -663,8 +669,9 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   }
   if (req == CONECTRIC_POLL_RS485_CHUNK) {
     response = CONECTRIC_POLL_RS485_CHUNK_REPLY;
-    /* TODO calculate responlen */
-    responselen += 2;
+    chunk_number = *radio_request++;
+    chunk_size   = *radio_request++;
+    responselen += chunk_size;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
   if (req == CONECTRIC_POLL_SENSORS) {
@@ -690,9 +697,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   }
 
   if (req == CONECTRIC_POLL_RS485_CHUNK) {
-    /* FIXME this has to be calculated from RS485 reply length */
-    *packet++ = 0xAA; /* number of chunks available to poll */
-    *packet++ = 0xBB; /* chunk size */
+    for (i = 0; i < chunk_size; i++)
+      *packet++ = rs485_buffer[(chunk_size*chunk_number) + i];
   }
 
   if (req == CONECTRIC_GET_LONG_MAC) {
