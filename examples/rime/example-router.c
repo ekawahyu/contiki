@@ -731,6 +731,12 @@ call_decision_maker(void * incoming, uint8_t type)
   /*******************************************************/
   /***** INTERPRETING COMMAND LINES FROM SERIAL PORT *****/
   /*******************************************************/
+  /*
+   * BYTECMD Protocol:
+   * - It starts with any char, but '<'
+   * - Non-capital letter inputs get capitalized automatically
+   *
+   */
   if (type == MESSAGE_BYTECMD) {
 
     /* Command line interpreter */
@@ -755,6 +761,17 @@ call_decision_maker(void * incoming, uint8_t type)
   /*******************************************************/
   /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
   /*******************************************************/
+  /*
+   * BYTEREQ Protocol:
+   * -----------------
+   * [<][Len][Req][DestH][DestL][RLen][R1H][R1L]...[RnH][RnL][Data0][Data1]...
+   *
+   * [Len]  = request byte length including [Len], but excluding [<]
+   * [RLen] = routing table length including [RLen] itself
+   * [RnH]  = the last hop address H ---> [DestH]
+   * [RnL]  = the last hop address L ---> [DestL]
+   *
+   */
   if (type == MESSAGE_BYTEREQ) {
 
     request = bytereq[2];
@@ -819,7 +836,7 @@ call_decision_maker(void * incoming, uint8_t type)
     *header++ = mhop_message_recv.ereceiver.u8[0];
     *header++ = mhop_message_recv.ereceiver.u8[1];
 
-    /* multihop request with built-in routing table, no payload */
+    /* multihop request with built-in routing table */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
@@ -828,37 +845,17 @@ call_decision_maker(void * incoming, uint8_t type)
       forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
       forward_addr.u8[1] = mhop_message_recv.message[5 + (mhops << 1)];
     }
-    /* multihop reply, no routing table, no payload */
-    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY) {
+    /* multihop reply, no routing table */
+    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
+        mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY ||
+        mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
       packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
       packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
     }
-    /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY) {
-      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
-    }
-    /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY) {
-      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
-    }
-    /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY) {
-      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
-    }
-    /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY) {
-      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
-    }
-    /* multihop reply, build routing table, no payload */
+    /* multihop reply, update routing table on every hop */
     if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
       *header++ = linkaddr_node_addr.u8[0];
       *header++ = linkaddr_node_addr.u8[1];
