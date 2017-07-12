@@ -33,8 +33,10 @@
 /**
  * \file
  *         Example for using the trickle code in Rime
+ *         with ranking and multihop
  * \author
  *         Adam Dunkels <adam@sics.se>
+ *         Ekawahyu Susilo <ekawahyu@yahoo.com>
  */
 
 #include "contiki.h"
@@ -527,6 +529,9 @@ PROCESS_THREAD(serial_in_process, ev, data)
 PROCESS_THREAD(rs485_emulator_process, ev, data)
 {
   uint8_t * payload;
+  uint8_t reqlen;
+  uint8_t req;
+  uint8_t len;
   uint8_t i;
 
   PROCESS_BEGIN();
@@ -553,10 +558,18 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
+    payload = (uint8_t *)data;
+    reqlen = *payload++;
+    req = *payload++;
+
+    len = reqlen - 2;
+
     /* Step 1: RS485 device dumps payload to RS485 network.
      * Not applicable in Cooja simulator
      */
-
+//    while(len--) {
+//      uart_arch_writeb(*payload++);
+//    }
 
     /* Step 2: Assuming that step 1 above obtains a reply from
      * the RS485 network, meaning that this router is its parent.
