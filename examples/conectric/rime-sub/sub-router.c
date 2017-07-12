@@ -191,29 +191,6 @@ static uint8_t *sensors_head, *sensors_tail;
 #endif
 
 /*---------------------------------------------------------------------------*/
-// sub send data using trickle
-static void sub_send(struct trickle_conn *c, uint8_t type, uint8_t counter, uint8_t battery, uint8_t *tx_data, uint8_t size)
-{
-  uint8_t * pmessage = message;
-  uint8_t cnt;
-
-  pmessage = message;
-  memset(message, 0, size+8);
-  *pmessage++ = 0;
-  *pmessage++ = 0;
-  *pmessage++ = 0xFF;
-  *pmessage++ = 0xFF;
-  *pmessage++ = type;
-  *pmessage++ = counter;
-  *pmessage++ = battery;
-
-  for (cnt=0; cnt<size; cnt++)
-    *pmessage++ = tx_data[cnt];
-
-  packetbuf_copyfrom(message, size+7);
-  trickle_send(c);
-}
-/*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
@@ -684,26 +661,6 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     while(len--) {
       uart_arch_writeb(*serial_data++);
     }
-
-//    uart_arch_writeb(0x2F);
-//    uart_arch_writeb(0x3F);
-//
-//    uart_arch_writeb(serial_data[0]);
-//    uart_arch_writeb(serial_data[1]);
-//    uart_arch_writeb(serial_data[2]);
-//    uart_arch_writeb(serial_data[3]);
-//    uart_arch_writeb(serial_data[4]);
-//    uart_arch_writeb(serial_data[5]);
-//    uart_arch_writeb(serial_data[6]);
-//    uart_arch_writeb(serial_data[7]);
-//    uart_arch_writeb(serial_data[8]);
-//    uart_arch_writeb(serial_data[9]);
-//    uart_arch_writeb(serial_data[10]);
-//    uart_arch_writeb(serial_data[11]);
-//
-//    uart_arch_writeb(0x21);
-//    uart_arch_writeb(0x0D);
-//    uart_arch_writeb(0x0A);
   }
 
   PROCESS_END();
