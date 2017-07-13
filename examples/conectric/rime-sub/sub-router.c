@@ -141,25 +141,6 @@ static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 
 extern volatile uint16_t deep_sleep_requested;
-static struct etimer et;
-
-// BMB - move this to .h
-#define SN_SIZE 12
-static uint8_t sn_data[SN_SIZE];
-
-// Messaging
-static uint8_t message[72];
-static uint8_t pkt_counter = 0;
-
-// BMB - move this to .h for messages
-enum {
-     SUB_MSG_TYPE_BOOT = 0x01,
-     SUB_MSG_TYPE_EKM_DATA1 = 0x10,
-     SUB_MSG_TYPE_EKM_DATA2 = 0x11,
-     SUB_MSG_TYPE_EKM_DATA3 = 0x12,
-     SUB_MSG_TYPE_EKM_DATA4 = 0x13,
-     GW_MSG_TYPE_SN = 0x80
-};
 
 /* EKM */
 #define BUFSIZE 256
