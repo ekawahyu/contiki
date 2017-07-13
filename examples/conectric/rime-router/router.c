@@ -161,6 +161,8 @@ static uint8_t serial_number[12] = {
 };
 static uint8_t rs485_buffer[256];
 
+static uint8_t dump_buffer = 0;
+
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -230,7 +232,7 @@ dump_payload(void)
   static uint16_t len;
   static char * packetbuf;
 
-  putstring("p>");
+  putstring(">");
 
   len = packetbuf_datalen();
   packetbuf = (char *)packetbuf_dataptr();
@@ -267,8 +269,10 @@ abc_recv(struct abc_conn *c)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  dump_packetbuf();
-  dump_payload();
+  if (dump_buffer)
+    dump_packetbuf();
+  else
+    dump_payload();
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -318,8 +322,10 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
 
   /* TODO only the sink should dump packetbuf */
-  dump_packetbuf();
-  dump_payload();
+  if (dump_buffer)
+    dump_packetbuf();
+  else
+    dump_payload();
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -811,6 +817,17 @@ call_decision_maker(void * incoming, uint8_t type)
         for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       }
       putstring("\n");
+    }
+
+    else if (bytereq[0] == 'D') {
+      if (bytereq[1] == 'P') {
+        dump_buffer = 0;
+        putstring("Ok DP\n");
+      }
+      if (bytereq[1] == 'B') {
+        dump_buffer = 1;
+        putstring("Ok DB\n");
+      }
     }
 
     /* Unknown command */

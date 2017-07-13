@@ -166,6 +166,8 @@ static uint8_t *sensors_head, *sensors_tail;
 static uint16_t ekm_in_pos;
 static uint8_t submeter_data[BUFSIZE];
 
+static uint8_t dump_buffer = 0;
+
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -235,7 +237,7 @@ dump_payload(void)
   static uint16_t len;
   static char * packetbuf;
 
-  putstring("p>");
+  putstring(">");
 
   len = packetbuf_datalen();
   packetbuf = (char *)packetbuf_dataptr();
@@ -288,8 +290,10 @@ abc_recv(struct abc_conn *c)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  dump_packetbuf();
-  dump_payload();
+  if (dump_buffer)
+    dump_packetbuf();
+  else
+    dump_payload();
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -339,8 +343,10 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
 
   /* TODO only the sink should dump packetbuf */
-  dump_packetbuf();
-  dump_payload();
+  if (dump_buffer)
+    dump_packetbuf();
+  else
+    dump_payload();
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -614,10 +620,10 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 {
   static struct etimer et;
   static message_recv * message;
-  uint8_t * serial_data;
-  uint8_t reqlen;
-  uint8_t req;
-  uint8_t len;
+  static uint8_t * serial_data;
+  static uint8_t reqlen;
+  static uint8_t req;
+  static uint8_t len;
 
   PROCESS_BEGIN();
 
@@ -643,18 +649,18 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     /* FIXME workaround 1 second delay to see if ekm_in_pos gets updated
      * and do multihop reply
      */
-    etimer_set(&et, CLOCK_SECOND * 3);
+    etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    printf("len=%d ekm_in_pos1=%d\n", len, ekm_in_pos);
+    //printf("len=%d reqlen=%d ekm_in_pos1=%d\n", len, reqlen, ekm_in_pos);
 
     if (ekm_in_pos) {
 
-      printf("ekm_in_pos2=%d\n", ekm_in_pos);
+      //printf("ekm_in_pos2=%d\n", ekm_in_pos);
 
       if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
         if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
-          printf("modbus out: RREQ by SN\n");
+          //printf("modbus out: RREQ by SN\n");
           process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
               message->payload);
         }
@@ -662,7 +668,7 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 
       if (message->request == CONECTRIC_POLL_RS485) {
         if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
-          printf("modbus out: POLL RS485\n");
+          //printf("modbus out: POLL RS485\n");
           process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
               message->payload);
         }
@@ -871,6 +877,17 @@ call_decision_maker(void * incoming, uint8_t type)
         for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       }
       putstring("\n");
+    }
+
+    else if (bytereq[0] == 'D') {
+      if (bytereq[1] == 'P') {
+        dump_buffer = 0;
+        putstring("Ok DP\n");
+      }
+      if (bytereq[1] == 'B') {
+        dump_buffer = 1;
+        putstring("Ok DB\n");
+      }
     }
 
     /* Unknown command */
