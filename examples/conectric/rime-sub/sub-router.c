@@ -142,20 +142,10 @@ static message_recv mhop_message_recv;
 
 extern volatile uint16_t deep_sleep_requested;
 
-/* EKM */
-#define BUFSIZE 256
-static uint16_t ekm_in_pos;
-static uint8_t submeter_data[BUFSIZE];
-
 /* Flash Logging */
 static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
 
 #define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
-enum
-{
-  SUB_RESERVED = 0x00,    // reserved
-  SUB_SEND     = 0x01     // send data event
-};
 
 static uint16_t rank = 255;
 static uint8_t sensors[128];
@@ -170,6 +160,11 @@ static uint8_t *sensors_head, *sensors_tail;
 #else
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
+
+/* EKM */
+#define BUFSIZE 256
+static uint16_t ekm_in_pos;
+static uint8_t submeter_data[BUFSIZE];
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -1014,10 +1009,9 @@ call_decision_maker(void * incoming, uint8_t type)
             message->payload);
 
     if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
-      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
+      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
         process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
             message);
-      }
 
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||

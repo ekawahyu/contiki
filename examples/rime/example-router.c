@@ -33,8 +33,10 @@
 /**
  * \file
  *         Example for using the trickle code in Rime
+ *         with ranking and multihop
  * \author
  *         Adam Dunkels <adam@sics.se>
+ *         Ekawahyu Susilo <ekawahyu@yahoo.com>
  */
 
 #include "contiki.h"
@@ -132,9 +134,7 @@ static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 
 static uint16_t rank = 255;
-static uint8_t sensors[128] = {
-    0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22, 0x33, 0x44, 0x55
-};
+static uint8_t sensors[128];
 static uint8_t *sensors_head, *sensors_tail;
 static uint8_t X_IEEE_ADDR[8] = {0x44, 0x33, 0x22, 0x11, 0xDD, 0xCC, 0xBB, 0xAA};
 static uint8_t * gmacp = X_IEEE_ADDR;
@@ -143,6 +143,7 @@ static uint8_t serial_number[12] = {
     0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30
 };
 static uint8_t rs485_buffer[256];
+
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -511,6 +512,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(rs485_emulator_process, ev, data)
 {
+  static message_recv * message;
   uint8_t * payload;
   uint8_t reqlen;
   uint8_t req;
@@ -541,7 +543,8 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    payload = (uint8_t *)data;
+    message = (message_recv *)data;
+    payload = message->payload;
     reqlen = *payload++;
     req = *payload++;
 
@@ -554,7 +557,6 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
 //      uart_arch_writeb(*payload++);
 //    }
 
-
     /* Step 2: Assuming that step 1 above obtains a reply from
      * the RS485 network, meaning that this router is its parent.
      *
@@ -566,11 +568,11 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
      */
 
 //    putstring("payload>");
-//    payload = (uint8_t *)data;
+//    payload = message->payload;
 //    while(*payload != '\0') puthex(*payload++);
 //    putstring("\n");
 
-    payload = (uint8_t *)data;
+    payload = message->payload;
 
     if (*(payload+12) == serial_number[8] &&
         *(payload+13) == serial_number[9]) {
@@ -579,7 +581,22 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
               linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
               clock_seconds());
 
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
+      if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+        if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
+          printf("modbus out: RREQ by SN\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
+      if (message->request == CONECTRIC_POLL_RS485) {
+        if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
+          printf("modbus out: POLL RS485\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
     }
   }
 
@@ -648,10 +665,10 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t * header = NULL;
   uint8_t req;
   uint8_t reqlen;
-  uint8_t response;
+  uint8_t response = 0;
   uint8_t responselen;
-  uint8_t chunk_number;
-  uint8_t chunk_size;
+  uint8_t chunk_number = 0;
+  uint8_t chunk_size = 0;
   uint8_t i;
 
   reqlen = *radio_request++;
@@ -902,20 +919,23 @@ call_decision_maker(void * incoming, uint8_t type)
             message->payload);
 
     if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
-      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
+      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
         process_post(&rs485_emulator_process, PROCESS_EVENT_CONTINUE,
-            message->payload);
-      }
+            message);
 
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||
-        message->request == CONECTRIC_POLL_RS485  ||
         message->request == CONECTRIC_POLL_RS485_CHUNK  ||
         message->request == CONECTRIC_POLL_SENSORS  ||
         message->request == CONECTRIC_GET_LONG_MAC)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
+
+    if (message->request == CONECTRIC_POLL_RS485)
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
+        process_post(&rs485_emulator_process, PROCESS_EVENT_CONTINUE,
+            message);
 
   }
 

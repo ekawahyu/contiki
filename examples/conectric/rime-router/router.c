@@ -141,11 +141,6 @@ extern volatile uint16_t deep_sleep_requested;
 static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
 
 #define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
-enum
-{
-  ROUTER_RESERVED = 0x00,    // reserved
-  ROUTER_SEND     = 0x01,    // send data event 
-};
 
 static uint16_t rank = 255;
 static uint8_t sensors[128];
@@ -528,6 +523,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(rs485_emulator_process, ev, data)
 {
+  static message_recv * message;
   uint8_t * payload;
   uint8_t reqlen;
   uint8_t req;
@@ -558,7 +554,8 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    payload = (uint8_t *)data;
+    message = (message_recv *)data;
+    payload = message->payload;
     reqlen = *payload++;
     req = *payload++;
 
@@ -582,11 +579,11 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
      */
 
 //    putstring("payload>");
-//    payload = (uint8_t *)data;
+//    payload = message->payload;
 //    while(*payload != '\0') puthex(*payload++);
 //    putstring("\n");
 
-    payload = (uint8_t *)data;
+    payload = message->payload;
 
     if (*(payload+12) == serial_number[8] &&
         *(payload+13) == serial_number[9]) {
@@ -595,7 +592,22 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
               linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
               clock_seconds());
 
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, payload);
+      if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+        if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
+          printf("modbus out: RREQ by SN\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
+      if (message->request == CONECTRIC_POLL_RS485) {
+        if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
+          printf("modbus out: POLL RS485\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
     }
   }
 
@@ -605,16 +617,16 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
 PROCESS_THREAD(flash_log_process, ev, data)
 {
   static struct etimer et;
-  
+
   PROCESS_BEGIN();
 
   flashlogging_init();
-  
+
   while (1)
   {
-    etimer_set(&et, LOGGING_REF_TIME_PD);  
+    etimer_set(&et, LOGGING_REF_TIME_PD);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    
+
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
   }
 
@@ -937,21 +949,23 @@ call_decision_maker(void * incoming, uint8_t type)
             message->payload);
 
     if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
-      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
-        /* TODO call modbus out process */
+      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
         process_post(&rs485_emulator_process, PROCESS_EVENT_CONTINUE,
-            message->payload);
-      }
+            message);
 
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||
-        message->request == CONECTRIC_POLL_RS485  ||
         message->request == CONECTRIC_POLL_RS485_CHUNK  ||
         message->request == CONECTRIC_POLL_SENSORS  ||
         message->request == CONECTRIC_GET_LONG_MAC)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
+
+    if (message->request == CONECTRIC_POLL_RS485)
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
+        process_post(&rs485_emulator_process, PROCESS_EVENT_CONTINUE,
+            message);
 
   }
 
