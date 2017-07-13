@@ -636,6 +636,8 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_out_process, ev, data)
 {
+  static struct etimer et;
+  static message_recv * message;
   uint8_t * serial_data;
   uint8_t reqlen;
   uint8_t req;
@@ -645,21 +647,51 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 
   while(1) {
 
-    // wait for event
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    serial_data = (uint8_t *)data;
+    message = (message_recv *)data;
+    serial_data = message->payload;
     reqlen = *serial_data++;
     req = *serial_data++;
 
     len = reqlen - 2;
 
-    // reset modbus input index
+    /* reset modbus input index */
     ekm_in_pos = 0;
 
     /* modbus write */
     while(len--) {
       uart_arch_writeb(*serial_data++);
+    }
+
+    /* FIXME workaround 1 second delay to see if ekm_in_pos gets updated
+     * and do multihop reply
+     */
+    etimer_set(&et, CLOCK_SECOND * 3);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("len=%d ekm_in_pos1=%d\n", len, ekm_in_pos);
+
+    if (ekm_in_pos) {
+
+      printf("ekm_in_pos2=%d\n", ekm_in_pos);
+
+      if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+        if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
+          printf("modbus out: RREQ by SN\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
+      if (message->request == CONECTRIC_POLL_RS485) {
+        if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
+          printf("modbus out: POLL RS485\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
     }
   }
 
@@ -1002,20 +1034,23 @@ call_decision_maker(void * incoming, uint8_t type)
 
     if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
       if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
-        /* TODO call modbus out process */
         process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
-            message->payload);
+            message);
       }
 
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||
-        message->request == CONECTRIC_POLL_RS485  ||
         message->request == CONECTRIC_POLL_RS485_CHUNK  ||
         message->request == CONECTRIC_POLL_SENSORS  ||
         message->request == CONECTRIC_GET_LONG_MAC)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
+
+    if (message->request == CONECTRIC_POLL_RS485)
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
+        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
+            message);
 
   }
 
