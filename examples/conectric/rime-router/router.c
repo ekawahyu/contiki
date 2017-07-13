@@ -793,7 +793,7 @@ call_decision_maker(void * incoming, uint8_t type)
 {
   static linkaddr_t forward_addr;
   message_recv * message = (message_recv *)incoming;
-  uint8_t * bytereq = (uint8_t *)incoming;
+  static uint8_t * bytereq;
   uint8_t request;
   uint8_t mhops, hdrlen;
   uint8_t * header;
@@ -808,26 +808,27 @@ call_decision_maker(void * incoming, uint8_t type)
    * - Non-capital letter inputs get capitalized automatically
    *
    */
+  bytereq = (uint8_t *)incoming;
+
   if (type == MESSAGE_BYTECMD) {
 
+    printf("%s\n", bytereq);
+
     /* Command line interpreter */
-    if (bytereq[0] == 'M') {
-      if (bytereq[1] == 'R') {
-        gmacp = &X_IEEE_ADDR;
-        for(i = 7; i >= 0; i--) puthex(gmacp[i]);
-      }
+    if (bytereq[0] == 'M' && bytereq[1] == 'R') {
+      gmacp = &X_IEEE_ADDR;
+      for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       putstring("\n");
     }
 
-    else if (bytereq[0] == 'D') {
-      if (bytereq[1] == 'P') {
-        dump_buffer = 0;
-        putstring("Ok DP\n");
-      }
-      if (bytereq[1] == 'B') {
-        dump_buffer = 1;
-        putstring("Ok DB\n");
-      }
+    else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
+      dump_buffer = 0;
+      putstring("Ok DP\n");
+    }
+
+    else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
+      dump_buffer = 1;
+      putstring("Ok DB\n");
     }
 
     /* Unknown command */

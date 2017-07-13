@@ -871,23 +871,20 @@ call_decision_maker(void * incoming, uint8_t type)
   if (type == MESSAGE_BYTECMD) {
 
     /* Command line interpreter */
-    if (bytereq[0] == 'M') {
-      if (bytereq[1] == 'R') {
-        gmacp = &X_IEEE_ADDR;
-        for(i = 7; i >= 0; i--) puthex(gmacp[i]);
-      }
+    if (bytereq[0] == 'M' && bytereq[1] == 'R') {
+      gmacp = &X_IEEE_ADDR;
+      for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       putstring("\n");
     }
 
-    else if (bytereq[0] == 'D') {
-      if (bytereq[1] == 'P') {
-        dump_buffer = 0;
-        putstring("Ok DP\n");
-      }
-      if (bytereq[1] == 'B') {
-        dump_buffer = 1;
-        putstring("Ok DB\n");
-      }
+    else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
+      dump_buffer = 0;
+      putstring("Ok DP\n");
+    }
+
+    else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
+      dump_buffer = 1;
+      putstring("Ok DB\n");
     }
 
     /* Unknown command */
