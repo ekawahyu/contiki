@@ -793,7 +793,7 @@ call_decision_maker(void * incoming, uint8_t type)
 {
   static linkaddr_t forward_addr;
   message_recv * message = (message_recv *)incoming;
-  static uint8_t * bytereq;
+  uint8_t * bytereq = (uint8_t *)incoming;
   uint8_t request;
   uint8_t mhops, hdrlen;
   uint8_t * header;
@@ -808,11 +808,7 @@ call_decision_maker(void * incoming, uint8_t type)
    * - Non-capital letter inputs get capitalized automatically
    *
    */
-  bytereq = (uint8_t *)incoming;
-
-  if (type == MESSAGE_BYTECMD) {
-
-    printf("%s\n", bytereq);
+   if (type == MESSAGE_BYTECMD) {
 
     /* Command line interpreter */
     if (bytereq[0] == 'M' && bytereq[1] == 'R') {
