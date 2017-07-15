@@ -356,6 +356,7 @@ main(void) CC_NON_BANKED
       }
 #endif
       r = process_run();
+      leds_on(LEDS_YELLOW);
     } while(r > 0);
     len = NETSTACK_RADIO.pending_packet();
     if(len) {
@@ -368,6 +369,7 @@ main(void) CC_NON_BANKED
     }
 
     invoke_process_before_sleep();
+    leds_off(LEDS_YELLOW);
 
 #if LPM_MODE
     if (deep_sleep_requested) {
