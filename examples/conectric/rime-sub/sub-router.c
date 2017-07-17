@@ -90,6 +90,8 @@ enum {
   CONECTRIC_GET_LONG_MAC_REPLY,
   CONECTRIC_POLL_RS485,
   CONECTRIC_POLL_RS485_REPLY,
+  CONECTRIC_POLL_RS485_CHUNK,
+  CONECTRIC_POLL_RS485_CHUNK_REPLY,
   CONECTRIC_POLL_SENSORS,
   CONECTRIC_POLL_SENSORS_REPLY,
   CONECTRIC_POLL_NEIGHBORS,
@@ -139,40 +141,11 @@ static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 
 extern volatile uint16_t deep_sleep_requested;
-static struct etimer et;
-
-// BMB - move this to .h
-#define SN_SIZE 12
-static uint8_t sn_data[SN_SIZE];
-
-// Messaging
-static uint8_t message[72];
-static uint8_t pkt_counter = 0;
-
-// BMB - move this to .h for messages
-enum {
-     SUB_MSG_TYPE_BOOT = 0x01,
-     SUB_MSG_TYPE_EKM_DATA1 = 0x10,
-     SUB_MSG_TYPE_EKM_DATA2 = 0x11,
-     SUB_MSG_TYPE_EKM_DATA3 = 0x12,
-     SUB_MSG_TYPE_EKM_DATA4 = 0x13,
-     GW_MSG_TYPE_SN = 0x80
-};
-
-/* EKM */
-#define BUFSIZE 256
-static uint16_t ekm_in_pos;
-static uint8_t submeter_data[BUFSIZE];
 
 /* Flash Logging */
 static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
 
 #define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
-enum
-{
-  SUB_RESERVED = 0x00,    // reserved
-  SUB_SEND     = 0x01     // send data event
-};
 
 static uint16_t rank = 255;
 static uint8_t sensors[128];
@@ -188,29 +161,13 @@ static uint8_t *sensors_head, *sensors_tail;
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
 
-/*---------------------------------------------------------------------------*/
-// sub send data using trickle
-static void sub_send(struct trickle_conn *c, uint8_t type, uint8_t counter, uint8_t battery, uint8_t *tx_data, uint8_t size)
-{
-  uint8_t * pmessage = message;
-  uint8_t cnt;
+/* EKM */
+#define BUFSIZE 256
+static uint16_t ekm_in_pos;
+static uint8_t submeter_data[BUFSIZE];
 
-  pmessage = message;
-  memset(message, 0, size+8);
-  *pmessage++ = 0;
-  *pmessage++ = 0;
-  *pmessage++ = 0xFF;
-  *pmessage++ = 0xFF;
-  *pmessage++ = type;
-  *pmessage++ = counter;
-  *pmessage++ = battery;
+static uint8_t dump_buffer = 0;
 
-  for (cnt=0; cnt<size; cnt++)
-    *pmessage++ = tx_data[cnt];
-
-  packetbuf_copyfrom(message, size+7);
-  trickle_send(c);
-}
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -280,7 +237,7 @@ dump_payload(void)
   static uint16_t len;
   static char * packetbuf;
 
-  putstring("p>");
+  putstring(">");
 
   len = packetbuf_datalen();
   packetbuf = (char *)packetbuf_dataptr();
@@ -333,8 +290,10 @@ abc_recv(struct abc_conn *c)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  dump_packetbuf();
-  dump_payload();
+  if (dump_buffer)
+    dump_packetbuf();
+  else
+    dump_payload();
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -384,8 +343,10 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
 
   /* TODO only the sink should dump packetbuf */
-  dump_packetbuf();
-  dump_payload();
+  if (dump_buffer)
+    dump_packetbuf();
+  else
+    dump_payload();
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -657,39 +618,63 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_out_process, ev, data)
 {
-  uint8_t *serial_data;
+  static struct etimer et;
+  static message_recv * message;
+  static uint8_t * serial_data;
+  static uint8_t reqlen;
+  static uint8_t req;
+  static uint8_t len;
 
   PROCESS_BEGIN();
 
   while(1) {
 
-    // wait for event
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
-    serial_data = (uint8_t *)data;
 
-    // reset modbus input index
+    message = (message_recv *)data;
+    serial_data = message->payload;
+    reqlen = *serial_data++;
+    req = *serial_data++;
+
+    len = reqlen - 2;
+
+    /* reset modbus input index */
     ekm_in_pos = 0;
 
     /* modbus write */
-    uart_arch_writeb(0x2F);
-    uart_arch_writeb(0x3F);
+    while(len--) {
+      uart_arch_writeb(*serial_data++);
+    }
 
-    uart_arch_writeb(serial_data[0]);
-    uart_arch_writeb(serial_data[1]);
-    uart_arch_writeb(serial_data[2]);
-    uart_arch_writeb(serial_data[3]);
-    uart_arch_writeb(serial_data[4]);
-    uart_arch_writeb(serial_data[5]);
-    uart_arch_writeb(serial_data[6]);
-    uart_arch_writeb(serial_data[7]);
-    uart_arch_writeb(serial_data[8]);
-    uart_arch_writeb(serial_data[9]);
-    uart_arch_writeb(serial_data[10]);
-    uart_arch_writeb(serial_data[11]);
+    /* FIXME workaround 1 second delay to see if ekm_in_pos gets updated
+     * and do multihop reply
+     */
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    uart_arch_writeb(0x21);
-    uart_arch_writeb(0x0D);
-    uart_arch_writeb(0x0A);
+    //printf("len=%d reqlen=%d ekm_in_pos1=%d\n", len, reqlen, ekm_in_pos);
+
+    if (ekm_in_pos) {
+
+      //printf("ekm_in_pos2=%d\n", ekm_in_pos);
+
+      if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+        if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
+          //printf("modbus out: RREQ by SN\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
+      if (message->request == CONECTRIC_POLL_RS485) {
+        if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
+          //printf("modbus out: POLL RS485\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+              message->payload);
+        }
+      }
+
+    }
   }
 
   PROCESS_END();
@@ -776,8 +761,10 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t * header = NULL;
   uint8_t req;
   uint8_t reqlen;
-  uint8_t response;
+  uint8_t response = 0;
   uint8_t responselen;
+  uint8_t chunk_number = 0;
+  uint8_t chunk_size = 0;
   uint8_t i;
 
   reqlen = *radio_request++;
@@ -802,9 +789,14 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   }
   if (req == CONECTRIC_POLL_RS485) {
     response = CONECTRIC_POLL_RS485_REPLY;
-    /* TODO poll submeter over RS485 network and fill packetbuf with
-     * chunks of data
-     */
+    responselen += 2;
+    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+  }
+  if (req == CONECTRIC_POLL_RS485_CHUNK) {
+    response = CONECTRIC_POLL_RS485_CHUNK_REPLY;
+    chunk_number = *radio_request++;
+    chunk_size   = *radio_request++;
+    responselen += chunk_size;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
   if (req == CONECTRIC_POLL_SENSORS) {
@@ -822,6 +814,17 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   *packet++ = response;
 
   i = responselen-2;
+
+  if (req == CONECTRIC_POLL_RS485) {
+    /* FIXME this has to be calculated from RS485 reply length */
+    *packet++ = 0x04; /* number of chunks available to poll */
+    *packet++ = 0x40; /* chunk size */
+  }
+
+  if (req == CONECTRIC_POLL_RS485_CHUNK) {
+    for (i = 0; i < chunk_size; i++)
+      *packet++ = submeter_data[(chunk_size*chunk_number) + i];
+  }
 
   if (req == CONECTRIC_GET_LONG_MAC) {
     gmacp = &X_IEEE_ADDR;
@@ -859,15 +862,29 @@ call_decision_maker(void * incoming, uint8_t type)
   /*******************************************************/
   /***** INTERPRETING COMMAND LINES FROM SERIAL PORT *****/
   /*******************************************************/
+  /*
+   * BYTECMD Protocol:
+   * - It starts with any char, but '<'
+   * - Non-capital letter inputs get capitalized automatically
+   *
+   */
   if (type == MESSAGE_BYTECMD) {
 
     /* Command line interpreter */
-    if (bytereq[0] == 'M') {
-      if (bytereq[1] == 'R') {
-        gmacp = &X_IEEE_ADDR;
-        for(i = 7; i >= 0; i--) puthex(gmacp[i]);
-      }
+    if (bytereq[0] == 'M' && bytereq[1] == 'R') {
+      gmacp = &X_IEEE_ADDR;
+      for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       putstring("\n");
+    }
+
+    else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
+      dump_buffer = 0;
+      putstring("Ok DP\n");
+    }
+
+    else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
+      dump_buffer = 1;
+      putstring("Ok DB\n");
     }
 
     /* Unknown command */
@@ -883,6 +900,17 @@ call_decision_maker(void * incoming, uint8_t type)
   /*******************************************************/
   /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
   /*******************************************************/
+  /*
+   * BYTEREQ Protocol:
+   * -----------------
+   * [<][Len][Req][DestH][DestL][RLen][R1H][R1L]...[RnH][RnL][Data0][Data1]...
+   *
+   * [Len]  = request byte length including [Len], but excluding [<]
+   * [RLen] = routing table length including [RLen] itself
+   * [RnH]  = the last hop address H ---> [DestH]
+   * [RnL]  = the last hop address L ---> [DestL]
+   *
+   */
   if (type == MESSAGE_BYTEREQ) {
 
     request = bytereq[2];
@@ -896,6 +924,7 @@ call_decision_maker(void * incoming, uint8_t type)
     else if (
         request == CONECTRIC_MULTIHOP_PING ||
         request == CONECTRIC_POLL_RS485  ||
+        request == CONECTRIC_POLL_RS485_CHUNK  ||
         request == CONECTRIC_POLL_SENSORS  ||
         request == CONECTRIC_GET_LONG_MAC)
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
@@ -946,39 +975,26 @@ call_decision_maker(void * incoming, uint8_t type)
     *header++ = mhop_message_recv.ereceiver.u8[0];
     *header++ = mhop_message_recv.ereceiver.u8[1];
 
-    /* multihop request with built-in routing table, no payload */
+    /* multihop request with built-in routing table */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
         mhop_message_recv.request == CONECTRIC_POLL_SENSORS  ||
         mhop_message_recv.request == CONECTRIC_GET_LONG_MAC) {
       forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
       forward_addr.u8[1] = mhop_message_recv.message[5 + (mhops << 1)];
     }
-    /* multihop reply, no routing table, no payload */
-    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY) {
+    /* multihop reply, no routing table */
+    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
+        mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY ||
+        mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
       packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
       packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
     }
-    /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY) {
-      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
-    }
-    /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY) {
-      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
-    }
-    /* multihop reply, no routing table, with payload */
-    if (mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY) {
-      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
-    }
-    /* multihop reply, build routing table, no payload */
+    /* multihop reply, update routing table on every hop */
     if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
       *header++ = linkaddr_node_addr.u8[0];
       *header++ = linkaddr_node_addr.u8[1];
@@ -1001,28 +1017,29 @@ call_decision_maker(void * incoming, uint8_t type)
     /* TODO store sensors data as a ring buffer with timestamp */
 
     /* trickle message received */
-    if (message->request == CONECTRIC_ROUTE_REQUEST) {
+    if (message->request == CONECTRIC_ROUTE_REQUEST)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
-    }
 
     if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
-      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
-        /* TODO send EKM packet over RS485 network and see if it gets replied */
-        if (0)
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-              message->payload);
-      }
+      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
+        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
+            message);
 
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||
-        message->request == CONECTRIC_POLL_RS485  ||
+        message->request == CONECTRIC_POLL_RS485_CHUNK  ||
         message->request == CONECTRIC_POLL_SENSORS  ||
-        message->request == CONECTRIC_GET_LONG_MAC) {
+        message->request == CONECTRIC_GET_LONG_MAC)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
-        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, message->payload);
-    }
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+            message->payload);
+
+    if (message->request == CONECTRIC_POLL_RS485)
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
+        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
+            message);
 
   }
 
