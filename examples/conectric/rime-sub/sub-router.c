@@ -166,6 +166,12 @@ static uint8_t *sensors_head, *sensors_tail;
 static uint16_t ekm_in_pos;
 static uint8_t submeter_data[BUFSIZE];
 
+/* EKM Messaging */
+#define EKM_DATA_MAX_SIZE 20
+static uint8_t ekm_data_request;
+static linkaddr_t ekm_data_recv;
+static uint8_t ekm_data_payload[EKM_DATA_MAX_SIZE];
+
 static uint8_t dump_buffer = 0;
 
 /*---------------------------------------------------------------------------*/
@@ -575,6 +581,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
   PROCESS_END();
 }
+
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_in_process, ev, data)
 {
@@ -607,9 +614,22 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 
     if(ekm_in_pos >= 0xFF)
     {
-      ekm_in_pos = 0x100;  // known value
-      /* Do something here, got full EKM response */
-      //process_post(&sub_process, PROCESS_EVENT_CONTINUE, &ekm_in_pos);
+      
+      if (ekm_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+        if (ekm_data_recv.u8[0] == 0xFF && ekm_data_recv.u8[1] == 0xFF) {
+          //printf("modbus out: RREQ by SN\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+            ekm_data_payload);
+        }
+      }
+
+      else if (ekm_data_request == CONECTRIC_POLL_RS485) {
+        if (shortaddr_cmp(&ekm_data_recv, &linkaddr_node_addr)) {
+          //printf("modbus out: POLL RS485\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+            ekm_data_payload);
+        }
+      }
     }
   }
 
@@ -645,36 +665,11 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     while(len--) {
       uart_arch_writeb(*serial_data++);
     }
-
-    /* FIXME workaround 1 second delay to see if ekm_in_pos gets updated
-     * and do multihop reply
-     */
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    //printf("len=%d reqlen=%d ekm_in_pos1=%d\n", len, reqlen, ekm_in_pos);
-
-    if (ekm_in_pos) {
-
-      //printf("ekm_in_pos2=%d\n", ekm_in_pos);
-
-      if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-        if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
-          //printf("modbus out: RREQ by SN\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-              message->payload);
-        }
-      }
-
-      if (message->request == CONECTRIC_POLL_RS485) {
-        if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
-          //printf("modbus out: POLL RS485\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-              message->payload);
-        }
-      }
-
-    }
+    
+    // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
+    ekm_data_request = message->request;
+    linkaddr_copy(&ekm_data_recv, &message->ereceiver);
+    memcpy(ekm_data_payload, message->payload, message->length);  
   }
 
   PROCESS_END();
@@ -859,6 +854,9 @@ call_decision_maker(void * incoming, uint8_t type)
   uint8_t * header;
   int i;
 
+  
+  
+  
   /*******************************************************/
   /***** INTERPRETING COMMAND LINES FROM SERIAL PORT *****/
   /*******************************************************/
