@@ -600,7 +600,7 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
 
       if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
         if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
-          printf("modbus out: RREQ by SN\n");
+          //printf("modbus out: RREQ by SN\n");
           process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
               message->payload);
         }
@@ -608,7 +608,7 @@ PROCESS_THREAD(rs485_emulator_process, ev, data)
 
       if (message->request == CONECTRIC_POLL_RS485) {
         if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
-          printf("modbus out: POLL RS485\n");
+          //printf("modbus out: POLL RS485\n");
           process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
               message->payload);
         }
