@@ -595,17 +595,12 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     datasize = ((uint8_t *)data)[0];
 
     // copy data into submeter buffer (mask high bit)
-    for(cnt = 0; cnt < datasize-2; cnt++)
+    for(cnt = 0; cnt < datasize; cnt++)
     {
       puthex((dataptr[cnt]) & 0x7F);
       submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
     }
-    // copy crc without masking
-    puthex((dataptr[datasize-2]));
-    submeter_data[ekm_in_pos++] = (dataptr[datasize-2]);
-    puthex((dataptr[datasize-1]));
-    submeter_data[ekm_in_pos++] = (dataptr[datasize-1]);
-    printf("\n");
+    putstring("\n");
 
     if(ekm_in_pos >= 0xFF)
     {
