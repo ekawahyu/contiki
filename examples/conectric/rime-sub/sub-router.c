@@ -116,6 +116,7 @@ typedef struct {
   uint8_t       *payload;
   uint8_t       length;
   uint8_t       request;
+  uint8_t       seqno;
   uint8_t       hops;
   uint8_t       maxhops;
   uint16_t      rssi;
@@ -202,6 +203,7 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 
   /* Decoding payload and its length */
   hdrlen = message->message[0];
+  message->seqno = message->message[1];
   message->payload = &message->message[0] + hdrlen;
   message->length = message->message[hdrlen];
 
@@ -593,12 +595,17 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     datasize = ((uint8_t *)data)[0];
 
     // copy data into submeter buffer (mask high bit)
-    for(cnt = 0; cnt < datasize; cnt++)
+    for(cnt = 0; cnt < datasize-2; cnt++)
     {
       puthex((dataptr[cnt]) & 0x7F);
       submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
     }
-    putstring("\n");
+    // copy crc without masking
+    puthex((dataptr[datasize-2]));
+    submeter_data[ekm_in_pos++] = (dataptr[datasize-2]);
+    puthex((dataptr[datasize-1]));
+    submeter_data[ekm_in_pos++] = (dataptr[datasize-1]);
+    printf("\n");
 
     if(ekm_in_pos >= 0xFF)
     {
@@ -850,7 +857,7 @@ call_decision_maker(void * incoming, uint8_t type)
   message_recv * message = (message_recv *)incoming;
   uint8_t * bytereq = (uint8_t *)incoming;
   uint8_t request;
-  uint8_t mhops, hdrlen;
+  uint8_t seqno, mhops, hdrlen;
   uint8_t * header;
   int i;
 
@@ -942,6 +949,7 @@ call_decision_maker(void * incoming, uint8_t type)
   else if (type == MESSAGE_MHOP_FWD) {
 
     /* multihop message received but need to be forwarded */
+    seqno = mhop_message_recv.seqno;
     mhops = mhop_message_recv.hops;
     hdrlen = mhop_message_recv.message[0];
 
@@ -964,7 +972,7 @@ call_decision_maker(void * incoming, uint8_t type)
       *header++ = hdrlen;
     }
 
-    *header++ = mhop_message_recv.request;
+    *header++ = seqno;
     *header++ = mhops;
     *header++ = mhop_message_recv.message[3]; /* TODO assign max hops here */
     *header++ = mhop_message_recv.ereceiver.u8[0];
