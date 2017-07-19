@@ -171,6 +171,7 @@ static uint8_t submeter_data[BUFSIZE];
 static uint8_t ekm_data_request;
 static linkaddr_t ekm_data_recv;
 static uint8_t ekm_data_payload[EKM_DATA_MAX_SIZE];
+//static uint8_t ekm_close_string[5] = {0x01, 0x42, 0x30, 0x03, 0x75};
 
 static uint8_t dump_buffer = 0;
 
@@ -626,6 +627,15 @@ PROCESS_THREAD(modbus_in_process, ev, data)
         }
       }
     }
+    
+    // write close string for clearing connection
+    // 01 42 30 03 75
+//    uart_arch_writeb(ekm_close_string[0]);
+//    uart_arch_writeb(ekm_close_string[1]);
+//    uart_arch_writeb(ekm_close_string[2]);
+//    uart_arch_writeb(ekm_close_string[3]);
+//    uart_arch_writeb(ekm_close_string[4]);
+
   }
 
   PROCESS_END();
