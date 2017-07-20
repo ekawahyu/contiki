@@ -58,7 +58,7 @@ modbus_line_input_byte(unsigned char c)
     modbus_rx_data[pos] = c;
 
   // refresh timer as long as data keeps coming in
-  etimer_adjust(&mt, (CLOCK_SECOND/10));
+  etimer_adjust(&mt, (CLOCK_SECOND/8));
   
   return 1;
 }
