@@ -59,6 +59,17 @@ void invoke_process_before_sleep(void);
 #define WATCHDOG 1
 #endif
 /*---------------------------------------------------------------------------*/
+/*
+ * TODO add pre-built command line to collect git information on IAR
+ *
+ */
+#ifndef CONECTRIC_VERSION_STRING
+#define CONECTRIC_VERSION_STRING "Contiki-unknown"
+#endif
+#ifndef CONECTRIC_PROJECT_STRING
+#define CONECTRIC_PROJECT_STRING "unknow"
+#endif
+/*---------------------------------------------------------------------------*/
 #ifdef CONTIKI_VERSION_STRING
 #undef CONTIKI_VERSION_STRING
 #define CONTIKI_VERSION_STRING CONECTRIC_VERSION_STRING
