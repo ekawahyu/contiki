@@ -502,12 +502,15 @@ PROCESS_THREAD(serial_in_process, ev, data)
       counter = 0;
 
       /* passthrough until end of line found */
-      while(*++request != '\0') {
+      while(*request != '\0') {
         /* remove space */
-        if (*request == ' ') continue;
+        if (*request == ' ') {
+          request++;
+          continue;
+        }
         if (*request >= 0x61 && *request <= 0x7A)
           *request -= 0x20;
-        bytereq[counter++] = *request;
+        bytereq[counter++] = *request++;
       }
 
       call_decision_maker(bytereq, MESSAGE_BYTECMD);
