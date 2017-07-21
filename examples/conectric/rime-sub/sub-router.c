@@ -888,6 +888,11 @@ call_decision_maker(void * incoming, uint8_t type)
       putstring("Ok DB\n");
     }
 
+    else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
+      putstring(CONTIKI_VERSION_STRING "\n");
+      putstring(CONECTRIC_PROJECT_STRING "\n");
+    }
+
     /* Unknown command */
     else {
       puthex(linkaddr_node_addr.u8[0]);
