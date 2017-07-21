@@ -59,6 +59,11 @@ void invoke_process_before_sleep(void);
 #define WATCHDOG 1
 #endif
 /*---------------------------------------------------------------------------*/
+#ifdef CONTIKI_VERSION_STRING
+#undef CONTIKI_VERSION_STRING
+#define CONTIKI_VERSION_STRING CONECTRIC_VERSION_STRING
+#endif
+/*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
 static unsigned long irq_energest = 0;
 #define ENERGEST_IRQ_SAVE(a) do { \
@@ -232,7 +237,7 @@ main(void) CC_NON_BANKED
 
   PUTSTRING("##########################################\n");
   putstring(CONTIKI_VERSION_STRING "\n");
-  putstring(MODEL_STRING);
+  putstring(CONECTRIC_PROJECT_STRING "\n");
   switch(CHIPID) {
   case 0xA5:
     putstring("cc2530");
