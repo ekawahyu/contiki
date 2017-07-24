@@ -46,7 +46,6 @@
 #include "flash-logging.h"
 
 #include "dev/button-sensor.h"
-#include "dev/adc-sensor.h"
 #include "dev/rs485-arch.h"
 #include "dev/serial-line.h"
 #include "dev/modbus-line.h"
@@ -920,7 +919,7 @@ call_decision_maker(void * incoming, uint8_t type)
    * [RnL]  = the last hop address L ---> [DestL]
    *
    */
-  if (type == MESSAGE_BYTEREQ) {
+  else if (type == MESSAGE_BYTEREQ) {
 
     request = bytereq[2];
 

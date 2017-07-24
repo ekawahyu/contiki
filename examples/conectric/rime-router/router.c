@@ -46,7 +46,11 @@
 #include "flash-logging.h"
 
 #include "dev/button-sensor.h"
+#include "dev/rs485-arch.h"
 #include "dev/serial-line.h"
+#include "dev/modbus-line.h"
+
+#include "dev/uart-arch.h"
 #include "dev/leds.h"
 
 #include <stdio.h>
@@ -157,10 +161,16 @@ static uint8_t *sensors_head, *sensors_tail;
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
 
-static uint8_t serial_number[12] = {
-    0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30
-};
-static uint8_t rs485_buffer[256];
+/* RS485 */
+#define BUFSIZE 256
+static uint16_t rs485_in_pos;
+static uint8_t rs485_buffer[BUFSIZE];
+
+/* EKM Messaging */
+#define RS485_DATA_MAX_SIZE 20
+static uint8_t rs485_data_request;
+static linkaddr_t rs485_data_recv;
+static uint8_t rs485_data_payload[RS485_DATA_MAX_SIZE];
 
 static uint8_t dump_buffer = 0;
 
@@ -253,15 +263,31 @@ PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
 PROCESS(example_multihop_process, "ConMHop");
 PROCESS(serial_in_process, "SerialIn");
-PROCESS(rs485_emulator_process, "RS485Emu");
+PROCESS(modbus_in_process, "ModbusIn");
+PROCESS(modbus_out_process, "ModbusOut");
 PROCESS(flash_log_process, "FlashLog");
+#if BUTTON_SENSOR_ON
+PROCESS(buttons_test_process, "ButtonTest");
 AUTOSTART_PROCESSES(
     &example_abc_process,
     &example_trickle_process,
     &example_multihop_process,
     &serial_in_process,
-    &rs485_emulator_process,
+    &modbus_in_process,
+    &modbus_out_process,
+    &flash_log_process,
+    &buttons_test_process);
+#else
+AUTOSTART_PROCESSES(
+    &example_abc_process,
+    &example_trickle_process,
+    &example_multihop_process,
+    &serial_in_process,
+    &modbus_in_process,
+    &modbus_out_process,
     &flash_log_process);
+#endif
+
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv(struct abc_conn *c)
@@ -459,6 +485,34 @@ PROCESS_THREAD(example_multihop_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+#if BUTTON_SENSOR_ON
+PROCESS_THREAD(buttons_test_process, ev, data)
+{
+  struct sensors_sensor *sensor;
+  static uint8_t counter;
+  static uint8_t button;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
+
+    sensor = (struct sensors_sensor *)data;
+    if(sensor == &button_1_sensor) {
+      button = 0x71;
+      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
+    }
+    if(sensor == &button_2_sensor) {
+      button = 0x72;
+      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
+    }
+  }
+
+  PROCESS_END();
+}
+#endif
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
   static uint8_t * request;
@@ -532,94 +586,88 @@ PROCESS_THREAD(serial_in_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(rs485_emulator_process, ev, data)
+PROCESS_THREAD(modbus_in_process, ev, data)
 {
-  static message_recv * message;
-  uint8_t * payload;
-  uint8_t reqlen;
-  uint8_t req;
-  uint8_t len;
-  uint8_t i;
+  static uint8_t datasize;
+  static uint8_t* dataptr;
+  static uint16_t crc;
+  uint8_t cnt;
 
   PROCESS_BEGIN();
 
-  /***********************************************************/
+  while(1) {
 
-  serial_number[8] = ((linkaddr_node_addr.u8[0] & 0xF0) >> 4);
-  if (serial_number[8] > 9)
-    serial_number[8] += 0x37;
-  else
-    serial_number[8] += 0x30;
+    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
 
-  serial_number[9] = (linkaddr_node_addr.u8[0] & 0x0F);
-  if (serial_number[9] > 9)
-    serial_number[9] += 0x37;
-  else
-    serial_number[9] += 0x30;
+    dataptr = &((uint8_t *)data)[1];
+    datasize = ((uint8_t *)data)[0];
 
-  i = 255;
-  while(i--) rs485_buffer[i] = i;
+    for(cnt = 0; cnt < datasize; cnt++)
+    {
+      puthex(dataptr[cnt]);
+      rs485_buffer[rs485_in_pos++] = dataptr[cnt];
+    }
+    putstring("\n");
 
-  /***********************************************************/
+    if(rs485_in_pos >= 0xFF)
+    {
+      
+      if (rs485_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+        if (rs485_data_recv.u8[0] == 0xFF && rs485_data_recv.u8[1] == 0xFF) {
+          //printf("modbus out: RREQ by SN\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+            rs485_data_payload);
+        }
+      }
+
+      else if (rs485_data_request == CONECTRIC_POLL_RS485) {
+        if (shortaddr_cmp(&rs485_data_recv, &linkaddr_node_addr)) {
+          //printf("modbus out: POLL RS485\n");
+          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+            rs485_data_payload);
+        }
+      }
+    }
+    
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(modbus_out_process, ev, data)
+{
+  static struct etimer et;
+  static message_recv * message;
+  static uint8_t * serial_data;
+  static uint8_t reqlen;
+  static uint8_t req;
+  static uint8_t len;
+
+  PROCESS_BEGIN();
 
   while(1) {
+
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
     message = (message_recv *)data;
-    payload = message->payload;
-    reqlen = *payload++;
-    req = *payload++;
+    serial_data = message->payload;
+    reqlen = *serial_data++;
+    req = *serial_data++;
 
     len = reqlen - 2;
 
-    /* Step 1: RS485 device dumps payload to RS485 network.
-     * Not applicable in Cooja simulator
-     */
-//    while(len--) {
-//      uart_arch_writeb(*payload++);
-//    }
+    /* reset modbus input index */
+    rs485_in_pos = 0;
 
-    /* Step 2: Assuming that step 1 above obtains a reply from
-     * the RS485 network, meaning that this router is its parent.
-     *
-     * In Cooja simulator, if the serial number matches, then it gives
-     * a multihop reply back to the gateway
-     *
-     * We take example of EKM meter RS485 device request
-     * [2F][3F][12-digit S/N][21][0D][0A]
-     */
-
-//    putstring("payload>");
-//    payload = message->payload;
-//    while(*payload != '\0') puthex(*payload++);
-//    putstring("\n");
-
-    payload = message->payload;
-
-    if (*(payload+12) == serial_number[8] &&
-        *(payload+13) == serial_number[9]) {
-
-      PRINTF("%d.%d: S/N matched! - %lu\n",
-              linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-              clock_seconds());
-
-      if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-        if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF) {
-          //printf("modbus out: RREQ by SN\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-              message->payload);
-        }
-      }
-
-      if (message->request == CONECTRIC_POLL_RS485) {
-        if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
-          //printf("modbus out: POLL RS485\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-              message->payload);
-        }
-      }
-
+    /* modbus write */
+    while(len--) {
+      uart_arch_writeb(*serial_data++);
     }
+    
+    // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
+    rs485_data_request = message->request;
+    linkaddr_copy(&rs485_data_recv, &message->ereceiver);
+    memcpy(rs485_data_payload, message->payload, message->length);
   }
 
   PROCESS_END();
@@ -813,7 +861,7 @@ call_decision_maker(void * incoming, uint8_t type)
    * - Non-capital letter inputs get capitalized automatically
    *
    */
-   if (type == MESSAGE_BYTECMD) {
+  if (type == MESSAGE_BYTECMD) {
 
     /* Command line interpreter */
     if (bytereq[0] == 'M' && bytereq[1] == 'R') {
@@ -861,7 +909,7 @@ call_decision_maker(void * incoming, uint8_t type)
    * [RnL]  = the last hop address L ---> [DestL]
    *
    */
-  if (type == MESSAGE_BYTEREQ) {
+  else if (type == MESSAGE_BYTEREQ) {
 
     request = bytereq[2];
 
@@ -975,7 +1023,7 @@ call_decision_maker(void * incoming, uint8_t type)
 
     if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
       if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
-        process_post(&rs485_emulator_process, PROCESS_EVENT_CONTINUE,
+        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
             message);
 
     /* multihop message received */
@@ -989,7 +1037,7 @@ call_decision_maker(void * incoming, uint8_t type)
 
     if (message->request == CONECTRIC_POLL_RS485)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
-        process_post(&rs485_emulator_process, PROCESS_EVENT_CONTINUE,
+        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
             message);
 
   }
