@@ -46,7 +46,6 @@
 #include "flash-logging.h"
 
 #include "dev/button-sensor.h"
-#include "dev/adc-sensor.h"
 #include "dev/rs485-arch.h"
 #include "dev/serial-line.h"
 #include "dev/modbus-line.h"
@@ -175,7 +174,17 @@ static uint8_t ekm_data_payload[EKM_DATA_MAX_SIZE];
 //static uint8_t ekm_close_string[5] = {0x01, 0x42, 0x30, 0x03, 0x75};
 
 static uint8_t dump_buffer = 0;
-
+/*---------------------------------------------------------------------------*/
+/*
+ * TODO add pre-built command line to collect git information on IAR
+ *
+ */
+#ifndef CONECTRIC_VERSION_STRING
+#define CONECTRIC_VERSION_STRING "Contiki-unknown"
+#endif
+#ifndef CONECTRIC_PROJECT_STRING
+#define CONECTRIC_PROJECT_STRING "unknow"
+#endif
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -920,7 +929,7 @@ call_decision_maker(void * incoming, uint8_t type)
    * [RnL]  = the last hop address L ---> [DestL]
    *
    */
-  if (type == MESSAGE_BYTEREQ) {
+  else if (type == MESSAGE_BYTEREQ) {
 
     request = bytereq[2];
 

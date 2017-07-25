@@ -830,7 +830,7 @@ call_decision_maker(void * incoming, uint8_t type)
    * [RnL]  = the last hop address L ---> [DestL]
    *
    */
-  if (type == MESSAGE_BYTEREQ) {
+  else if (type == MESSAGE_BYTEREQ) {
 
     request = bytereq[2];
 
