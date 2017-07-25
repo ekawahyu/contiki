@@ -173,7 +173,17 @@ static linkaddr_t rs485_data_recv;
 static uint8_t rs485_data_payload[RS485_DATA_MAX_SIZE];
 
 static uint8_t dump_buffer = 0;
-
+/*---------------------------------------------------------------------------*/
+/*
+ * TODO add pre-built command line to collect git information on IAR
+ *
+ */
+#ifndef CONECTRIC_VERSION_STRING
+#define CONECTRIC_VERSION_STRING "Contiki-unknown"
+#endif
+#ifndef CONECTRIC_PROJECT_STRING
+#define CONECTRIC_PROJECT_STRING "unknow"
+#endif
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -601,6 +611,8 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 
     dataptr = &((uint8_t *)data)[1];
     datasize = ((uint8_t *)data)[0];
+
+    putstring("I am here\n");
 
     for(cnt = 0; cnt < datasize; cnt++)
     {

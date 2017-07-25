@@ -174,7 +174,17 @@ static uint8_t ekm_data_payload[EKM_DATA_MAX_SIZE];
 //static uint8_t ekm_close_string[5] = {0x01, 0x42, 0x30, 0x03, 0x75};
 
 static uint8_t dump_buffer = 0;
-
+/*---------------------------------------------------------------------------*/
+/*
+ * TODO add pre-built command line to collect git information on IAR
+ *
+ */
+#ifndef CONECTRIC_VERSION_STRING
+#define CONECTRIC_VERSION_STRING "Contiki-unknown"
+#endif
+#ifndef CONECTRIC_PROJECT_STRING
+#define CONECTRIC_PROJECT_STRING "unknow"
+#endif
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
