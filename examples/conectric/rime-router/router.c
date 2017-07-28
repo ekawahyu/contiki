@@ -608,38 +608,8 @@ PROCESS_THREAD(modbus_in_process, ev, data)
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
-
-    dataptr = &((uint8_t *)data)[1];
-    datasize = ((uint8_t *)data)[0];
-
-    putstring("I am here\n");
-
-    for(cnt = 0; cnt < datasize; cnt++)
-    {
-      puthex(dataptr[cnt]);
-      rs485_buffer[rs485_in_pos++] = dataptr[cnt];
-    }
-    putstring("\n");
-
-    if(rs485_in_pos >= 0xFF)
-    {
-      
-      if (rs485_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-        if (rs485_data_recv.u8[0] == 0xFF && rs485_data_recv.u8[1] == 0xFF) {
-          //printf("modbus out: RREQ by SN\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-            rs485_data_payload);
-        }
-      }
-
-      else if (rs485_data_request == CONECTRIC_POLL_RS485) {
-        if (shortaddr_cmp(&rs485_data_recv, &linkaddr_node_addr)) {
-          //printf("modbus out: POLL RS485\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-            rs485_data_payload);
-        }
-      }
-    }
+    printf("got modbus data\n");
+    printf("%s\n", (uint8_t *)data);
     
   }
 

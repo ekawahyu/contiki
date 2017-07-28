@@ -58,6 +58,9 @@ extern "C" {
 
 #define LPM_CONF_MODE                         0
 
+#define RS485_CONF_ENABLE                     1
+#define UART1_CONF_ENABLE                     1
+
 #define BUTTON_SENSOR_CONF_ON                 0
 
 #define CONECTRIC_BURST_NUMBER                5
