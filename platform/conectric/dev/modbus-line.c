@@ -41,9 +41,6 @@
 
 #define BUFSIZE 128
 
-#define IGNORE_CHAR(c) (c == 0x0d)
-#define END 0x0a
-
 static struct ringbuf modbus_rxbuf;
 static uint8_t modbus_rxbuf_data[BUFSIZE];
 
@@ -55,11 +52,7 @@ process_event_t modbus_line_event_message;
 int
 modbus_line_input_byte(unsigned char c)
 {
-  static uint8_t overflow = 0; /* Buffer overflow: ignore until END */
-  
-  if(IGNORE_CHAR(c)) {
-    return 0;
-  }
+  static uint8_t overflow = 0;
 
   if(!overflow) {
     /* Add character */
@@ -69,8 +62,8 @@ modbus_line_input_byte(unsigned char c)
     }
   } else {
     /* Buffer overflowed:
-     * Only (try to) add terminator characters, otherwise skip */
-    if(c == END && ringbuf_put(&modbus_rxbuf, c) != 0) {
+     * Keep trying to add it, otherwise skip */
+    if(ringbuf_put(&modbus_rxbuf, c) != 0) {
       overflow = 0;
     }
   }
@@ -80,43 +73,49 @@ modbus_line_input_byte(unsigned char c)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+void
+modbus_line_timeout(void * arg)
+{
+  /* Wake up consumer process */
+  process_poll(&modbus_line_process);
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_line_process, ev, data)
 {
+  static struct ctimer ct;
   static char buf[BUFSIZE];
   static int ptr;
 
   PROCESS_BEGIN();
   
+  ctimer_set(&ct, CLOCK_SECOND/8, modbus_line_timeout, &ptr);
   modbus_line_event_message = process_alloc_event();
   ptr = 0;
 
   while(1) {
     /* Fill application buffer until newline or empty */
     int c = ringbuf_get(&modbus_rxbuf);
-
     if(c == -1) {
       /* Buffer empty, wait for poll */
       PROCESS_YIELD();
-    } else {
-      if(c != END) {
-        if(ptr < BUFSIZE-1) {
-          buf[ptr++] = (uint8_t)c;
-        } else {
-          /* Ignore character (wait for EOL) */
-        }
-      } else {
+      if (ctimer_expired(&ct) && ptr != 0) {
         /* Terminate */
         buf[ptr++] = (uint8_t)'\0';
-
         /* Broadcast event */
         process_post(PROCESS_BROADCAST, modbus_line_event_message, buf);
-
         /* Wait until all processes have handled the serial line event */
         if(PROCESS_ERR_OK ==
           process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
           PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
         }
         ptr = 0;
+      }
+    } else {
+      ctimer_restart(&ct);
+      if(ptr < BUFSIZE-1) {
+        buf[ptr++] = (uint8_t)c;
+      } else {
+        /* Ignore character */
       }
     }
   }
