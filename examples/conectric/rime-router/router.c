@@ -605,6 +605,11 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 
   PROCESS_BEGIN();
 
+  /* FIXME workaround to send at least one character out so that
+   * PROCESS_WAIT_EVENT() can receive modbus_line_event_message
+   */
+  uart_arch_writeb(0);
+
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
