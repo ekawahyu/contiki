@@ -613,8 +613,13 @@ PROCESS_THREAD(modbus_in_process, ev, data)
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
-    printf("got modbus data\n");
-    printf("%s\n", (uint8_t *)data);
+    dataptr = data;
+    printf("got modbus data (%d)\n", *dataptr);
+    dataptr++;
+    while (*dataptr != 0) {
+      puthex(*dataptr++);
+    }
+    putstring("\n");
     
   }
 

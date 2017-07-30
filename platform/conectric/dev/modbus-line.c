@@ -100,7 +100,8 @@ PROCESS_THREAD(modbus_line_process, ev, data)
       PROCESS_YIELD();
       if (ctimer_expired(&ct) && ptr != 0) {
         /* Terminate */
-        buf[ptr++] = (uint8_t)'\0';
+        buf[++ptr] = (uint8_t)'\0';
+        buf[0] = ptr;
         /* Broadcast event */
         process_post(PROCESS_BROADCAST, modbus_line_event_message, buf);
         /* Wait until all processes have handled the serial line event */
@@ -113,7 +114,7 @@ PROCESS_THREAD(modbus_line_process, ev, data)
     } else {
       ctimer_restart(&ct);
       if(ptr < BUFSIZE-1) {
-        buf[ptr++] = (uint8_t)c;
+        buf[++ptr] = (uint8_t)c;
       } else {
         /* Ignore character */
       }
