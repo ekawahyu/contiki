@@ -671,6 +671,25 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 
   PROCESS_END();
 }
+void
+fill_modbus_payload(uint8_t * payload, uint8_t id, uint8_t fc, uint16_t word1, uint16_t word2)
+{
+  static uint16_t crc16_result;
+  static uint8_t * modbus_payload;
+
+  *payload++ = 10; /* length, not part of modbus */
+  *payload++ = 0;  /* request, not part of modbus */
+  modbus_payload = payload;
+  *payload++ = id; /* slave id */
+  *payload++ = fc; /* function code */
+  *payload++ = (word1 & 0xFF00) >> 8; /* register starting address H */
+  *payload++ = word1 & 0x00FF;        /* register starting address L */
+  *payload++ = (word2 & 0xFF00) >> 8; /* value/total number of registers requested H */
+  *payload++ = word2 & 0x00FF;        /* value/total number of registers requested L */
+  crc16_result = modbus_crc16_calc(modbus_payload, 6);
+  *payload++ = crc16_result & 0x00FF;
+  *payload++ = (crc16_result & 0xFF00) >> 8;
+}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_wi_test, ev, data)
 {
@@ -678,7 +697,7 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
   static uint8_t payload[20];
   static message_recv message;
   static uint16_t crc16_result;
-  static uint8_t counter;
+  static uint16_t counter;
 
   PROCESS_BEGIN();
 
@@ -689,45 +708,19 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
     counter = 1;
     while (counter <= 20) {
       message.payload = payload;
-      payload[0] = 10; /* length, not part of modbus */
-      payload[1] = 0; /* request, not part of modbus */
-      payload[2] = 0x01; /* slave id */
-      payload[3] = 0x03; /* function code */
-      payload[4] = 0x00; /* register starting address H */
-      payload[5] = counter++; /* register starting address L */
-      payload[6] = 0x00; /* total number of registers requested H */
-      payload[7] = 0x01; /* total number of registers requested L */
-      crc16_result = modbus_crc16_calc(&payload[2], 6);
-      payload[8] = crc16_result & 0x00FF;
-      payload[9] = (crc16_result & 0xFF00) >> 8;
-
+      fill_modbus_payload(payload, 0x01, 0x03, counter++, 0x0001);
       process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     }
 
-
     /*** read register holding from 1-20 all at once ***/
     printf("modbus_wi_test: ID=1, FC=0x03, read all at once\n");
     message.payload = payload;
-    payload[0] = 10; /* length, not part of modbus */
-    payload[1] = 0; /* request, not part of modbus */
-    payload[2] = 0x01; /* slave id */
-    payload[3] = 0x03; /* function code */
-    payload[4] = 0x00; /* register starting address H */
-    payload[5] = 0x01; /* register starting address L */
-    payload[6] = 0x00; /* total number of registers requested H */
-    payload[7] = 0x14; /* total number of registers requested L */
-    crc16_result = modbus_crc16_calc(&payload[2], 6);
-    payload[8] = crc16_result & 0x00FF;
-    payload[9] = (crc16_result & 0xFF00) >> 8;
-
+    fill_modbus_payload(payload, 0x01, 0x03, 0x0001, 0x0014);
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
 
     /* read register holding from 1-20 one at a time FROM DEVICE ID=2,
      * WI should not respond to any of these read request
@@ -736,132 +729,252 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
     counter = 1;
     while (counter <= 20) {
       message.payload = payload;
-      payload[0] = 10; /* length, not part of modbus */
-      payload[1] = 0; /* request, not part of modbus */
-      payload[2] = 0x02; /* slave id */
-      payload[3] = 0x03; /* function code */
-      payload[4] = 0x00; /* register starting address H */
-      payload[5] = counter++; /* register starting address L */
-      payload[6] = 0x00; /* total number of registers requested H */
-      payload[7] = 0x01; /* total number of registers requested L */
-      crc16_result = modbus_crc16_calc(&payload[2], 6);
-      payload[8] = crc16_result & 0x00FF;
-      payload[9] = (crc16_result & 0xFF00) >> 8;
-
+      fill_modbus_payload(payload, 0x02, 0x03, counter++, 0x0001);
       process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     }
 
-
-    /*** dim backlight up ***/
     printf("modbus_wi_test: ID=1, FC=0x06, backlight dim up\n");
     counter = 5;
     while (counter <= 10) {
       message.payload = payload;
-      payload[0] = 10; /* length, not part of modbus */
-      payload[1] = 0; /* request, not part of modbus */
-      payload[2] = 0x01; /* slave id */
-      payload[3] = 0x06; /* function code */
-      payload[4] = 0x00; /* register H */
-      payload[5] = 0x08; /* register L */
-      payload[6] = 0x00; /* value H */
-      payload[7] = counter++; /* value L */
-      crc16_result = modbus_crc16_calc(&payload[2], 6);
-      payload[8] = crc16_result & 0x00FF;
-      payload[9] = (crc16_result & 0xFF00) >> 8;
-
+      fill_modbus_payload(payload, 0x01, 0x06, 0x0008, counter++);
       process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     }
 
-
-    /*** dim backlight down ***/
     printf("modbus_wi_test: ID=1, FC=0x06, backlight dim down\n");
     counter = 10;
     while (counter >= 5) {
       message.payload = payload;
-      payload[0] = 10; /* length, not part of modbus */
-      payload[1] = 0; /* request, not part of modbus */
-      payload[2] = 0x01; /* slave id */
-      payload[3] = 0x06; /* function code */
-      payload[4] = 0x00; /* register H */
-      payload[5] = 0x08; /* register L */
-      payload[6] = 0x00; /* value H */
-      payload[7] = counter--; /* value L */
-      crc16_result = modbus_crc16_calc(&payload[2], 6);
-      payload[8] = crc16_result & 0x00FF;
-      payload[9] = (crc16_result & 0xFF00) >> 8;
-
+      fill_modbus_payload(payload, 0x01, 0x06, 0x0008, counter--);
       process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     }
 
-
-    /*** backlight delay off 10 seconds ***/
-    printf("modbus_wi_test: ID=1, FC=0x03, backlight delay off 10 seconds\n");
+    printf("modbus_wi_test: ID=1, FC=0x06, backlight delay off 10 seconds\n");
     message.payload = payload;
-    payload[0] = 10; /* length, not part of modbus */
-    payload[1] = 0; /* request, not part of modbus */
-    payload[2] = 0x01; /* slave id */
-    payload[3] = 0x06; /* function code */
-    payload[4] = 0x00; /* register H */
-    payload[5] = 0x09; /* register L */
-    payload[6] = 0x00; /* value H */
-    payload[7] = 0x0a; /* value L */
-    crc16_result = modbus_crc16_calc(&payload[2], 6);
-    payload[8] = crc16_result & 0x00FF;
-    payload[9] = (crc16_result & 0xFF00) >> 8;
-
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0009, 0x000a);
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-
-    /*** power off ***/
-    printf("modbus_wi_test: ID=1, FC=0x03, power off\n");
+    printf("modbus_wi_test: ID=1, FC=0x06, power off\n");
     message.payload = payload;
-    payload[0] = 10; /* length, not part of modbus */
-    payload[1] = 0; /* request, not part of modbus */
-    payload[2] = 0x01; /* slave id */
-    payload[3] = 0x06; /* function code */
-    payload[4] = 0x00; /* register H */
-    payload[5] = 0x0a; /* register L */
-    payload[6] = 0x00; /* value H */
-    payload[7] = 0x00; /* value L */
-    crc16_result = modbus_crc16_calc(&payload[2], 6);
-    payload[8] = crc16_result & 0x00FF;
-    payload[9] = (crc16_result & 0xFF00) >> 8;
-
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000a, 0x0000);
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-
-    /*** power on ***/
-    printf("modbus_wi_test: ID=1, FC=0x03, power on\n");
+    printf("modbus_wi_test: ID=1, FC=0x06, power on\n");
     message.payload = payload;
-    payload[0] = 10; /* length, not part of modbus */
-    payload[1] = 0; /* request, not part of modbus */
-    payload[2] = 0x01; /* slave id */
-    payload[3] = 0x06; /* function code */
-    payload[4] = 0x00; /* register H */
-    payload[5] = 0x0a; /* register L */
-    payload[6] = 0x00; /* value H */
-    payload[7] = 0x01; /* value L */
-    crc16_result = modbus_crc16_calc(&payload[2], 6);
-    payload[8] = crc16_result & 0x00FF;
-    payload[9] = (crc16_result & 0xFF00) >> 8;
-
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000a, 0x0001);
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
+    printf("modbus_wi_test: ID=1, FC=0x06, home icon 0-9\n");
+    counter = 0x0030;
+    while (counter <= 0x0039) {
+      message.payload = payload;
+      fill_modbus_payload(payload, 0x01, 0x06, 0x000b, counter++);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+    printf("modbus_wi_test: ID=1, FC=0x06, home icon A-F\n");
+    counter = 0x0041;
+    while (counter <= 0x0046) {
+      message.payload = payload;
+      fill_modbus_payload(payload, 0x01, 0x06, 0x000b, counter++);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+    printf("modbus_wi_test: ID=1, FC=0x06, home icon L\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000b, 'L');
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, home icon H\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000b, 'H');
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, home icon P\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000b, 'P');
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, home icon U\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000b, 'U');
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, home icon off\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000b, 0x0000);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, days icon 1-7 then off\n");
+    counter = 0x0001;
+    while (counter <= 0x0100) {
+      message.payload = payload;
+      fill_modbus_payload(payload, 0x01, 0x06, 0x000c, counter & 0x00FF);
+      counter = counter << 1;
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+    printf("modbus_wi_test: ID=1, FC=0x06, playing buzzer from 5-1\n");
+    counter = 0x0005;
+    while (counter > 0) {
+      message.payload = payload;
+      fill_modbus_payload(payload, 0x01, 0x06, 0x000d, counter--);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+    printf("modbus_wi_test: ID=1, FC=0x06, turning off buzzer\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000d, 0);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, clock showing 00:00\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000e, 0x0000);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, clock showing 99:99\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000e, 0x6363);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temperature to 10.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000f, 100);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temperature to 10.5 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000f, 105);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temperature to 11.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000f, 110);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temperature to 11.5 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x000f, 115);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set low temperature to 10.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0010, 100);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set low temperature to 20.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0010, 200);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set high temperature to 20.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0011, 200);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set high temperature to 32.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0011, 320);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temp compensation to +5.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0012, 50);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temp compensation to +4.5 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0012, 45);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temp compensation to -5.0 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0012, 0x00CE);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, set temp compensation to -4.5 deg C\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0012, 0x00D3);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, show RH data\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0013, 0);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x06, show WI ID\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x06, 0x0013, 1);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    printf("modbus_wi_test: ID=1, FC=0x03, read status bytes\n");
+    message.payload = payload;
+    fill_modbus_payload(payload, 0x01, 0x03, 0x0014, 0x0001);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
