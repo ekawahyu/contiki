@@ -49,6 +49,7 @@
 #include "dev/rs485-arch.h"
 #include "dev/serial-line.h"
 #include "dev/modbus-line.h"
+#include "dev/modbus-crc16.h"
 
 #include "dev/uart-arch.h"
 #include "dev/leds.h"
@@ -120,6 +121,18 @@ typedef struct {
   uint8_t       maxhops;
   uint16_t      rssi;
 } message_recv;
+
+typedef union {
+  uint16_t len;
+  uint16_t value;
+} modbus_union;
+
+typedef struct {
+  uint8_t id;
+  uint8_t fc;
+  uint16_t addr;
+  modbus_union third;
+} modbus_request;
 
 static void compose_request_to_packetbuf(
     uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
@@ -275,6 +288,7 @@ PROCESS(example_multihop_process, "ConMHop");
 PROCESS(serial_in_process, "SerialIn");
 PROCESS(modbus_in_process, "ModbusIn");
 PROCESS(modbus_out_process, "ModbusOut");
+PROCESS(modbus_wi_test, "WITest");
 PROCESS(flash_log_process, "FlashLog");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "ButtonTest");
@@ -285,6 +299,7 @@ AUTOSTART_PROCESSES(
     &serial_in_process,
     &modbus_in_process,
     &modbus_out_process,
+    &modbus_wi_test,
     &flash_log_process,
     &buttons_test_process);
 #else
@@ -295,6 +310,7 @@ AUTOSTART_PROCESSES(
     &serial_in_process,
     &modbus_in_process,
     &modbus_out_process,
+    &modbus_wi_test,
     &flash_log_process);
 #endif
 
@@ -613,38 +629,13 @@ PROCESS_THREAD(modbus_in_process, ev, data)
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
-
-    dataptr = &((uint8_t *)data)[1];
-    datasize = ((uint8_t *)data)[0];
-
-    putstring("I am here\n");
-
-    for(cnt = 0; cnt < datasize; cnt++)
-    {
-      puthex(dataptr[cnt]);
-      rs485_buffer[rs485_in_pos++] = dataptr[cnt];
+    dataptr = data;
+    printf("got modbus data (%d)\n", *dataptr);
+    dataptr++;
+    while (*dataptr != 0) {
+      puthex(*dataptr++);
     }
     putstring("\n");
-
-    if(rs485_in_pos >= 0xFF)
-    {
-      
-      if (rs485_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-        if (rs485_data_recv.u8[0] == 0xFF && rs485_data_recv.u8[1] == 0xFF) {
-          //printf("modbus out: RREQ by SN\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-            rs485_data_payload);
-        }
-      }
-
-      else if (rs485_data_request == CONECTRIC_POLL_RS485) {
-        if (shortaddr_cmp(&rs485_data_recv, &linkaddr_node_addr)) {
-          //printf("modbus out: POLL RS485\n");
-          process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
-            rs485_data_payload);
-        }
-      }
-    }
     
   }
 
@@ -677,14 +668,240 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     rs485_in_pos = 0;
 
     /* modbus write */
+    putstring("modbus_out_process: ");
     while(len--) {
+      puthex(*serial_data);
       uart_arch_writeb(*serial_data++);
     }
+    putstring("\n");
     
     // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
     rs485_data_request = message->request;
     linkaddr_copy(&rs485_data_recv, &message->ereceiver);
     memcpy(rs485_data_payload, message->payload, message->length);
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+void
+fill_modbus_payload(uint8_t * payload, modbus_request * modreq)
+{
+  static uint16_t crc16_result;
+  static uint8_t * modbus_payload;
+
+  *payload++ = 10; /* length, not part of modbus */
+  *payload++ = 0;  /* request, not part of modbus */
+  modbus_payload = payload;
+  *payload++ = modreq->id; /* slave id */
+  *payload++ = modreq->fc; /* function code */
+  *payload++ = (modreq->addr & 0xFF00) >> 8; /* register starting address H */
+  *payload++ = modreq->addr & 0x00FF;        /* register starting address L */
+  *payload++ = (modreq->third.len & 0xFF00) >> 8; /* value/total number of registers requested H */
+  *payload++ = modreq->third.len & 0x00FF;        /* value/total number of registers requested L */
+  crc16_result = modbus_crc16_calc(modbus_payload, 6);
+  *payload++ = crc16_result & 0x00FF;
+  *payload++ = (crc16_result & 0xFF00) >> 8;
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(modbus_wi_test, ev, data)
+{
+  static struct etimer et;
+  static uint8_t payload[20];
+  static message_recv message;
+  static uint16_t crc16_result;
+  static uint16_t counter;
+  static uint8_t i;
+  static modbus_request modreq[] =
+  {
+      /*** read register holding from 1-20 one at a time ***/
+      {.id = 0x01, .fc = 0x03, .addr = 0x0001, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0002, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0003, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0004, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0005, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0006, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0007, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0008, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0009, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x000a, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x000b, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x000c, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x000d, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x000e, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x000f, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0010, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0011, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0012, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0013, .third.len = 0x0001},
+      {.id = 0x01, .fc = 0x03, .addr = 0x0014, .third.len = 0x0001},
+
+      /*** read register holding from 1-20 all at once ***/
+      {.id = 0x01, .fc = 0x03, .addr = 0x0001, .third.len = 0x0014},
+
+      /* read register holding from 1-20 one at a time FROM DEVICE ID=2,
+       * WI should not respond to any of these read request
+       */
+      {.id = 0x02, .fc = 0x03, .addr = 0x0001, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0002, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0003, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0004, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0005, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0006, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0007, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0008, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0009, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x000a, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x000b, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x000c, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x000d, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x000e, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x000f, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0010, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0011, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0012, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0013, .third.len = 0x0001},
+      {.id = 0x02, .fc = 0x03, .addr = 0x0014, .third.len = 0x0001},
+
+      /*** dimming up backlight ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 5},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 6},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 7},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 8},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 9},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 10},
+
+      /*** dimming down backlight ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 10},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 9},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 8},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 7},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 6},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 5},
+
+      /*** set backlight delay off to 10 seconds ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 10},
+
+      /*** set power off ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0},
+
+      /*** set power on ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 1},
+
+      /*** set home icon 0-9 ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0030},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0031},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0032},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0033},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0034},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0035},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0036},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0037},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0038},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0039},
+
+      /*** set home icon A-F, L, H, P, U, and then off ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'A'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'B'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'C'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'D'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'E'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'F'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'L'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'H'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'P'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 'U'},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0},
+
+      /*** set days icon 1-7 then off ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0001},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0002},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0004},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0008},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0010},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0020},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0040},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0},
+
+      /*** set buzzer to play 1-5 ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 1},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 2},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 3},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 4},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 5},
+
+      /*** clock showing 00:00 and then 99:99 ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0000},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x6363},
+
+      /*** set temperature to 10.0 deg C and increment it by 0.5 deg C ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x000f, .third.value = 100},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000f, .third.value = 105},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000f, .third.value = 110},
+      {.id = 0x01, .fc = 0x06, .addr = 0x000f, .third.value = 115},
+
+      /*** set low temperature from 10.0 deg C to 20.0 deg C ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 100},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 110},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 120},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 130},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 140},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 150},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 160},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 170},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 180},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 190},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0010, .third.value = 200},
+
+      /*** set high temperature from 20.0 to 32.0 deg C ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 200},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 210},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 220},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 230},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 240},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 250},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 260},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 270},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 280},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 290},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 300},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 310},
+      {.id = 0x01, .fc = 0x06, .addr = 0x0011, .third.value = 320},
+
+      /*** set temp compensation to +5.0 deg C ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0012, .third.value = 50},
+
+      /*** set temp compensation to +4.5 deg C ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0012, .third.value = 45},
+
+      /*** set temp compensation to -5.0 deg C ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0012, .third.value = 0x00CE},
+
+      /*** set temp compensation to -4.5 deg C ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0012, .third.value = 0x00D3},
+
+      /*** show RH data ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0013, .third.value = 0},
+
+      /*** show WI ID ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0013, .third.value = 1},
+
+      /*** read status bytes ***/
+      {.id = 0x01, .fc = 0x06, .addr = 0x0014, .third.len = 0x0001},
+  };
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    for (i = 0; i < (sizeof(modreq)/6); i++) {
+      message.payload = payload;
+      fill_modbus_payload(payload, &modreq[i]);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
   }
 
   PROCESS_END();

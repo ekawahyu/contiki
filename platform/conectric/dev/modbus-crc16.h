@@ -1,10 +1,10 @@
 /*
- * project-conf.h
+ * modbus-crc16.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Jul 30, 2017
  *     Author: Ekawahyu Susilo
  *
- * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
+ * Copyright (c) 2017, Chongqing Aisenke Electronic Technology Co., Ltd.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,39 +34,17 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef PLATFORM_CONECTRIC_DEV_MODBUS_CRC16_H_
+#define PLATFORM_CONECTRIC_DEV_MODBUS_CRC16_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      1
-
-#define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     nullrdc_driver
-
-#define IEEE802154_CONF_PANID                 0x2007
-#define CC2530_RF_CONF_CHANNEL                25
-#define CC2530_RF_CONF_LEDS                   1
-#if MODELS_CONF_ANAREN_A2530E_MODULE
-#else
-#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
-#endif
-
-#define LPM_CONF_MODE                         0
-
-#define RS485_CONF_ENABLE                     1
-#define UART1_CONF_ENABLE                     1
-
-#define BUTTON_SENSOR_CONF_ON                 0
-
-#define CONECTRIC_BURST_NUMBER                5
+uint16_t modbus_crc16_calc(const uint8_t *data, uint16_t len);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* PLATFORM_CONECTRIC_DEV_MODBUS_CRC16_H_ */

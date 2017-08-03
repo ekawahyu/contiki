@@ -37,14 +37,12 @@
 #include "dev/modbus-line.h"
 #include "dev/leds.h"
 
-#define BUFSIZE 276
+#include "lib/ringbuf.h"
 
-// data management
-static int pos;
-static uint8_t modbus_rx_data[BUFSIZE];  // index 0 used for data buffer length
+#define BUFSIZE 128
 
-// Modbus timers
-static struct etimer mt;
+static struct ringbuf modbus_rxbuf;
+static uint8_t modbus_rxbuf_data[BUFSIZE];
 
 PROCESS(modbus_line_process, "MODBUS driver");
 
@@ -54,39 +52,71 @@ process_event_t modbus_line_event_message;
 int
 modbus_line_input_byte(unsigned char c)
 {
-  if(++pos < BUFSIZE)
-    modbus_rx_data[pos] = c;
+  static uint8_t overflow = 0;
 
-  // refresh timer as long as data keeps coming in
-  etimer_adjust(&mt, (CLOCK_SECOND/8));
-  
+  if(!overflow) {
+    /* Add character */
+    if(ringbuf_put(&modbus_rxbuf, c) == 0) {
+      /* Buffer overflow: ignore the rest of the line */
+      overflow = 1;
+    }
+  } else {
+    /* Buffer overflowed:
+     * Keep trying to add it, otherwise skip */
+    if(ringbuf_put(&modbus_rxbuf, c) != 0) {
+      overflow = 0;
+    }
+  }
+
+  /* Wake up consumer process */
+  process_poll(&modbus_line_process);
   return 1;
+}
+/*---------------------------------------------------------------------------*/
+void
+modbus_line_timeout(void * arg)
+{
+  /* Wake up consumer process */
+  process_poll(&modbus_line_process);
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_line_process, ev, data)
 {
+  static struct ctimer ct;
+  static char buf[BUFSIZE];
+  static int ptr;
+
   PROCESS_BEGIN();
   
+  ctimer_set(&ct, CLOCK_SECOND/8, modbus_line_timeout, &ptr);
   modbus_line_event_message = process_alloc_event();
+  ptr = 0;
 
   while(1) {
-
-    etimer_set(&mt, CLOCK_SECOND/4);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&mt));
-
-    if(pos > 0) {
-      
-      modbus_rx_data[0] = pos;
-       
-      process_post(PROCESS_BROADCAST, modbus_line_event_message, modbus_rx_data);
-
-      // reset for next input
-      pos = 0;
-      
-      /* Wait until all processes have handled the modbus line event */
-      if(PROCESS_ERR_OK ==
-        process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
-        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+    /* Fill application buffer until newline or empty */
+    int c = ringbuf_get(&modbus_rxbuf);
+    if(c == -1) {
+      /* Buffer empty, wait for poll */
+      PROCESS_YIELD();
+      if (ctimer_expired(&ct) && ptr != 0) {
+        /* Terminate */
+        buf[++ptr] = (uint8_t)'\0';
+        buf[0] = ptr;
+        /* Broadcast event */
+        process_post(PROCESS_BROADCAST, modbus_line_event_message, buf);
+        /* Wait until all processes have handled the serial line event */
+        if(PROCESS_ERR_OK ==
+          process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
+          PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+        }
+        ptr = 0;
+      }
+    } else {
+      ctimer_restart(&ct);
+      if(ptr < BUFSIZE-1) {
+        buf[++ptr] = (uint8_t)c;
+      } else {
+        /* Ignore character */
       }
     }
   }
@@ -97,6 +127,6 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 void
 modbus_line_init(void)
 {
-  pos = 0;
+  ringbuf_init(&modbus_rxbuf, modbus_rxbuf_data, sizeof(modbus_rxbuf_data));
   process_start(&modbus_line_process, NULL);
 }
