@@ -81,8 +81,8 @@
 
 static void compose_request_to_packetbuf(
     uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
-static void compose_response_to_packetbuf(
-    uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
+//static void compose_response_to_packetbuf(
+//    uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
 static linkaddr_t * call_decision_maker(void * incoming, uint8_t type);
 
 #define REQUEST_HEADER_LEN    4
@@ -236,19 +236,19 @@ PROCESS(serial_in_process, "SerialIn");
 //PROCESS(modbus_in_process, "ModbusIn");
 //PROCESS(modbus_out_process, "ModbusOut");
 PROCESS(flash_log_process, "FlashLog");
-#if BUTTON_SENSOR_ON
-PROCESS(buttons_test_process, "ButtonTest");
-AUTOSTART_PROCESSES(
-    //&example_abc_process,
-    &example_trickle_process,
-    &example_multihop_process,
-    &serial_in_process,
-    //&modbus_in_process,
-    //&modbus_out_process,
-    &flash_log_process,
-    //&buttons_test_process
-      );
-#else
+//#if BUTTON_SENSOR_ON
+//PROCESS(buttons_test_process, "ButtonTest");
+//AUTOSTART_PROCESSES(
+//    //&example_abc_process,
+//    &example_trickle_process,
+//    &example_multihop_process,
+//    &serial_in_process,
+//    //&modbus_in_process,
+//    //&modbus_out_process,
+//    &flash_log_process,
+//    //&buttons_test_process
+//      );
+//#else
 AUTOSTART_PROCESSES(
     //&example_abc_process,
     &example_trickle_process,
@@ -258,7 +258,7 @@ AUTOSTART_PROCESSES(
     //&modbus_out_process,
     &flash_log_process
       );
-#endif
+//#endif
 
 /*---------------------------------------------------------------------------*/
 //static void
