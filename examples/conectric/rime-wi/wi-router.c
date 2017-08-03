@@ -39,22 +39,27 @@
  *         Ekawahyu Susilo <ekawahyu@yahoo.com>
  */
 
+// General
+#include <stdio.h>
+
+// Contiki
 #include "contiki.h"
 #include "debug.h"
 #include "net/rime/rime.h"
 #include "random.h"
-#include "flash-logging.h"
 
+// Conectric Device
+#include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/rs485-arch.h"
 #include "dev/serial-line.h"
 #include "dev/modbus-line.h"
 #include "dev/modbus-crc16.h"
-
 #include "dev/uart-arch.h"
 #include "dev/leds.h"
 
-#include <stdio.h>
+// Conectric Network
+#include "examples/conectric/conectric-messages.h"
 
 #define DEBUG 0
 
@@ -73,54 +78,6 @@
 #define PUTDEC(...)
 #define PUTCHAR(...)
 #endif
-
-enum {
-  CONECTRIC_ATTR_NONE,
-  /* abc messages */
-  CONECTRIC_SENSOR_BROADCAST,
-  /* trickle messages */
-  CONECTRIC_ROUTE_REQUEST,
-  CONECTRIC_ROUTE_REQUEST_BY_SN,
-  CONECTRIC_ROUTE_REPLY,
-  CONECTRIC_TIME_SYNC,
-  /* multihop messages */
-  CONECTRIC_SET_LONG_MAC,
-  CONECTRIC_SET_LONG_MAC_REPLY,
-  CONECTRIC_GET_LONG_MAC,
-  CONECTRIC_GET_LONG_MAC_REPLY,
-  CONECTRIC_POLL_RS485,
-  CONECTRIC_POLL_RS485_REPLY,
-  CONECTRIC_POLL_RS485_CHUNK,
-  CONECTRIC_POLL_RS485_CHUNK_REPLY,
-  CONECTRIC_POLL_SENSORS,
-  CONECTRIC_POLL_SENSORS_REPLY,
-  CONECTRIC_POLL_NEIGHBORS,
-  CONECTRIC_POLL_NEIGHBORS_REPLY,
-  CONECTRIC_MULTIHOP_PING,
-  CONECTRIC_MULTIHOP_PING_REPLY,
-  CONECTRIC_ATTR_MAX
-};
-
-typedef struct {
-  clock_time_t  timestamp;
-  uint8_t       message_type;
-  uint8_t       message[128];
-  linkaddr_t    sender;
-  linkaddr_t    prev_sender;
-  linkaddr_t    receiver;
-  linkaddr_t    prev_receiver;
-  linkaddr_t    esender;
-  linkaddr_t    prev_esender;
-  linkaddr_t    ereceiver;
-  linkaddr_t    prev_ereceiver;
-  uint8_t       *payload;
-  uint8_t       length;
-  uint8_t       request;
-  uint8_t       seqno;
-  uint8_t       hops;
-  uint8_t       maxhops;
-  uint16_t      rssi;
-} message_recv;
 
 typedef union {
   uint16_t len;
