@@ -354,7 +354,7 @@ multihop_forward(struct multihop_conn *c,
 
   forward_addr = call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_FWD);
 
-  PRINTF("%d.%d: multihop forwarding address is %d.%d - %d hops\n",
+  printf("%d.%d: multihop forwarding address is %d.%d - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       forward_addr->u8[0], forward_addr->u8[1], mhop_message_recv.hops);
 
@@ -452,7 +452,7 @@ PROCESS_THREAD(example_multihop_process, ev, data)
     /* Send the packet */
     multihop_send(&multihop, &to);
 
-    PRINTF("%d.%d: multihop sent to %d.%d - %lu\n",
+    printf("%d.%d: multihop sent to %d.%d - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         to.u8[0], to.u8[1], clock_seconds());
   }
@@ -926,53 +926,57 @@ call_decision_maker(void * incoming, uint8_t type)
   /*******************************************************/
   /***** RULES TO ASSIGN MULTIHOP FORWARDING ADDRESS *****/
   /*******************************************************/
-//  else if (type == MESSAGE_MHOP_FWD) {
-//
-//    /* multihop message received but need to be forwarded */
-//    seqno = mhop_message_recv.seqno;
-//    mhops = mhop_message_recv.hops;
-//    hdrlen = mhop_message_recv.message[0];
-//
-//    /* Discard current packet header */
-//    packetbuf_copyfrom(mhop_message_recv.payload, mhop_message_recv.length);
-//
-//    packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
-//    packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.ereceiver);
-//    packetbuf_set_attr(PACKETBUF_ATTR_HOPS, mhops);
-//
-//    /* Compose header */
-//    if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
-//      packetbuf_hdralloc(hdrlen+2);
-//      header = (uint8_t *)packetbuf_hdrptr();
-//      *header++ = hdrlen+2;
-//    }
-//    else {
-//      packetbuf_hdralloc(hdrlen);
-//      header = (uint8_t *)packetbuf_hdrptr();
-//      *header++ = hdrlen;
-//    }
-//
-//    *header++ = seqno;
-//    *header++ = mhops;
-//    *header++ = mhop_message_recv.message[3]; /* TODO assign max hops here */
-//    *header++ = mhop_message_recv.ereceiver.u8[0];
-//    *header++ = mhop_message_recv.ereceiver.u8[1];
-//
-//    /* multihop request with built-in routing table */
-//    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
-//        mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
-//        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
-//        mhop_message_recv.request == CONECTRIC_POLL_SENSORS  ||
-//        mhop_message_recv.request == CONECTRIC_GET_LONG_MAC) {
-//      forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
-//      forward_addr.u8[1] = mhop_message_recv.message[5 + (mhops << 1)];
-//    }
-//    /* multihop reply, no routing table */
-//    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
+  else if (type == MESSAGE_MHOP_FWD) {
+
+    /* multihop message received but need to be forwarded */
+    seqno = mhop_message_recv.seqno;
+    mhops = mhop_message_recv.hops;
+    hdrlen = mhop_message_recv.message[0];
+
+    /* Discard current packet header */
+    packetbuf_copyfrom(mhop_message_recv.payload, mhop_message_recv.length);
+
+    packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
+    packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.ereceiver);
+    packetbuf_set_attr(PACKETBUF_ATTR_HOPS, mhops);
+
+    /* Compose header */
+    if (mhop_message_recv.request == CONECTRIC_ROUTE_REPLY) {
+      packetbuf_hdralloc(hdrlen+2);
+      header = (uint8_t *)packetbuf_hdrptr();
+      *header++ = hdrlen+2;
+    }
+    else {
+      packetbuf_hdralloc(hdrlen);
+      header = (uint8_t *)packetbuf_hdrptr();
+      *header++ = hdrlen;
+    }
+
+    *header++ = seqno;
+    *header++ = mhops;
+    *header++ = mhop_message_recv.message[3]; /* TODO assign max hops here */
+    *header++ = mhop_message_recv.ereceiver.u8[0];
+    *header++ = mhop_message_recv.ereceiver.u8[1];
+
+    /* multihop request with built-in routing table */
+    if (
+        //mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
+        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
+        mhop_message_recv.request == CONECTRIC_POLL_WI  
+        // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC
+          ) {
+      forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
+      forward_addr.u8[1] = mhop_message_recv.message[5 + (mhops << 1)];
+    }
+    /* multihop reply, no routing table */
+//    if (
+//        // mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
 //        mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
 //        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
-//        mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY ||
-//        mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY) {
+//        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY 
+//        // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY
+//          ) {
 //      linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
 //      packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
 //      packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
@@ -983,13 +987,13 @@ call_decision_maker(void * incoming, uint8_t type)
 //      *header++ = linkaddr_node_addr.u8[1];
 //      linkaddr_copy(&forward_addr, &trickle_message_recv.sender);
 //    }
-//
-//    for (i = 6; i < hdrlen; i++) {
-//      *header++ = mhop_message_recv.message[i];
-//    }
-//
-//    return &forward_addr;
-//  }
+
+    for (i = 6; i < hdrlen; i++) {
+      *header++ = mhop_message_recv.message[i];
+    }
+
+    return &forward_addr;
+  }
 
   /*******************************************************/
   /***** ALL THE REST ARE HANDLED HERE *******************/

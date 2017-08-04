@@ -238,6 +238,30 @@ static void child_sensor_table_init(void)
 /*---------------------------------------------------------------------------*/
 // WI State Functions
 
+// REMOVE THIS
+static void wi_test()
+{
+  wi_state.timestamp = clock_seconds();
+  wi_state.onboard_temp += 0x11;
+  wi_state.setpoint_temp += 0x11;
+  wi_state.heating += 0x01;
+  wi_state.cooling += 0x01;
+  wi_state.fan_speed += 0x01;
+  wi_state.stage_cooling_heating += 0x01;
+  wi_state.num_rht_events = 0x01;
+  rht_event_list[0].rht_addr.u16 = 0x1234;
+  rht_event_list[0].temp = 0x1234;
+  rht_event_list[0].hum = 0x1234;
+  rht_event_list[0].status = RHT_EVENT_STATUS_INUSE;
+  
+  wi_state.num_child_sensors = 0x01;
+  child_sensors[0].sensor_addr.u16 = 0x1234;
+  child_sensors[0].rssi = 0xAA;
+  child_sensors[0].batt = 0xCD;
+  child_sensors[0].device_state = 0x34;
+  child_sensors[0].status = CHILD_SENSOR_STATUS_INUSE;
+}
+
 static void wi_state_init()
 {
   wi_state.timestamp = 0x0000;
@@ -257,11 +281,19 @@ static void wi_state_clear()
   wi_state.num_rht_events = 0x00;
 }
 
-// build the wi msg payload
+static void wi_msg_write_flash()
+{
+   // save wi_msg in FLASH and update flash pointers
+}
+
+// build the wi msg payload in Flash
 // return size
-static uint8_t build_wi_msg(uint8_t *pyld)
+static uint8_t wi_msg_build()
 {
   uint8_t cnt;
+  uint8_t *pyld = wi_msg;
+  // zero out previous message
+  memset(wi_msg, 0, WI_MSG_MAX_SIZE);
   
   uint8_t size = sizeof(wi_state_t);
   *pyld++ = (uint8_t)(wi_state.timestamp >> 8);
@@ -1148,7 +1180,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  }
   if (req == CONECTRIC_POLL_WI) {
     // Update length based on WI State structure
-    
+    responselen += wi_msg_build();
     response = CONECTRIC_POLL_WI_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
@@ -1168,7 +1200,12 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   
   // Save payload to Flash until Read acknowledged
   
-  
+  if (req == CONECTRIC_POLL_WI) {
+    for(uint8_t x=0; x<i; x++) {
+      *packet++ = wi_msg[x];
+      puthex(wi_msg[x]);
+    }
+  }
   
 //  if (req == CONECTRIC_POLL_RS485) {
 //    /* FIXME this has to be calculated from RS485 reply length */
@@ -1409,6 +1446,10 @@ call_decision_maker(void * incoming, uint8_t type)
           )
     {
       // Handle end to end implicit ACK failure
+      
+      
+      // test simulate wi state
+      wi_test();
       
       // Trigger Reply
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
