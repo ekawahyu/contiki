@@ -122,7 +122,48 @@ static uint16_t rank = 255;
 
 
 // WI state
+#define WI_COOLING_BIT_SHIFT 4;
+#define WI_ROOM_STATUS_BIT_SHIFT 0;
+#define WI_DOOR_STATUS_BIT_SHIFT 1;
+#define WI_OCC_STATUS_BIT_SHIFT 2;
 
+// RHT Event Management
+typedef struct {
+   linkaddr_t   rht_addr;
+   uint16_t     temp;
+   uint16_t     hum;
+} rht_event_t;
+
+#define MAX_RHT_EVENTS 50
+static uint8_t rht_old_start;
+static uint8_t rht_new_start;
+static uint8_t rht_end;
+static rht_event_t rht_event_list[MAX_RHT_EVENTS]; 
+
+// Child Sensor Table Management
+typedef struct {
+  linkaddr_t    sensor_addr;
+  uint8_t       rssi;
+  uint8_t       batt;
+  uint8_t       device_state;
+} child_sensor_t;
+
+#define MAX_CHILD_SENSORS  10
+static child_sensor_t child_sensors[MAX_CHILD_SENSORS];
+
+typedef struct {
+  uint16_t timestamp;
+  uint16_t onboard_temp;
+  uint16_t setpoint_temp;
+  uint8_t heating;
+  uint8_t cooling;
+  uint8_t fan_speed;
+  uint8_t stage_cooling_heating;
+  uint8_t num_rht_events;
+  uint8_t num_child_sensors;
+} wi_state_msg_t;
+
+static wi_state_msg_t wi_msg;
 
 //static uint8_t sensors[128];
 //static uint8_t *sensors_head, *sensors_tail;

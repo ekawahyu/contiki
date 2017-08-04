@@ -50,16 +50,15 @@
 #include "flash-logging.h"
 
 // Conectric Device
-#include "dev/button-sensor.h"
+//#include "dev/button-sensor.h"
 #include "dev/rs485-arch.h"
-#include "dev/serial-line.h"
+//#include "dev/serial-line.h"
 #include "dev/modbus-line.h"
 #include "dev/uart-arch.h"
 #include "dev/leds.h"
 
 // Conectric Network
 #include "examples/conectric/conectric-messages.h"
-
 
 #define DEBUG 0
 
@@ -79,22 +78,22 @@
 #define PUTCHAR(...)
 #endif
 
-static void compose_request_to_packetbuf(
-    uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
+//static void compose_request_to_packetbuf(
+//    uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
 static void compose_response_to_packetbuf(
     uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
 static linkaddr_t * call_decision_maker(void * incoming, uint8_t type);
 
 #define REQUEST_HEADER_LEN    4
 
-#define MESSAGE_BYTEREQ       1
-#define MESSAGE_BYTECMD       2
-#define MESSAGE_ABC_RECV      3
+//#define MESSAGE_BYTEREQ       1
+//#define MESSAGE_BYTECMD       2
+//#define MESSAGE_ABC_RECV      3
 #define MESSAGE_TRICKLE_RECV  4
 #define MESSAGE_MHOP_RECV     5 /* uses mhop_message_recv to store message */
 #define MESSAGE_MHOP_FWD      6 /* uses mhop_message_recv to store message */
 
-static message_recv abc_message_recv;
+//static message_recv abc_message_recv;
 static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 
@@ -105,9 +104,12 @@ static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
 
 #define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
 
+// Trickle State
 static uint16_t rank = 255;
-static uint8_t sensors[128];
-static uint8_t *sensors_head, *sensors_tail;
+
+
+//static uint8_t sensors[128];
+//static uint8_t *sensors_head, *sensors_tail;
 
 #if CC2530_CONF_MAC_FROM_PRIMARY
 #if defined __IAR_SYSTEMS_ICC__
@@ -144,6 +146,7 @@ static uint8_t dump_buffer = 0;
 #define CONECTRIC_PROJECT_STRING "unknow"
 #endif
 /*---------------------------------------------------------------------------*/
+/// MOVE THIS TO GENERAL Conectric Network Functions
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
@@ -222,64 +225,65 @@ dump_payload(void)
   putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
+/// MOVE THIS TO GENERAL Conectric Network Functions
 static uint8_t
 shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
 {
   return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
 }
 /*---------------------------------------------------------------------------*/
-PROCESS(example_abc_process, "ConBurst");
+//PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
 PROCESS(example_multihop_process, "ConMHop");
-PROCESS(serial_in_process, "SerialIn");
+//PROCESS(serial_in_process, "SerialIn");
 PROCESS(modbus_in_process, "ModbusIn");
 PROCESS(modbus_out_process, "ModbusOut");
 PROCESS(flash_log_process, "FlashLog");
-#if BUTTON_SENSOR_ON
-PROCESS(buttons_test_process, "ButtonTest");
+//#if BUTTON_SENSOR_ON
+//PROCESS(buttons_test_process, "ButtonTest");
+//AUTOSTART_PROCESSES(
+//    &example_abc_process,
+//    &example_trickle_process,
+//    &example_multihop_process,
+//    &serial_in_process,
+//    &modbus_in_process,
+//    &modbus_out_process,
+//    &flash_log_process,
+//    &buttons_test_process);
+//#else
 AUTOSTART_PROCESSES(
-    &example_abc_process,
+    //&example_abc_process,
     &example_trickle_process,
     &example_multihop_process,
-    &serial_in_process,
-    &modbus_in_process,
-    &modbus_out_process,
-    &flash_log_process,
-    &buttons_test_process);
-#else
-AUTOSTART_PROCESSES(
-    &example_abc_process,
-    &example_trickle_process,
-    &example_multihop_process,
-    &serial_in_process,
+    //&serial_in_process,
     &modbus_in_process,
     &modbus_out_process,
     &flash_log_process);
-#endif
+//#endif
 
 /*---------------------------------------------------------------------------*/
-static void
-abc_recv(struct abc_conn *c)
-{
-  packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
-
-  /* TODO only the sink should dump packetbuf,
-   * but routers have to store sensors data
-   */
-  if (dump_buffer)
-    dump_packetbuf();
-  else
-    dump_payload();
-
-  PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
-      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      abc_message_recv.sender.u8[0], abc_message_recv.sender.u8[1],
-      abc_message_recv.rssi, abc_message_recv.timestamp);
-
-  call_decision_maker(&abc_message_recv, MESSAGE_ABC_RECV);
-}
-static const struct abc_callbacks abc_call = {abc_recv};
-static struct abc_conn abc;
+//static void
+//abc_recv(struct abc_conn *c)
+//{
+//  packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
+//
+//  /* TODO only the sink should dump packetbuf,
+//   * but routers have to store sensors data
+//   */
+//  if (dump_buffer)
+//    dump_packetbuf();
+//  else
+//    dump_payload();
+//
+//  PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
+//      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+//      abc_message_recv.sender.u8[0], abc_message_recv.sender.u8[1],
+//      abc_message_recv.rssi, abc_message_recv.timestamp);
+//
+//  call_decision_maker(&abc_message_recv, MESSAGE_ABC_RECV);
+//}
+//static const struct abc_callbacks abc_call = {abc_recv};
+//static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
 static void
 trickle_recv(struct trickle_conn *c)
@@ -357,20 +361,20 @@ multihop_forward(struct multihop_conn *c,
 static const struct multihop_callbacks multihop_call = {multihop_recv, multihop_forward};
 static struct multihop_conn multihop;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_abc_process, ev, data)
-{
-  PROCESS_EXITHANDLER(abc_close(&abc);)
-
-  PROCESS_BEGIN();
-
-  abc_open(&abc, 128, &abc_call);
-
-  while(1) {
-    PROCESS_YIELD();
-  }
-
-  PROCESS_END();
-}
+//PROCESS_THREAD(example_abc_process, ev, data)
+//{
+//  PROCESS_EXITHANDLER(abc_close(&abc);)
+//
+//  PROCESS_BEGIN();
+//
+//  abc_open(&abc, 128, &abc_call);
+//
+//  while(1) {
+//    PROCESS_YIELD();
+//  }
+//
+//  PROCESS_END();
+//}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_trickle_process, ev, data)
 {
@@ -392,21 +396,21 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     /* Compose packetbuf for request comes from serial port with '<' marking
      * or request comes from radio with no '<' marking
      */
-    request = (uint8_t *)data;
-    if (*request == '<')
-      compose_request_to_packetbuf(request, counter++, &to);
-    else
-      compose_response_to_packetbuf(request, counter++, &to);
-
-    /* Send the rank to 1 (source of trickle) */
-    trickle_set_rank(1);
-
-    /* Send the packet */
-    trickle_send(&trickle);
-
-    PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
-        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-        to.u8[0], to.u8[1], clock_seconds());
+//    request = (uint8_t *)data;
+//    if (*request == '<')
+//      compose_request_to_packetbuf(request, counter++, &to);
+//    else
+//      compose_response_to_packetbuf(request, counter++, &to);
+//
+//    /* Send the rank to 1 (source of trickle) */
+//    trickle_set_rank(1);
+//
+//    /* Send the packet */
+//    trickle_send(&trickle);
+//
+//    PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
+//        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+//        to.u8[0], to.u8[1], clock_seconds());
   }
 
   PROCESS_END();
@@ -434,9 +438,9 @@ PROCESS_THREAD(example_multihop_process, ev, data)
      * or request comes from radio with no '<' marking
      */
     request = (uint8_t *)data;
-    if (*request == '<')
-      compose_request_to_packetbuf(request, counter++, &to);
-    else
+//    if (*request == '<')
+//      compose_request_to_packetbuf(request, counter++, &to);
+//    else
       compose_response_to_packetbuf(request, counter++, &to);
 
     /* TODO delay count (for now) 1 seconds for (local) trickle to subside */
@@ -454,106 +458,106 @@ PROCESS_THREAD(example_multihop_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-#if BUTTON_SENSOR_ON
-PROCESS_THREAD(buttons_test_process, ev, data)
-{
-  struct sensors_sensor *sensor;
-  static uint8_t counter;
-  static uint8_t button;
-
-  PROCESS_BEGIN();
-
-  while(1) {
-
-    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
-
-    sensor = (struct sensors_sensor *)data;
-    if(sensor == &button_1_sensor) {
-      button = 0x71;
-      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
-    }
-    if(sensor == &button_2_sensor) {
-      button = 0x72;
-      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
-    }
-  }
-
-  PROCESS_END();
-}
-#endif
+//#if BUTTON_SENSOR_ON
+//PROCESS_THREAD(buttons_test_process, ev, data)
+//{
+//  struct sensors_sensor *sensor;
+//  static uint8_t counter;
+//  static uint8_t button;
+//
+//  PROCESS_BEGIN();
+//
+//  while(1) {
+//
+//    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
+//
+//    sensor = (struct sensors_sensor *)data;
+//    if(sensor == &button_1_sensor) {
+//      button = 0x71;
+//      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
+//    }
+//    if(sensor == &button_2_sensor) {
+//      button = 0x72;
+//      process_post(&sub_process, PROCESS_EVENT_CONTINUE, &button);
+//    }
+//  }
+//
+//  PROCESS_END();
+//}
+//#endif
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(serial_in_process, ev, data)
-{
-  static uint8_t * request;
-  static uint8_t counter;
-  static uint8_t hex_string[2];
-  static uint8_t bytereq[128];
-
-  PROCESS_BEGIN();
-
-  while(1) {
-
-    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
-    PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
-    printf("%s\n", (uint8_t *)data);
-
-    request = (uint8_t *)data;
-    memset(bytereq, 0, sizeof(bytereq));
-
-    if (request[0] == '<') {
-
-      bytereq[0] = '<';
-      counter = 2;
-
-      /* do conversion from hex string to hex bytes */
-      while(*++request != '\0') {
-
-        /* remove space */
-        if (*request == ' ') continue;
-
-        /* single digit hex string 0-9, A-F, a-f adjustment */
-        if (*request >= 0x30 && *request <= 0x39)
-          *request -= 0x30;
-        else if (*request >= 0x41 && *request <= 0x46)
-          *request -= 0x37;
-        else if (*request >= 0x61 && *request <= 0x66)
-                  *request -= 0x57;
-        else /* skip all input other than hex number */
-          continue;
-
-        hex_string[counter % 2] = *request;
-
-        /* combinining two digits hex bytes into one and store it */
-        if (counter++ % 2)
-          bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
-      }
-
-      call_decision_maker(bytereq, MESSAGE_BYTEREQ);
-
-    }
-    else {
-
-      counter = 0;
-
-      /* passthrough until end of line found */
-      while(*request != '\0') {
-        /* remove space */
-        if (*request == ' ') {
-          request++;
-          continue;
-        }
-        if (*request >= 0x61 && *request <= 0x7A)
-          *request -= 0x20;
-        bytereq[counter++] = *request++;
-      }
-
-      call_decision_maker(bytereq, MESSAGE_BYTECMD);
-
-    }
-  }
-
-  PROCESS_END();
-}
+//PROCESS_THREAD(serial_in_process, ev, data)
+//{
+//  static uint8_t * request;
+//  static uint8_t counter;
+//  static uint8_t hex_string[2];
+//  static uint8_t bytereq[128];
+//
+//  PROCESS_BEGIN();
+//
+//  while(1) {
+//
+//    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+//    PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+//    printf("%s\n", (uint8_t *)data);
+//
+//    request = (uint8_t *)data;
+//    memset(bytereq, 0, sizeof(bytereq));
+//
+//    if (request[0] == '<') {
+//
+//      bytereq[0] = '<';
+//      counter = 2;
+//
+//      /* do conversion from hex string to hex bytes */
+//      while(*++request != '\0') {
+//
+//        /* remove space */
+//        if (*request == ' ') continue;
+//
+//        /* single digit hex string 0-9, A-F, a-f adjustment */
+//        if (*request >= 0x30 && *request <= 0x39)
+//          *request -= 0x30;
+//        else if (*request >= 0x41 && *request <= 0x46)
+//          *request -= 0x37;
+//        else if (*request >= 0x61 && *request <= 0x66)
+//                  *request -= 0x57;
+//        else /* skip all input other than hex number */
+//          continue;
+//
+//        hex_string[counter % 2] = *request;
+//
+//        /* combinining two digits hex bytes into one and store it */
+//        if (counter++ % 2)
+//          bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
+//      }
+//
+//      call_decision_maker(bytereq, MESSAGE_BYTEREQ);
+//
+//    }
+//    else {
+//
+//      counter = 0;
+//
+//      /* passthrough until end of line found */
+//      while(*request != '\0') {
+//        /* remove space */
+//        if (*request == ' ') {
+//          request++;
+//          continue;
+//        }
+//        if (*request >= 0x61 && *request <= 0x7A)
+//          *request -= 0x20;
+//        bytereq[counter++] = *request++;
+//      }
+//
+//      call_decision_maker(bytereq, MESSAGE_BYTECMD);
+//
+//    }
+//  }
+//
+//  PROCESS_END();
+//}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_in_process, ev, data)
 {
@@ -598,15 +602,6 @@ PROCESS_THREAD(modbus_in_process, ev, data)
         }
       }
     }
-    
-    // write close string for clearing connection
-    // 01 42 30 03 75
-//    uart_arch_writeb(ekm_close_string[0]);
-//    uart_arch_writeb(ekm_close_string[1]);
-//    uart_arch_writeb(ekm_close_string[2]);
-//    uart_arch_writeb(ekm_close_string[3]);
-//    uart_arch_writeb(ekm_close_string[4]);
-
   }
 
   PROCESS_END();
@@ -670,58 +665,58 @@ PROCESS_THREAD(flash_log_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-static void
-compose_request_to_packetbuf(uint8_t * request,
-    uint8_t seqno, linkaddr_t * ereceiver)
-{
-  static uint8_t packet_buffer[128];
-  uint8_t * packet = packet_buffer;
-  uint8_t * header = NULL;
-  uint8_t * route = NULL;
-  linkaddr_t dest;
-  uint8_t req;
-  uint8_t reqlen;
-  uint8_t datalen;
-  uint8_t routelen;
-  uint8_t i;
-
-  /* Request from serial port, skip the '<' */
-  request++;
-
-  reqlen     = *request++;
-  req        = *request++;
-  dest.u8[0] = *request++;
-  dest.u8[1] = *request++;
-  routelen   = *request++;
-
-  if (ereceiver) linkaddr_copy(ereceiver, &dest);
-
-  /* Filling in packetbuf with data and skip routing table */
-  memset(packet_buffer, 0, sizeof(packet_buffer));
-  datalen = reqlen - routelen - REQUEST_HEADER_LEN;
-  *packet++ = datalen + 2;
-  *packet++ = req;
-  route = request;
-  request += (routelen - 1);
-  i = datalen;
-  while (i--) *packet++ = *request++;
-
-  packetbuf_copyfrom(packet_buffer, datalen+2);
-
-  routelen--; /* get rid of the length byte */
-
-  packetbuf_hdralloc(6 + routelen);
-
-  header = (uint8_t *)packetbuf_hdrptr();
-  *header++ = 6 + routelen;   /* header len */
-  *header++ = seqno;          /* seqno */
-  *header++ = 0;              /* hop count */
-  *header++ = 0;              /* number of hops */
-  *header++ = dest.u8[0];     /* destination addr H */
-  *header++ = dest.u8[1];     /* destination addr L */
-  while(routelen--)
-        *header++ = *route++; /* routing table */
-}
+//static void
+//compose_request_to_packetbuf(uint8_t * request,
+//    uint8_t seqno, linkaddr_t * ereceiver)
+//{
+//  static uint8_t packet_buffer[128];
+//  uint8_t * packet = packet_buffer;
+//  uint8_t * header = NULL;
+//  uint8_t * route = NULL;
+//  linkaddr_t dest;
+//  uint8_t req;
+//  uint8_t reqlen;
+//  uint8_t datalen;
+//  uint8_t routelen;
+//  uint8_t i;
+//
+//  /* Request from serial port, skip the '<' */
+//  request++;
+//
+//  reqlen     = *request++;
+//  req        = *request++;
+//  dest.u8[0] = *request++;
+//  dest.u8[1] = *request++;
+//  routelen   = *request++;
+//
+//  if (ereceiver) linkaddr_copy(ereceiver, &dest);
+//
+//  /* Filling in packetbuf with data and skip routing table */
+//  memset(packet_buffer, 0, sizeof(packet_buffer));
+//  datalen = reqlen - routelen - REQUEST_HEADER_LEN;
+//  *packet++ = datalen + 2;
+//  *packet++ = req;
+//  route = request;
+//  request += (routelen - 1);
+//  i = datalen;
+//  while (i--) *packet++ = *request++;
+//
+//  packetbuf_copyfrom(packet_buffer, datalen+2);
+//
+//  routelen--; /* get rid of the length byte */
+//
+//  packetbuf_hdralloc(6 + routelen);
+//
+//  header = (uint8_t *)packetbuf_hdrptr();
+//  *header++ = 6 + routelen;   /* header len */
+//  *header++ = seqno;          /* seqno */
+//  *header++ = 0;              /* hop count */
+//  *header++ = 0;              /* number of hops */
+//  *header++ = dest.u8[0];     /* destination addr H */
+//  *header++ = dest.u8[1];     /* destination addr L */
+//  while(routelen--)
+//        *header++ = *route++; /* routing table */
+//}
 /*---------------------------------------------------------------------------*/
 static void
 compose_response_to_packetbuf(uint8_t * radio_request,
@@ -754,10 +749,10 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   }
 
   /* Responses to multihop requests */
-  if (req == CONECTRIC_MULTIHOP_PING) {
-    response = CONECTRIC_MULTIHOP_PING_REPLY;
-    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-  }
+//  if (req == CONECTRIC_MULTIHOP_PING) {
+//    response = CONECTRIC_MULTIHOP_PING_REPLY;
+//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+//  }
   if (req == CONECTRIC_POLL_RS485) {
     response = CONECTRIC_POLL_RS485_REPLY;
     responselen += 2;
@@ -770,15 +765,15 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     responselen += chunk_size;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
-  if (req == CONECTRIC_POLL_SENSORS) {
-    response = CONECTRIC_POLL_SENSORS_REPLY;
-    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-  }
-  if (req == CONECTRIC_GET_LONG_MAC) {
-    response = CONECTRIC_GET_LONG_MAC_REPLY;
-    responselen += 8;
-    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-  }
+//  if (req == CONECTRIC_POLL_SENSORS) {
+//    response = CONECTRIC_POLL_SENSORS_REPLY;
+//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+//  }
+//  if (req == CONECTRIC_GET_LONG_MAC) {
+//    response = CONECTRIC_GET_LONG_MAC_REPLY;
+//    responselen += 8;
+//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+//  }
 
   memset(packet_buffer, 0, sizeof(packet_buffer));
   *packet++ = responselen;
@@ -797,14 +792,14 @@ compose_response_to_packetbuf(uint8_t * radio_request,
       *packet++ = submeter_data[(chunk_size*chunk_number) + i];
   }
 
-  if (req == CONECTRIC_GET_LONG_MAC) {
-    gmacp = &X_IEEE_ADDR;
-    while (i--) {
-      *packet++ = gmacp[i];
-      puthex(gmacp[i]);
-    }
-    putstring("\n");
-  }
+//  if (req == CONECTRIC_GET_LONG_MAC) {
+//    gmacp = &X_IEEE_ADDR;
+//    while (i--) {
+//      *packet++ = gmacp[i];
+//      puthex(gmacp[i]);
+//    }
+//    putstring("\n");
+//  }
 
   packetbuf_copyfrom(packet_buffer, responselen);
 
@@ -839,39 +834,39 @@ call_decision_maker(void * incoming, uint8_t type)
    * - Non-capital letter inputs get capitalized automatically
    *
    */
-  if (type == MESSAGE_BYTECMD) {
-
-    /* Command line interpreter */
-    if (bytereq[0] == 'M' && bytereq[1] == 'R') {
-      gmacp = &X_IEEE_ADDR;
-      for(i = 7; i >= 0; i--) puthex(gmacp[i]);
-      putstring("\n");
-    }
-
-    else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
-      dump_buffer = 0;
-      putstring("Ok DP\n");
-    }
-
-    else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
-      dump_buffer = 1;
-      putstring("Ok DB\n");
-    }
-
-    else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
-      putstring(CONTIKI_VERSION_STRING "\n");
-      putstring(CONECTRIC_PROJECT_STRING "\n");
-    }
-
-    /* Unknown command */
-    else {
-      puthex(linkaddr_node_addr.u8[0]);
-      putstring(".");
-      puthex(linkaddr_node_addr.u8[1]);
-      putstring(": Bad command!\n");
-    }
-
-  }
+//  if (type == MESSAGE_BYTECMD) {
+//
+//    /* Command line interpreter */
+//    if (bytereq[0] == 'M' && bytereq[1] == 'R') {
+//      gmacp = &X_IEEE_ADDR;
+//      for(i = 7; i >= 0; i--) puthex(gmacp[i]);
+//      putstring("\n");
+//    }
+//
+//    else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
+//      dump_buffer = 0;
+//      putstring("Ok DP\n");
+//    }
+//
+//    else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
+//      dump_buffer = 1;
+//      putstring("Ok DB\n");
+//    }
+//
+//    else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
+//      putstring(CONTIKI_VERSION_STRING "\n");
+//      putstring(CONECTRIC_PROJECT_STRING "\n");
+//    }
+//
+//    /* Unknown command */
+//    else {
+//      puthex(linkaddr_node_addr.u8[0]);
+//      putstring(".");
+//      puthex(linkaddr_node_addr.u8[1]);
+//      putstring(": Bad command!\n");
+//    }
+//
+//  }
 
   /*******************************************************/
   /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
@@ -887,40 +882,40 @@ call_decision_maker(void * incoming, uint8_t type)
    * [RnL]  = the last hop address L ---> [DestL]
    *
    */
-  else if (type == MESSAGE_BYTEREQ) {
-
-    request = bytereq[2];
-
-    /* Request bytes to be sent as trickle */
-    if (request == CONECTRIC_ROUTE_REQUEST ||
-        request == CONECTRIC_ROUTE_REQUEST_BY_SN)
-      process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
-
-    /* Request bytes to be sent as multihop */
-    else if (
-        request == CONECTRIC_MULTIHOP_PING ||
-        request == CONECTRIC_POLL_RS485  ||
-        request == CONECTRIC_POLL_RS485_CHUNK  ||
-        request == CONECTRIC_POLL_SENSORS  ||
-        request == CONECTRIC_GET_LONG_MAC)
-      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
-
-    /* Unknown request */
-    else {
-      puthex(linkaddr_node_addr.u8[0]);
-      putstring(".");
-      puthex(linkaddr_node_addr.u8[0]);
-      putstring(": Unknown request - 0x");
-      puthex(request);
-      putstring("\n");
-    }
-
-  }
+//  else if (type == MESSAGE_BYTEREQ) {
+//
+//    request = bytereq[2];
+//
+//    /* Request bytes to be sent as trickle */
+//    if (request == CONECTRIC_ROUTE_REQUEST ||
+//        request == CONECTRIC_ROUTE_REQUEST_BY_SN)
+//      process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
+//
+//    /* Request bytes to be sent as multihop */
+//    else if (
+//        request == CONECTRIC_MULTIHOP_PING ||
+//        request == CONECTRIC_POLL_RS485  ||
+//        request == CONECTRIC_POLL_RS485_CHUNK  ||
+//        request == CONECTRIC_POLL_SENSORS  ||
+//        request == CONECTRIC_GET_LONG_MAC)
+//      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
+//
+//    /* Unknown request */
+//    else {
+//      puthex(linkaddr_node_addr.u8[0]);
+//      putstring(".");
+//      puthex(linkaddr_node_addr.u8[0]);
+//      putstring(": Unknown request - 0x");
+//      puthex(request);
+//      putstring("\n");
+//    }
+//
+//  }
 
   /*******************************************************/
   /***** RULES TO ASSIGN MULTIHOP FORWARDING ADDRESS *****/
   /*******************************************************/
-  else if (type == MESSAGE_MHOP_FWD) {
+  if (type == MESSAGE_MHOP_FWD) {
 
     /* multihop message received but need to be forwarded */
     seqno = mhop_message_recv.seqno;
@@ -953,20 +948,24 @@ call_decision_maker(void * incoming, uint8_t type)
     *header++ = mhop_message_recv.ereceiver.u8[1];
 
     /* multihop request with built-in routing table */
-    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
+    if (
+        // mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
-        mhop_message_recv.request == CONECTRIC_POLL_SENSORS  ||
-        mhop_message_recv.request == CONECTRIC_GET_LONG_MAC) {
+        mhop_message_recv.request == CONECTRIC_POLL_WI  
+        // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC
+          ) {
       forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
       forward_addr.u8[1] = mhop_message_recv.message[5 + (mhops << 1)];
     }
     /* multihop reply, no routing table */
-    if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
+    if (
+        //mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_SENSORS_REPLY ||
-        mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY) {
+        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY 
+        // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY
+          ) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
       packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &mhop_message_recv.esender);
       packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, &mhop_message_recv.prev_esender);
@@ -1005,10 +1004,12 @@ call_decision_maker(void * incoming, uint8_t type)
             message);
 
     /* multihop message received */
-    if (message->request == CONECTRIC_MULTIHOP_PING ||
-        message->request == CONECTRIC_POLL_RS485_CHUNK  ||
-        message->request == CONECTRIC_POLL_SENSORS  ||
-        message->request == CONECTRIC_GET_LONG_MAC)
+    if (
+        //message->request == CONECTRIC_MULTIHOP_PING ||
+        message->request == CONECTRIC_POLL_RS485_CHUNK  
+        // || message->request == CONECTRIC_POLL_SENSORS  ||
+        // message->request == CONECTRIC_GET_LONG_MAC
+          )
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
