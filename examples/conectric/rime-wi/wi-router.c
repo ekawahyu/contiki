@@ -128,27 +128,38 @@ static uint16_t rank = 255;
 #define WI_OCC_STATUS_BIT_SHIFT 2;
 
 // RHT Event Management
+#define RHT_EVENT_STATUS_UNUSED 0
+#define RHT_EVENT_STATUS_INUSE  1
+//#define RHT_EVENT_STATUS_SENT   2
+
 typedef struct {
    linkaddr_t   rht_addr;
    uint16_t     temp;
    uint16_t     hum;
+   uint8_t      status;
 } rht_event_t;
 
-#define MAX_RHT_EVENTS 50
+#define MAX_RHT_EVENTS 32   // move this to config
+#define RHT_EVENT_SIZE 6   // move this to config
 static uint8_t rht_old_start;
 static uint8_t rht_new_start;
 static uint8_t rht_end;
 static rht_event_t rht_event_list[MAX_RHT_EVENTS]; 
 
 // Child Sensor Table Management
+#define CHILD_SENSOR_STATUS_UNUSED 0
+#define CHILD_SENSOR_STATUS_INUSE  1
+
 typedef struct {
   linkaddr_t    sensor_addr;
   uint8_t       rssi;
   uint8_t       batt;
   uint8_t       device_state;
+  uint8_t       status;
 } child_sensor_t;
 
-#define MAX_CHILD_SENSORS  10
+#define MAX_CHILD_SENSORS  10   // move this to config
+#define CHILD_SENSOR_SIZE  5   // move this to config
 static child_sensor_t child_sensors[MAX_CHILD_SENSORS];
 
 typedef struct {
@@ -161,12 +172,17 @@ typedef struct {
   uint8_t stage_cooling_heating;
   uint8_t num_rht_events;
   uint8_t num_child_sensors;
-} wi_state_msg_t;
+} wi_state_t;
 
-static wi_state_msg_t wi_msg;
+static wi_state_t wi_state;
+#define WI_MSG_MAX_SIZE (sizeof(wi_state_t) + (MAX_CHILD_SENSORS * CHILD_SENSOR_SIZE) + (MAX_RHT_EVENTS + RHT_EVENT_SIZE))    // move this to config
+static uint8_t wi_msg[WI_MSG_MAX_SIZE];
 
-//static uint8_t sensors[128];
-//static uint8_t *sensors_head, *sensors_tail;
+// Store sent messages in FLash until they are ACK'd
+// pointer to last sent message, NULL when all ACK'd
+// seq no for last sent message (verification)
+
+
 
 #if CC2530_CONF_MAC_FROM_PRIMARY
 #if defined __IAR_SYSTEMS_ICC__
@@ -203,6 +219,94 @@ static uint8_t dump_buffer = 0;
 #ifndef CONECTRIC_PROJECT_STRING
 #define CONECTRIC_PROJECT_STRING "unknow"
 #endif
+/*---------------------------------------------------------------------------*/
+// RHT Event Management Functions
+static void rht_event_list_init(void)
+{
+    for(uint8_t x=0; x<MAX_RHT_EVENTS; x++)
+      rht_event_list[x].status = RHT_EVENT_STATUS_UNUSED;
+}
+
+/*---------------------------------------------------------------------------*/
+// Child Sensor Management Functions
+static void child_sensor_table_init(void)
+{
+  for(int x=0; x < MAX_CHILD_SENSORS; x++)
+    child_sensors[x].status = CHILD_SENSOR_STATUS_UNUSED;
+}
+
+/*---------------------------------------------------------------------------*/
+// WI State Functions
+
+static void wi_state_init()
+{
+  wi_state.timestamp = 0x0000;
+  wi_state.onboard_temp = 0x0000;
+  wi_state.setpoint_temp = 0x0000;
+  wi_state.heating = 0x00;
+  wi_state.cooling = 0x00;
+  wi_state.fan_speed = 0x00;
+  wi_state.stage_cooling_heating = 0x00;
+  wi_state.num_rht_events = 0x00;
+  wi_state.num_child_sensors = 0x00;
+}
+
+static void wi_state_clear()
+{
+  wi_state.timestamp = 0x0000;
+  wi_state.num_rht_events = 0x00;
+}
+
+// build the wi msg payload
+// return size
+static uint8_t build_wi_msg(uint8_t *pyld)
+{
+  uint8_t cnt;
+  
+  uint8_t size = sizeof(wi_state_t);
+  *pyld++ = (uint8_t)(wi_state.timestamp >> 8);
+  *pyld++ = (uint8_t)(wi_state.timestamp);
+  *pyld++ = (uint8_t)(wi_state.onboard_temp >> 8);
+  *pyld++ = (uint8_t)(wi_state.onboard_temp);
+  *pyld++ = (uint8_t)(wi_state.setpoint_temp >> 8);
+  *pyld++ = (uint8_t)(wi_state.setpoint_temp);
+  *pyld++ = wi_state.heating;
+  *pyld++ = wi_state.cooling;
+  *pyld++ = wi_state.fan_speed;
+  *pyld++ = wi_state.stage_cooling_heating;
+  *pyld++ = wi_state.num_rht_events;
+  for(cnt=0; cnt<MAX_RHT_EVENTS; cnt++)
+  {
+      if(rht_event_list[cnt].status == RHT_EVENT_STATUS_INUSE)
+      {
+        *pyld++ = rht_event_list[cnt].rht_addr.u8[0];
+        *pyld++ = rht_event_list[cnt].rht_addr.u8[1];
+        *pyld++ = (uint8_t)(rht_event_list[cnt].temp >> 8);
+        *pyld++ = (uint8_t)(rht_event_list[cnt].temp);
+        *pyld++ = (uint8_t)(rht_event_list[cnt].hum >> 8);
+        *pyld++ = (uint8_t)(rht_event_list[cnt].hum);
+        size += RHT_EVENT_SIZE;
+        rht_event_list[cnt].status = RHT_EVENT_STATUS_UNUSED;
+      }
+  }
+  *pyld++ = wi_state.num_child_sensors;
+  for(cnt=0; cnt<MAX_CHILD_SENSORS; cnt++)
+  {
+      if(child_sensors[cnt].status == CHILD_SENSOR_STATUS_INUSE)
+      {
+        *pyld++ = child_sensors[cnt].sensor_addr.u8[0];
+        *pyld++ = child_sensors[cnt].sensor_addr.u8[1];
+        *pyld++ = child_sensors[cnt].rssi;
+        *pyld++ = child_sensors[cnt].batt;
+        *pyld++ = child_sensors[cnt].device_state;
+        size += CHILD_SENSOR_SIZE;
+        child_sensors[cnt].status = CHILD_SENSOR_STATUS_UNUSED;
+      }
+  }
+  
+  return size;
+}
+
 /*---------------------------------------------------------------------------*/
 /// MOVE THIS TO GENERAL Conectric Network Functions
 static uint8_t
@@ -430,6 +534,12 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
   PROCESS_BEGIN();
 
+  // didn't want the overhead of another process, 
+  // so initializing here as it relates to sensors that report through abc
+  child_sensor_table_init();
+  rht_event_list_init();
+  wi_state_init();
+  
   abc_open(&abc, 128, &abc_call);
 
   while(1) {

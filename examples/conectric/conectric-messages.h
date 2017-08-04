@@ -7,14 +7,14 @@ extern "C" {
 
   // Conectric Network Message Types
 enum {
-  CONECTRIC_ATTR_NONE,
-  /* commissioning messages */
-  CONECTRIC_ROUTE_REQUEST,
-  CONECTRIC_ROUTE_REPLY,
+  CONECTRIC_ATTR_NONE,          
+  /* commissioning messages */  
+  CONECTRIC_ROUTE_REQUEST,      
+  CONECTRIC_ROUTE_REPLY,        
   CONECTRIC_ROUTE_REQUEST_BY_SN,
   // CONECTRIC_TIME_SYNC,
   /* reporting messages */
-  CONECTRIC_SENSOR_BROADCAST,
+  CONECTRIC_SENSOR_BROADCAST,   
   CONECTRIC_SUPERVISORY_REPORT,
   CONECTRIC_SENSOR_UPDATE,
   CONECTRIC_SET_STATE,
