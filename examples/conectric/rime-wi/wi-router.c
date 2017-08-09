@@ -127,6 +127,14 @@ static uint16_t rank = 255;
 #define WI_DOOR_STATUS_BIT_SHIFT 1;
 #define WI_OCC_STATUS_BIT_SHIFT 2;
 
+// WI Message
+uint8_t wi_last_request_id = 0;
+#define WI_HEADER_REQID_MSK     0x80
+#define WI_HEADER_MORE_MSK      0x40
+#define WI_HEADER_ERR_MSK       0x20
+#define WI_HEADER_FRAG_MSK      0x0F
+#define WI_FRAG_SIZE            32
+
 // RHT Event Management
 #define RHT_EVENT_STATUS_UNUSED 0
 #define RHT_EVENT_STATUS_INUSE  1
@@ -175,8 +183,10 @@ typedef struct {
 } wi_state_t;
 
 static wi_state_t wi_state;
+// Can't be over 256 or we need 2 bytes for storing size
 #define WI_MSG_MAX_SIZE (sizeof(wi_state_t) + (MAX_CHILD_SENSORS * CHILD_SENSOR_SIZE) + (MAX_RHT_EVENTS + RHT_EVENT_SIZE))    // move this to config
-static uint8_t wi_msg[WI_MSG_MAX_SIZE];
+// byte 0 is size
+static uint8_t wi_msg[WI_MSG_MAX_SIZE+1];    // move this to FLASH???
 
 // Store sent messages in FLash until they are ACK'd
 // pointer to last sent message, NULL when all ACK'd
@@ -281,21 +291,18 @@ static void wi_state_clear()
   wi_state.num_rht_events = 0x00;
 }
 
-static void wi_msg_write_flash()
+ // save WI State to mem (and update flash pointers?)
+static void wi_state_write()
 {
-   // save wi_msg in FLASH and update flash pointers
-}
-
-// build the wi msg payload in Flash
-// return size
-static uint8_t wi_msg_build()
-{
-  uint8_t cnt;
-  uint8_t *pyld = wi_msg;
+  uint8_t size, cnt;
+  uint8_t * pyld;
+ 
   // zero out previous message
-  memset(wi_msg, 0, WI_MSG_MAX_SIZE);
+  memset(wi_msg, 0, WI_MSG_MAX_SIZE+1);
   
-  uint8_t size = sizeof(wi_state_t);
+  // Write WI State to memory
+  size = sizeof(wi_state_t);
+  pyld = &wi_msg[1];            // set pyld pointer to start of mem (skip 1st byte for size)
   *pyld++ = (uint8_t)(wi_state.timestamp >> 8);
   *pyld++ = (uint8_t)(wi_state.timestamp);
   *pyld++ = (uint8_t)(wi_state.onboard_temp >> 8);
@@ -309,21 +316,21 @@ static uint8_t wi_msg_build()
   *pyld++ = wi_state.num_rht_events;
   for(cnt=0; cnt<MAX_RHT_EVENTS; cnt++)
   {
-      if(rht_event_list[cnt].status == RHT_EVENT_STATUS_INUSE)
-      {
-        *pyld++ = rht_event_list[cnt].rht_addr.u8[0];
-        *pyld++ = rht_event_list[cnt].rht_addr.u8[1];
-        *pyld++ = (uint8_t)(rht_event_list[cnt].temp >> 8);
-        *pyld++ = (uint8_t)(rht_event_list[cnt].temp);
-        *pyld++ = (uint8_t)(rht_event_list[cnt].hum >> 8);
-        *pyld++ = (uint8_t)(rht_event_list[cnt].hum);
-        size += RHT_EVENT_SIZE;
-        rht_event_list[cnt].status = RHT_EVENT_STATUS_UNUSED;
-      }
+    if(rht_event_list[cnt].status == RHT_EVENT_STATUS_INUSE)
+    {
+      *pyld++ = rht_event_list[cnt].rht_addr.u8[0];
+      *pyld++ = rht_event_list[cnt].rht_addr.u8[1];
+      *pyld++ = (uint8_t)(rht_event_list[cnt].temp >> 8);
+      *pyld++ = (uint8_t)(rht_event_list[cnt].temp);
+      *pyld++ = (uint8_t)(rht_event_list[cnt].hum >> 8);
+      *pyld++ = (uint8_t)(rht_event_list[cnt].hum);
+      size += RHT_EVENT_SIZE;
+      rht_event_list[cnt].status = RHT_EVENT_STATUS_UNUSED;
+    }
   }
   *pyld++ = wi_state.num_child_sensors;
   for(cnt=0; cnt<MAX_CHILD_SENSORS; cnt++)
-  {
+    {
       if(child_sensors[cnt].status == CHILD_SENSOR_STATUS_INUSE)
       {
         *pyld++ = child_sensors[cnt].sensor_addr.u8[0];
@@ -335,8 +342,62 @@ static uint8_t wi_msg_build()
         child_sensors[cnt].status = CHILD_SENSOR_STATUS_UNUSED;
       }
   }
+  // write size 
+  wi_msg[0] = size;   
+}
+
+// build the wi msg payload 
+// parameters: 
+//      wi_request: Incoming request
+//      header: Return packet header
+//      pyld: outgoing payload
+// return size of payload
+static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t * pyld)
+{
+  pyld = NULL;
   
-  return size;
+  uint8_t req_header = *wi_request++;
+  uint8_t fragment = req_header & WI_HEADER_FRAG_MSK;
+  uint8_t total_size, size;
+  
+  // response header
+  *header = req_header;
+  
+  // handle request for saved data
+  if(req_header & WI_HEADER_REQID_MSK == wi_last_request_id)
+  {
+     total_size = wi_msg[0];
+     if(fragment * WI_FRAG_SIZE > total_size)  // requested data out of bounds
+     {  
+       // ERROR
+       *header |= WI_HEADER_ERR_MSK;
+       pyld = NULL;
+       size = 0;
+     }
+     else  // send in 32 byte chunks
+     {
+       size = (total_size - (fragment * WI_FRAG_SIZE) < WI_FRAG_SIZE) ? (total_size - (fragment * WI_FRAG_SIZE)) : WI_FRAG_SIZE;
+       if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
+          *header |= WI_HEADER_MORE_MSK;
+       pyld = &wi_msg[(fragment * WI_FRAG_SIZE)+1];
+     } 
+  }
+  else
+  {    
+    wi_last_request_id ^= wi_last_request_id;  // toggle ID for re-request or follow up reads
+    
+    // test simulate wi state
+    wi_test();  // REMOVE THIS
+  
+    wi_state_write();
+    
+    pyld = &wi_msg[1];
+    total_size = wi_msg[0];
+    size = (total_size < WI_FRAG_SIZE) ? total_size : WI_FRAG_SIZE;
+    if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
+      *header |= WI_HEADER_MORE_MSK;
+  }
+  return size; 
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1138,6 +1199,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
   uint8_t * header = NULL;
+  uint8_t * pyld = NULL;
   uint8_t req;
   uint8_t reqlen;
   uint8_t response = 0;
@@ -1145,7 +1207,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t chunk_number = 0;
   uint8_t chunk_size = 0;
   uint8_t i;
-
+  uint8_t wi_header = 0;
+  
   reqlen = *radio_request++;
   req    = *radio_request++;
 
@@ -1180,7 +1243,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  }
   if (req == CONECTRIC_POLL_WI) {
     // Update length based on WI State structure
-    responselen += wi_msg_build();
+    responselen += wi_msg_build(radio_request, &wi_header, pyld) + 1;  // add 1 for header
     response = CONECTRIC_POLL_WI_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
@@ -1195,15 +1258,13 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   *packet++ = response;
 
   i = responselen-2;
-
-  // Build WI payload based on state
-  
-  // Save payload to Flash until Read acknowledged
   
   if (req == CONECTRIC_POLL_WI) {
-    for(uint8_t x=0; x<i; x++) {
-      *packet++ = wi_msg[x];
-      puthex(wi_msg[x]);
+    // add header
+    *packet++ = wi_header;
+    for(uint8_t x=0; x<(i-1); x++) {
+      *packet++ = pyld[x];
+      puthex(pyld[x]);
     }
   }
   
@@ -1445,12 +1506,6 @@ call_decision_maker(void * incoming, uint8_t type)
         // || message->request == CONECTRIC_GET_LONG_MAC
           )
     {
-      // Handle end to end implicit ACK failure
-      
-      
-      // test simulate wi state
-      wi_test();
-      
       // Trigger Reply
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
