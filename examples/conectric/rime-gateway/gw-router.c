@@ -101,8 +101,8 @@ static message_recv mhop_message_recv;
 extern volatile uint16_t deep_sleep_requested;
 
 /* Flash Logging */
-static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+// static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12U * CLOCK_SECOND * 60U * 60U))
 
 //static uint16_t rank = 255;
 //static uint8_t sensors[128];
@@ -223,11 +223,11 @@ dump_payload(void)
 }
 /*---------------------------------------------------------------------------*/
 /// MOVE THIS TO GENERAL Conectric Network Functions
-static uint8_t
-shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
-{
-  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
-}
+//static uint8_t
+//shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
+//{
+//  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
+//}
 /*---------------------------------------------------------------------------*/
 //PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
@@ -827,7 +827,7 @@ static linkaddr_t *
 call_decision_maker(void * incoming, uint8_t type)
 {
   static linkaddr_t forward_addr;
-  message_recv * message = (message_recv *)incoming;
+//  message_recv * message = (message_recv *)incoming;
   uint8_t * bytereq = (uint8_t *)incoming;
   uint8_t request;
   uint8_t seqno, mhops, hdrlen;

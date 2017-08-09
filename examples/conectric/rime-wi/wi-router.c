@@ -113,12 +113,12 @@ static message_recv mhop_message_recv;
 extern volatile uint16_t deep_sleep_requested;
 
 /* Flash Logging */
-static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
+//static uint8_t logData[4]= {0x00, 0x00, 0x00, 0x00};
 
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12U * CLOCK_SECOND * 60U * 60U))
 
 // Trickle state
-static uint16_t rank = 255;
+//static uint16_t rank = 255;
 
 
 // WI state
@@ -128,12 +128,12 @@ static uint16_t rank = 255;
 #define WI_OCC_STATUS_BIT_SHIFT 2;
 
 // WI Message
-uint8_t wi_last_request_id = 0;
-#define WI_HEADER_REQID_MSK     0x80
-#define WI_HEADER_MORE_MSK      0x40
-#define WI_HEADER_ERR_MSK       0x20
-#define WI_HEADER_FRAG_MSK      0x0F
+#define WI_HEADER_REQID_MSK     (uint8_t) 0x80 // 10000000b
+#define WI_HEADER_MORE_MSK      (uint8_t) 0x40 // 01000000b
+#define WI_HEADER_ERR_MSK       (uint8_t) 0x20 // 00100000b
+#define WI_HEADER_FRAG_MSK      (uint8_t) 0x0F // 00001111b
 #define WI_FRAG_SIZE            32
+uint8_t wi_last_request_id = WI_HEADER_REQID_MSK;
 
 // RHT Event Management
 #define RHT_EVENT_STATUS_UNUSED 0
@@ -149,9 +149,9 @@ typedef struct {
 
 #define MAX_RHT_EVENTS 32   // move this to config
 #define RHT_EVENT_SIZE 6   // move this to config
-static uint8_t rht_old_start;
-static uint8_t rht_new_start;
-static uint8_t rht_end;
+//static uint8_t rht_old_start;
+//static uint8_t rht_new_start;
+//static uint8_t rht_end;
 static rht_event_t rht_event_list[MAX_RHT_EVENTS]; 
 
 // Child Sensor Table Management
@@ -252,44 +252,82 @@ static void child_sensor_table_init(void)
 static void wi_test()
 {
   wi_state.timestamp = clock_seconds();
-  wi_state.onboard_temp += 0x11;
-  wi_state.setpoint_temp += 0x11;
+  wi_state.onboard_temp += 0x0101;
+  wi_state.setpoint_temp += 0x0101;
   wi_state.heating += 0x01;
   wi_state.cooling += 0x01;
   wi_state.fan_speed += 0x01;
   wi_state.stage_cooling_heating += 0x01;
-  wi_state.num_rht_events = 0x01;
-  rht_event_list[0].rht_addr.u16 = 0x1234;
-  rht_event_list[0].temp = 0x1234;
-  rht_event_list[0].hum = 0x1234;
+  wi_state.num_rht_events = 0x08;
+  rht_event_list[0].rht_addr.u16 = 0x1111;
+  rht_event_list[0].temp = 0x1111;
+  rht_event_list[0].hum = 0x1111;
   rht_event_list[0].status = RHT_EVENT_STATUS_INUSE;
+  rht_event_list[1].rht_addr.u16 = 0x2222;
+  rht_event_list[1].temp = 0x2222;
+  rht_event_list[1].hum = 0x2222;
+  rht_event_list[1].status = RHT_EVENT_STATUS_INUSE;
+  rht_event_list[2].rht_addr.u16 = 0x3333;
+  rht_event_list[2].temp = 0x3333;
+  rht_event_list[2].hum = 0x3333;
+  rht_event_list[2].status = RHT_EVENT_STATUS_INUSE;
+  rht_event_list[3].rht_addr.u16 = 0x4444;
+  rht_event_list[3].temp = 0x4444;
+  rht_event_list[3].hum = 0x4444;
+  rht_event_list[3].status = RHT_EVENT_STATUS_INUSE;
+  rht_event_list[4].rht_addr.u16 = 0x1111;
+  rht_event_list[4].temp = 0x1111;
+  rht_event_list[4].hum = 0x1111;
+  rht_event_list[4].status = RHT_EVENT_STATUS_INUSE;
+  rht_event_list[5].rht_addr.u16 = 0x2222;
+  rht_event_list[5].temp = 0x2222;
+  rht_event_list[5].hum = 0x2222;
+  rht_event_list[5].status = RHT_EVENT_STATUS_INUSE;
+  rht_event_list[6].rht_addr.u16 = 0x3333;
+  rht_event_list[6].temp = 0x3333;
+  rht_event_list[6].hum = 0x3333;
+  rht_event_list[6].status = RHT_EVENT_STATUS_INUSE;
+  rht_event_list[7].rht_addr.u16 = 0x4444;
+  rht_event_list[7].temp = 0x4444;
+  rht_event_list[7].hum = 0x4444;
+  rht_event_list[7].status = RHT_EVENT_STATUS_INUSE;
   
-  wi_state.num_child_sensors = 0x01;
-  child_sensors[0].sensor_addr.u16 = 0x1234;
-  child_sensors[0].rssi = 0xAA;
-  child_sensors[0].batt = 0xCD;
-  child_sensors[0].device_state = 0x34;
+  wi_state.num_child_sensors = 0x03;
+  child_sensors[0].sensor_addr.u16 = 0x1111;
+  child_sensors[0].rssi = 0x11;
+  child_sensors[0].batt = 0x11;
+  child_sensors[0].device_state = 0x11;
   child_sensors[0].status = CHILD_SENSOR_STATUS_INUSE;
+  child_sensors[1].sensor_addr.u16 = 0x2222;
+  child_sensors[1].rssi = 0x22;
+  child_sensors[1].batt = 0x22;
+  child_sensors[1].device_state = 0x22;
+  child_sensors[1].status = CHILD_SENSOR_STATUS_INUSE;
+  child_sensors[2].sensor_addr.u16 = 0x3333;
+  child_sensors[2].rssi = 0x33;
+  child_sensors[2].batt = 0x33;
+  child_sensors[2].device_state = 0x33;
+  child_sensors[2].status = CHILD_SENSOR_STATUS_INUSE;
 }
 
 static void wi_state_init()
 {
   wi_state.timestamp = 0x0000;
-  wi_state.onboard_temp = 0x0000;
-  wi_state.setpoint_temp = 0x0000;
-  wi_state.heating = 0x00;
-  wi_state.cooling = 0x00;
-  wi_state.fan_speed = 0x00;
-  wi_state.stage_cooling_heating = 0x00;
+  wi_state.onboard_temp = 0x0102;
+  wi_state.setpoint_temp = 0x0304;
+  wi_state.heating = 0x05;
+  wi_state.cooling = 0x06;
+  wi_state.fan_speed = 0x07;
+  wi_state.stage_cooling_heating = 0x08;
   wi_state.num_rht_events = 0x00;
   wi_state.num_child_sensors = 0x00;
 }
 
-static void wi_state_clear()
-{
-  wi_state.timestamp = 0x0000;
-  wi_state.num_rht_events = 0x00;
-}
+//static void wi_state_clear()
+//{
+//  wi_state.timestamp = 0x0000;
+//  wi_state.num_rht_events = 0x00;
+//}
 
  // save WI State to mem (and update flash pointers?)
 static void wi_state_write()
@@ -350,11 +388,11 @@ static void wi_state_write()
 // parameters: 
 //      wi_request: Incoming request
 //      header: Return packet header
-//      pyld: outgoing payload
+//      mem_idx: index into memory where WI State is saved
 // return size of payload
-static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t * pyld)
+static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem_idx)
 {
-  pyld = NULL;
+  *mem_idx = 0;
   
   uint8_t req_header = *wi_request++;
   uint8_t fragment = req_header & WI_HEADER_FRAG_MSK;
@@ -364,14 +402,13 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t * py
   *header = req_header;
   
   // handle request for saved data
-  if(req_header & WI_HEADER_REQID_MSK == wi_last_request_id)
+  if((uint8_t)(req_header & WI_HEADER_REQID_MSK) == wi_last_request_id)
   {
      total_size = wi_msg[0];
      if(fragment * WI_FRAG_SIZE > total_size)  // requested data out of bounds
      {  
        // ERROR
        *header |= WI_HEADER_ERR_MSK;
-       pyld = NULL;
        size = 0;
      }
      else  // send in 32 byte chunks
@@ -379,19 +416,19 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t * py
        size = (total_size - (fragment * WI_FRAG_SIZE) < WI_FRAG_SIZE) ? (total_size - (fragment * WI_FRAG_SIZE)) : WI_FRAG_SIZE;
        if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
           *header |= WI_HEADER_MORE_MSK;
-       pyld = &wi_msg[(fragment * WI_FRAG_SIZE)+1];
+       *mem_idx = fragment * WI_FRAG_SIZE+1;
      } 
   }
   else
   {    
-    wi_last_request_id ^= wi_last_request_id;  // toggle ID for re-request or follow up reads
+    wi_last_request_id ^= WI_HEADER_REQID_MSK;  // toggle ID for re-request or follow up reads
     
     // test simulate wi state
     wi_test();  // REMOVE THIS
   
     wi_state_write();
     
-    pyld = &wi_msg[1];
+    *mem_idx = 1;
     total_size = wi_msg[0];
     size = (total_size < WI_FRAG_SIZE) ? total_size : WI_FRAG_SIZE;
     if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
@@ -558,7 +595,7 @@ trickle_recv(struct trickle_conn *c)
   trickle_message_recv.ereceiver.u8[0] = *--dataptr;
 
   /* Get the rank to the sink */
-  rank = trickle_rank(c);
+//  rank = trickle_rank(c);
 
   /* TODO store neighbors as a list here */
 
@@ -644,9 +681,9 @@ PROCESS_THREAD(example_abc_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_trickle_process, ev, data)
 {
-  static linkaddr_t to;
-  static uint8_t counter = 0;
-  static uint8_t * request;
+//  static linkaddr_t to;
+//  static uint8_t counter = 0;
+//  static uint8_t * request;
 
   PROCESS_EXITHANDLER(trickle_close(&trickle);)
 
@@ -922,8 +959,8 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
   static struct etimer et;
   static uint8_t payload[20];
   static message_recv message;
-  static uint16_t crc16_result;
-  static uint16_t counter;
+//  static uint16_t crc16_result;
+//  static uint16_t counter;
   static uint8_t i;
   static modbus_request modreq[] =
   {
@@ -1199,17 +1236,18 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
   uint8_t * header = NULL;
-  uint8_t * pyld = NULL;
+  uint8_t mem_idx;
   uint8_t req;
-  uint8_t reqlen;
+//  uint8_t reqlen;
   uint8_t response = 0;
   uint8_t responselen;
-  uint8_t chunk_number = 0;
-  uint8_t chunk_size = 0;
+//  uint8_t chunk_number = 0;
+//  uint8_t chunk_size = 0;
   uint8_t i;
   uint8_t wi_header = 0;
   
-  reqlen = *radio_request++;
+//  reqlen = *radio_request++;
+  *radio_request++;
   req    = *radio_request++;
 
   responselen = 2;
@@ -1243,7 +1281,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  }
   if (req == CONECTRIC_POLL_WI) {
     // Update length based on WI State structure
-    responselen += wi_msg_build(radio_request, &wi_header, pyld) + 1;  // add 1 for header
+    responselen += wi_msg_build(radio_request, &wi_header, &mem_idx) + 1;  // add 1 for header
     response = CONECTRIC_POLL_WI_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
@@ -1263,8 +1301,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     // add header
     *packet++ = wi_header;
     for(uint8_t x=0; x<(i-1); x++) {
-      *packet++ = pyld[x];
-      puthex(pyld[x]);
+      *packet++ = wi_msg[mem_idx+x];
+      //puthex(pyld[x]);
     }
   }
   
@@ -1306,8 +1344,8 @@ call_decision_maker(void * incoming, uint8_t type)
 {
   static linkaddr_t forward_addr;
   message_recv * message = (message_recv *)incoming;
-  uint8_t * bytereq = (uint8_t *)incoming;
-  uint8_t request;
+//  uint8_t * bytereq = (uint8_t *)incoming;
+//  uint8_t request;
   uint8_t seqno, mhops, hdrlen;
   uint8_t * header;
   int i;
