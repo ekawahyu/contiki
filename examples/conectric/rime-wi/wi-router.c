@@ -233,7 +233,7 @@ static uint8_t dump_buffer = 0;
 // RHT Event Management Functions
 static void rht_event_list_init(void)
 {
-    for(uint8_t x=0; x<MAX_RHT_EVENTS; x++)
+    for(int x=0; x<MAX_RHT_EVENTS; x++)
       rht_event_list[x].status = RHT_EVENT_STATUS_UNUSED;
 }
 
@@ -245,6 +245,39 @@ static void child_sensor_table_init(void)
     child_sensors[x].status = CHILD_SENSOR_STATUS_UNUSED;
 }
 
+static void process_route_request(uint8_t * payload)
+{
+  uint16_t timestamp;
+  uint8_t num_sensors;
+  linkaddr_t child_addr;
+  
+  volatile uint8_t length, request;
+  
+  length = *payload++;  // request length
+  request = *payload++;  // request ID
+  
+  if(length - 2 >= 3)  // ensure there's a ROUTE_REQUEST payload to process
+  {
+    timestamp = (*payload++) << 8 + (*payload++);
+    num_sensors = *payload++;
+        
+    // check for num_sensors > MAX_CHILD_SENSORS
+    wi_state.num_child_sensors = (num_sensors < MAX_CHILD_SENSORS) ? num_sensors : MAX_CHILD_SENSORS;
+      
+    for(int ct=0; ct<num_sensors; ct++)
+    {
+      if(ct < MAX_CHILD_SENSORS) {
+        child_addr.u8[0] = *payload++;
+        child_addr.u8[1] = *payload++;;
+        linkaddr_copy(&child_sensors[ct].sensor_addr, &child_addr); 
+        child_sensors[ct].rssi = 0x00;
+        child_sensors[ct].batt = 0x00;
+        child_sensors[ct].device_state = 0x00;
+        child_sensors[ct].status = CHILD_SENSOR_STATUS_INUSE;
+      }
+    }
+  }
+}
 /*---------------------------------------------------------------------------*/
 // WI State Functions
 
@@ -292,22 +325,22 @@ static void wi_test()
   rht_event_list[7].hum = 0x4444;
   rht_event_list[7].status = RHT_EVENT_STATUS_INUSE;
   
-  wi_state.num_child_sensors = 0x03;
-  child_sensors[0].sensor_addr.u16 = 0x1111;
-  child_sensors[0].rssi = 0x11;
-  child_sensors[0].batt = 0x11;
-  child_sensors[0].device_state = 0x11;
-  child_sensors[0].status = CHILD_SENSOR_STATUS_INUSE;
-  child_sensors[1].sensor_addr.u16 = 0x2222;
-  child_sensors[1].rssi = 0x22;
-  child_sensors[1].batt = 0x22;
-  child_sensors[1].device_state = 0x22;
-  child_sensors[1].status = CHILD_SENSOR_STATUS_INUSE;
-  child_sensors[2].sensor_addr.u16 = 0x3333;
-  child_sensors[2].rssi = 0x33;
-  child_sensors[2].batt = 0x33;
-  child_sensors[2].device_state = 0x33;
-  child_sensors[2].status = CHILD_SENSOR_STATUS_INUSE;
+//  wi_state.num_child_sensors = 0x00;
+//  child_sensors[0].sensor_addr.u16 = 0x1111;
+//  child_sensors[0].rssi = 0x11;
+//  child_sensors[0].batt = 0x11;
+//  child_sensors[0].device_state = 0x11;
+//  child_sensors[0].status = CHILD_SENSOR_STATUS_INUSE;
+//  child_sensors[1].sensor_addr.u16 = 0x2222;
+//  child_sensors[1].rssi = 0x22;
+//  child_sensors[1].batt = 0x22;
+//  child_sensors[1].device_state = 0x22;
+//  child_sensors[1].status = CHILD_SENSOR_STATUS_INUSE;
+//  child_sensors[2].sensor_addr.u16 = 0x3333;
+//  child_sensors[2].rssi = 0x33;
+//  child_sensors[2].batt = 0x33;
+//  child_sensors[2].device_state = 0x33;
+//  child_sensors[2].status = CHILD_SENSOR_STATUS_INUSE;
 }
 
 static void wi_state_init()
@@ -1523,7 +1556,8 @@ call_decision_maker(void * incoming, uint8_t type)
     /* trickle message received */
     if (message->request == CONECTRIC_ROUTE_REQUEST)
     {
-      // handle Route Request Payload
+      // handle Route Request Payload      
+      process_route_request(message->payload);
       
       // Trigger Route Reply Send
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
