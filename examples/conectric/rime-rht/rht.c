@@ -37,25 +37,36 @@
  *         Adam Dunkels <adam@sics.se>
  */
 
+// General
+#include <stdio.h>
+
+// Contiki
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "random.h"
-#include "flash-logging.h"
 
+// Conectric Device
+#include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 
-#include <stdio.h>
+// Conectric Network
+#include "examples/conectric/conectric-messages.h"
 
-static uint8_t message[40];
+
+// RHT Network Parameters
+#define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
+#define RHT_HEADER_SIZE         2
+#define RHT_PAYLOAD_SIZE        7
+static uint8_t message[RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE];
 extern volatile uint16_t deep_sleep_requested;
 
 /* Flash Logging */
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+#define LOGGING_REF_TIME_PD ((clock_time_t)(12U * CLOCK_SECOND * 60U * 60U))
 enum
 {
   RHT_RESERVED = 0x00,    // reserved
@@ -72,6 +83,8 @@ static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(rht_abc_process, ev, data)
 {
+  static uint8_t * header = NULL;
+  static uint8_t seqno = 0;
   static unsigned int batt, temp, humid;
   static unsigned int prev_temp, prev_humid;
   static uint8_t counter;
@@ -92,29 +105,30 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  memset(message, 0, 40);
-  message[0] = 0;
-  message[1] = 0;
-  message[2] = 0xFF;
-  message[3] = 0xFF;
-  message[4] = 0x60;
-  message[5] = counter++;
-  message[6] = clock_reset_cause();
-
-  loop = CONECTRIC_BURST_NUMBER;
-
-  while(loop--) {
-    packetbuf_copyfrom(message, 7);
-    NETSTACK_MAC.on();
-    abc_send(&abc);
-
-    PROCESS_WAIT_EVENT();
-
-    if (loop)
-      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
-    else
-      deep_sleep_requested = CLOCK_SECOND;
-  }
+  // initial "I'm alive" message - DO WE STILL NEED THIS??  Not defined
+//  memset(message, 0, 40);
+//  message[0] = 0;
+//  message[1] = 0;
+//  message[2] = 0xFF;
+//  message[3] = 0xFF;
+//  message[4] = 0x60;
+//  message[5] = counter++;
+//  message[6] = clock_reset_cause();
+//
+//  loop = CONECTRIC_BURST_NUMBER;
+//
+//  while(loop--) {
+//    packetbuf_copyfrom(message, 7);
+//    NETSTACK_MAC.on();
+//    abc_send(&abc);
+//
+//    PROCESS_WAIT_EVENT();
+//
+//    if (loop)
+//      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+//    else
+//      deep_sleep_requested = CLOCK_SECOND;
+//  }
 
   while(1) {
 
@@ -142,19 +156,29 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     prev_humid = humid;
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
 
-    memset(message, 0, 40);
-    message[0] = 0;
-    message[1] = 0;
-    message[2] = 0xFF;
-    message[3] = 0xFF;
-    message[4] = 0x10;
-    message[5] = counter++;
-    message[6] = (char)(dec*10)+(char)(frac*10);
-    message[7] = (char)(humid >> 8);
-    message[8] = (char)(humid & 0xFC);
-    message[9] = (char)(temp >> 8);
-    message[10]= (char)(temp & 0xFC);
+    memset(message, 0, RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE);
+    message[0] = RHT_HEADER_SIZE;                    // Header Length
+    message[1] = seqno++;                            // Sequence number
+    message[2] = RHT_PAYLOAD_SIZE;                   // Payload Length
+    message[3] = CONECTRIC_SENSOR_BROADCAST_RHT;     // Payload Type                    
+    message[4] = (char)(dec*10)+(char)(frac*10);     // Battery
+    message[5] = (char)(temp >> 8);                  // Temp High
+    message[6] = (char)(temp & 0xFC);                 // Temp Low
+    message[7] = (char)(humid >> 8);                 // Humidity High
+    message[8] = (char)(humid & 0xFC);               // Humidity Low
 
+//    packetbuf_copyfrom(message, RHT_PAYLOAD_SIZE);
+    
+//    // build header
+//    packetbuf_hdralloc(6);    
+//    header = (uint8_t *)packetbuf_hdrptr();
+//    *header++ = 6;                /* header len */
+//    *header++ = seqno++;            /* seqno */
+//    *header++ = 0;                /* hop count */
+//    *header++ = 0;                /* number of hops */
+//    *header++ = 0xFF; /* destination addr H */
+//    *header++ = 0xFF; /* destination addr L */
+    
     loop = CONECTRIC_BURST_NUMBER;
 
     // Log data that will be sent out over the air
@@ -165,7 +189,9 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     flashlogging_write4(RIME_RHT_CMP_ID, RHT_SEND, logData);  
 
     while(loop--) {
-      packetbuf_copyfrom(message, 11);
+      
+      packetbuf_copyfrom(message, RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE);
+              
       NETSTACK_MAC.on();
       abc_send(&abc);
 
@@ -174,7 +200,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
       if (loop)
         deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
       else
-        deep_sleep_requested = 59 * CLOCK_SECOND;
+        deep_sleep_requested = RHT_REPORTING_PERIOD;
     }
 
   }

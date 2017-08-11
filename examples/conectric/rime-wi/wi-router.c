@@ -122,22 +122,23 @@ extern volatile uint16_t deep_sleep_requested;
 
 
 // WI state
-#define WI_COOLING_BIT_SHIFT 4;
-#define WI_ROOM_STATUS_BIT_SHIFT 0;
-#define WI_DOOR_STATUS_BIT_SHIFT 1;
-#define WI_OCC_STATUS_BIT_SHIFT 2;
+#define WI_ROOM_STATUS_BIT_SHIFT 7
+#define WI_HEATING_BIT_SHIFT 6
+#define WI_COOLING_BIT_SHIFT 5
+#define WI_DOOR_STATUS_BIT_SHIFT 4
+#define WI_OCC_STATUS_BIT_SHIFT 3
 
 // WI Message
-#define WI_HEADER_REQID_MSK     (uint8_t) 0x80 // 10000000b
-#define WI_HEADER_MORE_MSK      (uint8_t) 0x40 // 01000000b
-#define WI_HEADER_ERR_MSK       (uint8_t) 0x20 // 00100000b
-#define WI_HEADER_FRAG_MSK      (uint8_t) 0x0F // 00001111b
-#define WI_FRAG_SIZE            32
-uint8_t wi_last_request_id = WI_HEADER_REQID_MSK;
+#define WI_REQUEST_REQID_MSK     (uint8_t) 0x80 // 10000000b
+#define WI_REQUEST_MORE_MSK      (uint8_t) 0x40 // 01000000b
+#define WI_REQUEST_ERR_MSK       (uint8_t) 0x20 // 00100000b
+#define WI_REQUEST_FRAG_MSK      (uint8_t) 0x0F // 00001111b
+#define WI_FRAG_SIZE              32
+uint8_t wi_last_request_id = WI_REQUEST_REQID_MSK;
 
 // RHT Event Management
-#define RHT_EVENT_STATUS_UNUSED 0
-#define RHT_EVENT_STATUS_INUSE  1
+//#define RHT_EVENT_STATUS_UNUSED 0
+//#define RHT_EVENT_STATUS_INUSE  1
 //#define RHT_EVENT_STATUS_SENT   2
 
 typedef struct {
@@ -145,6 +146,7 @@ typedef struct {
    uint16_t     temp;
    uint16_t     hum;
    uint8_t      status;
+   uint8_t      seqno;
 } rht_event_t;
 
 #define MAX_RHT_EVENTS 32   // move this to config
@@ -229,20 +231,59 @@ static uint8_t dump_buffer = 0;
 #ifndef CONECTRIC_PROJECT_STRING
 #define CONECTRIC_PROJECT_STRING "unknow"
 #endif
+
+/*---------------------------------------------------------------------------*/
+/// MOVE THIS TO GENERAL Conectric Network Functions
+static uint8_t
+shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
+{
+  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
+}
+
 /*---------------------------------------------------------------------------*/
 // RHT Event Management Functions
-static void rht_event_list_init(void)
+//static void rht_event_list_init(void)
+//{
+//    for(int x=0; x<MAX_RHT_EVENTS; x++)
+//      rht_event_list[x].status = RHT_EVENT_STATUS_UNUSED;
+//}
+
+static void rht_event_list_add(linkaddr_t addr, uint8_t seqno, uint16_t temp, uint16_t hum)
 {
-    for(int x=0; x<MAX_RHT_EVENTS; x++)
-      rht_event_list[x].status = RHT_EVENT_STATUS_UNUSED;
+  uint8_t cnt = 0;
+  // determine if already recorded
+  while(cnt < wi_state.num_rht_events)
+  {
+    if(linkaddr_cmp(&rht_event_list[cnt].rht_addr, &addr) && rht_event_list[cnt].seqno == seqno)
+      return;
+    cnt++;
+  }
+  
+  if(wi_state.num_rht_events < MAX_RHT_EVENTS)
+  {
+    linkaddr_copy(&rht_event_list[wi_state.num_rht_events].rht_addr, &addr); 
+    rht_event_list[wi_state.num_rht_events].temp = temp;
+    rht_event_list[wi_state.num_rht_events].hum = hum;
+    rht_event_list[wi_state.num_rht_events].seqno = seqno;
+    wi_state.num_rht_events++;
+  }
 }
 
 /*---------------------------------------------------------------------------*/
 // Child Sensor Management Functions
-static void child_sensor_table_init(void)
+static void child_sensors_init(void)
 {
   for(int x=0; x < MAX_CHILD_SENSORS; x++)
     child_sensors[x].status = CHILD_SENSOR_STATUS_UNUSED;
+}
+
+static child_sensor_t * child_sensors_find(linkaddr_t addr)
+{
+  for(int x=0; x < MAX_CHILD_SENSORS; x++)
+    if(child_sensors[x].status == CHILD_SENSOR_STATUS_INUSE
+       && (shortaddr_cmp(&child_sensors[x].sensor_addr, &addr)))
+      return &child_sensors[x];
+  return NULL;
 }
 
 static void process_route_request(uint8_t * payload)
@@ -291,39 +332,40 @@ static void wi_test()
   wi_state.cooling += 0x01;
   wi_state.fan_speed += 0x01;
   wi_state.stage_cooling_heating += 0x01;
-  wi_state.num_rht_events = 0x08;
-  rht_event_list[0].rht_addr.u16 = 0x1111;
-  rht_event_list[0].temp = 0x1111;
-  rht_event_list[0].hum = 0x1111;
-  rht_event_list[0].status = RHT_EVENT_STATUS_INUSE;
-  rht_event_list[1].rht_addr.u16 = 0x2222;
-  rht_event_list[1].temp = 0x2222;
-  rht_event_list[1].hum = 0x2222;
-  rht_event_list[1].status = RHT_EVENT_STATUS_INUSE;
-  rht_event_list[2].rht_addr.u16 = 0x3333;
-  rht_event_list[2].temp = 0x3333;
-  rht_event_list[2].hum = 0x3333;
-  rht_event_list[2].status = RHT_EVENT_STATUS_INUSE;
-  rht_event_list[3].rht_addr.u16 = 0x4444;
-  rht_event_list[3].temp = 0x4444;
-  rht_event_list[3].hum = 0x4444;
-  rht_event_list[3].status = RHT_EVENT_STATUS_INUSE;
-  rht_event_list[4].rht_addr.u16 = 0x1111;
-  rht_event_list[4].temp = 0x1111;
-  rht_event_list[4].hum = 0x1111;
-  rht_event_list[4].status = RHT_EVENT_STATUS_INUSE;
-  rht_event_list[5].rht_addr.u16 = 0x2222;
-  rht_event_list[5].temp = 0x2222;
-  rht_event_list[5].hum = 0x2222;
-  rht_event_list[5].status = RHT_EVENT_STATUS_INUSE;
-  rht_event_list[6].rht_addr.u16 = 0x3333;
-  rht_event_list[6].temp = 0x3333;
-  rht_event_list[6].hum = 0x3333;
-  rht_event_list[6].status = RHT_EVENT_STATUS_INUSE;
-  rht_event_list[7].rht_addr.u16 = 0x4444;
-  rht_event_list[7].temp = 0x4444;
-  rht_event_list[7].hum = 0x4444;
-  rht_event_list[7].status = RHT_EVENT_STATUS_INUSE;
+  
+//  wi_state.num_rht_events = 0x08;
+//  rht_event_list[0].rht_addr.u16 = 0x1111;
+//  rht_event_list[0].temp = 0x1111;
+//  rht_event_list[0].hum = 0x1111;
+//  rht_event_list[0].status = RHT_EVENT_STATUS_INUSE;
+//  rht_event_list[1].rht_addr.u16 = 0x2222;
+//  rht_event_list[1].temp = 0x2222;
+//  rht_event_list[1].hum = 0x2222;
+//  rht_event_list[1].status = RHT_EVENT_STATUS_INUSE;
+//  rht_event_list[2].rht_addr.u16 = 0x3333;
+//  rht_event_list[2].temp = 0x3333;
+//  rht_event_list[2].hum = 0x3333;
+//  rht_event_list[2].status = RHT_EVENT_STATUS_INUSE;
+//  rht_event_list[3].rht_addr.u16 = 0x4444;
+//  rht_event_list[3].temp = 0x4444;
+//  rht_event_list[3].hum = 0x4444;
+//  rht_event_list[3].status = RHT_EVENT_STATUS_INUSE;
+//  rht_event_list[4].rht_addr.u16 = 0x1111;
+//  rht_event_list[4].temp = 0x1111;
+//  rht_event_list[4].hum = 0x1111;
+//  rht_event_list[4].status = RHT_EVENT_STATUS_INUSE;
+//  rht_event_list[5].rht_addr.u16 = 0x2222;
+//  rht_event_list[5].temp = 0x2222;
+//  rht_event_list[5].hum = 0x2222;
+//  rht_event_list[5].status = RHT_EVENT_STATUS_INUSE;
+//  rht_event_list[6].rht_addr.u16 = 0x3333;
+//  rht_event_list[6].temp = 0x3333;
+//  rht_event_list[6].hum = 0x3333;
+//  rht_event_list[6].status = RHT_EVENT_STATUS_INUSE;
+//  rht_event_list[7].rht_addr.u16 = 0x4444;
+//  rht_event_list[7].temp = 0x4444;
+//  rht_event_list[7].hum = 0x4444;
+//  rht_event_list[7].status = RHT_EVENT_STATUS_INUSE;
   
 //  wi_state.num_child_sensors = 0x00;
 //  child_sensors[0].sensor_addr.u16 = 0x1111;
@@ -365,7 +407,7 @@ static void wi_state_init()
  // save WI State to mem (and update flash pointers?)
 static void wi_state_write()
 {
-  uint8_t size, cnt;
+  uint8_t size, cnt, num_evts;
   uint8_t * pyld;
  
   // zero out previous message
@@ -385,20 +427,33 @@ static void wi_state_write()
   *pyld++ = wi_state.fan_speed;
   *pyld++ = wi_state.stage_cooling_heating;
   *pyld++ = wi_state.num_rht_events;
-  for(cnt=0; cnt<MAX_RHT_EVENTS; cnt++)
+//  for(cnt=0; cnt<MAX_RHT_EVENTS; cnt++)
+//  {
+//    if(rht_event_list[cnt].status == RHT_EVENT_STATUS_INUSE)
+//    {
+//      *pyld++ = rht_event_list[cnt].rht_addr.u8[0];
+//      *pyld++ = rht_event_list[cnt].rht_addr.u8[1];
+//      *pyld++ = (uint8_t)(rht_event_list[cnt].temp >> 8);
+//      *pyld++ = (uint8_t)(rht_event_list[cnt].temp);
+//      *pyld++ = (uint8_t)(rht_event_list[cnt].hum >> 8);
+//      *pyld++ = (uint8_t)(rht_event_list[cnt].hum);
+//      size += RHT_EVENT_SIZE;
+//      rht_event_list[cnt].status = RHT_EVENT_STATUS_UNUSED;
+//    }
+//  }
+  num_evts = wi_state.num_rht_events;
+  for(cnt=0; cnt<num_evts; cnt++)
   {
-    if(rht_event_list[cnt].status == RHT_EVENT_STATUS_INUSE)
-    {
-      *pyld++ = rht_event_list[cnt].rht_addr.u8[0];
-      *pyld++ = rht_event_list[cnt].rht_addr.u8[1];
-      *pyld++ = (uint8_t)(rht_event_list[cnt].temp >> 8);
-      *pyld++ = (uint8_t)(rht_event_list[cnt].temp);
-      *pyld++ = (uint8_t)(rht_event_list[cnt].hum >> 8);
-      *pyld++ = (uint8_t)(rht_event_list[cnt].hum);
-      size += RHT_EVENT_SIZE;
-      rht_event_list[cnt].status = RHT_EVENT_STATUS_UNUSED;
-    }
+    *pyld++ = rht_event_list[cnt].rht_addr.u8[0];
+    *pyld++ = rht_event_list[cnt].rht_addr.u8[1];
+    *pyld++ = (uint8_t)(rht_event_list[cnt].temp >> 8);
+    *pyld++ = (uint8_t)(rht_event_list[cnt].temp);
+    *pyld++ = (uint8_t)(rht_event_list[cnt].hum >> 8);
+    *pyld++ = (uint8_t)(rht_event_list[cnt].hum);
+    size += RHT_EVENT_SIZE;
+    wi_state.num_rht_events--;
   }
+
   *pyld++ = wi_state.num_child_sensors;
   for(cnt=0; cnt<MAX_CHILD_SENSORS; cnt++)
     {
@@ -428,33 +483,33 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
   *mem_idx = 0;
   
   uint8_t req_header = *wi_request++;
-  uint8_t fragment = req_header & WI_HEADER_FRAG_MSK;
+  uint8_t fragment = req_header & WI_REQUEST_FRAG_MSK;
   uint8_t total_size, size;
   
   // response header
   *header = req_header;
   
   // handle request for saved data
-  if((uint8_t)(req_header & WI_HEADER_REQID_MSK) == wi_last_request_id)
+  if((uint8_t)(req_header & WI_REQUEST_REQID_MSK) == wi_last_request_id)
   {
      total_size = wi_msg[0];
      if(fragment * WI_FRAG_SIZE > total_size)  // requested data out of bounds
      {  
        // ERROR
-       *header |= WI_HEADER_ERR_MSK;
+       *header |= WI_REQUEST_ERR_MSK;
        size = 0;
      }
      else  // send in 32 byte chunks
      {
        size = (total_size - (fragment * WI_FRAG_SIZE) < WI_FRAG_SIZE) ? (total_size - (fragment * WI_FRAG_SIZE)) : WI_FRAG_SIZE;
        if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
-          *header |= WI_HEADER_MORE_MSK;
+          *header |= WI_REQUEST_MORE_MSK;
        *mem_idx = fragment * WI_FRAG_SIZE+1;
      } 
   }
   else
   {    
-    wi_last_request_id ^= WI_HEADER_REQID_MSK;  // toggle ID for re-request or follow up reads
+    wi_last_request_id ^= WI_REQUEST_REQID_MSK;  // toggle ID for re-request or follow up reads
     
     // test simulate wi state
     wi_test();  // REMOVE THIS
@@ -465,7 +520,7 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
     total_size = wi_msg[0];
     size = (total_size < WI_FRAG_SIZE) ? total_size : WI_FRAG_SIZE;
     if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
-      *header |= WI_HEADER_MORE_MSK;
+      *header |= WI_REQUEST_MORE_MSK;
   }
   return size; 
 }
@@ -510,9 +565,10 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   message->length = message->message[hdrlen];
 
   /* Decoding request byte */
-  dataptr = message->payload;
-  message->request = *++dataptr;
-
+//  dataptr = message->payload;
+//  message->request = *++dataptr;
+  message->request = message->payload[1];
+    
   return packetlen;
 }
 /*---------------------------------------------------------------------------*/
@@ -551,13 +607,7 @@ dump_payload(void)
 
   putstring("\n");
 }
-/*---------------------------------------------------------------------------*/
-/// MOVE THIS TO GENERAL Conectric Network Functions
-static uint8_t
-shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
-{
-  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
-}
+
 /*---------------------------------------------------------------------------*/
 PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
@@ -596,21 +646,22 @@ static void
 abc_recv(struct abc_conn *c)
 {
   packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
+  
+    /* TODO only the sink should dump packetbuf,
+     * but routers have to store sensors data
+     */
+//    if (dump_buffer)
+//      dump_packetbuf();
+//    else
+//      dump_payload();
+//
+//    PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
+//        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+//        abc_message_recv.sender.u8[0], abc_message_recv.sender.u8[1],
+//        abc_message_recv.rssi, abc_message_recv.timestamp);
 
-  /* TODO only the sink should dump packetbuf,
-   * but routers have to store sensors data
-   */
-  if (dump_buffer)
-    dump_packetbuf();
-  else
-    dump_payload();
-
-  PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
-      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      abc_message_recv.sender.u8[0], abc_message_recv.sender.u8[1],
-      abc_message_recv.rssi, abc_message_recv.timestamp);
-
-  call_decision_maker(&abc_message_recv, MESSAGE_ABC_RECV);
+    call_decision_maker(&abc_message_recv, MESSAGE_ABC_RECV);
+  
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -699,8 +750,8 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
   // didn't want the overhead of another process, 
   // so initializing here as it relates to sensors that report through abc
-  child_sensor_table_init();
-  rht_event_list_init();
+  child_sensors_init();
+  //rht_event_list_init();
   wi_state_init();
   
   abc_open(&abc, 128, &abc_call);
@@ -1277,7 +1328,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  uint8_t chunk_number = 0;
 //  uint8_t chunk_size = 0;
   uint8_t i;
-  uint8_t wi_header = 0;
+  uint8_t wi_request = 0;
   
 //  reqlen = *radio_request++;
   *radio_request++;
@@ -1314,7 +1365,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  }
   if (req == CONECTRIC_POLL_WI) {
     // Update length based on WI State structure
-    responselen += wi_msg_build(radio_request, &wi_header, &mem_idx) + 1;  // add 1 for header
+    responselen += wi_msg_build(radio_request, &wi_request, &mem_idx) + 1;  // add 1 for header
     response = CONECTRIC_POLL_WI_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
@@ -1332,7 +1383,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   
   if (req == CONECTRIC_POLL_WI) {
     // add header
-    *packet++ = wi_header;
+    *packet++ = wi_request;
     for(uint8_t x=0; x<(i-1); x++) {
       *packet++ = wi_msg[mem_idx+x];
       //puthex(pyld[x]);
@@ -1375,13 +1426,14 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 static linkaddr_t *
 call_decision_maker(void * incoming, uint8_t type)
 {
-  static linkaddr_t forward_addr;
+  static linkaddr_t forward_addr, source_addr;
   message_recv * message = (message_recv *)incoming;
 //  uint8_t * bytereq = (uint8_t *)incoming;
 //  uint8_t request;
   uint8_t seqno, mhops, hdrlen;
   uint8_t * header;
   int i;
+  static child_sensor_t * sensor_list_entry;
 
   /*******************************************************/
   /***** INTERPRETING COMMAND LINES FROM SERIAL PORT *****/
@@ -1543,15 +1595,39 @@ call_decision_maker(void * incoming, uint8_t type)
     return &forward_addr;
   }
 
+  /* Sensor message received */
+  else if(type == MESSAGE_ABC_RECV)
+  {
+    
+    /* TODO store sensors data as a ring buffer with timestamp */
+
+    if(message->request == CONECTRIC_SENSOR_BROADCAST_RHT)
+    {
+        source_addr = message->sender;
+        
+        sensor_list_entry = child_sensors_find(source_addr);
+        if(sensor_list_entry != NULL)
+        {
+          static uint16_t temp, hum;
+          
+          sensor_list_entry->rssi = (uint8_t)(message->rssi >> 8);
+          sensor_list_entry->batt =  message->payload[2];
+          // update device state
+          //     sensor_list_entry->device_state  
+
+          seqno = message->seqno;
+          temp = (uint16_t)((message->payload[3] << 8) + message->payload[4]);
+          hum = (uint16_t)((message->payload[5] << 8) + message->payload[6]);
+          rht_event_list_add(message->sender, seqno, temp, hum);
+ 
+        }
+    } 
+  }
+  
   /*******************************************************/
   /***** ALL THE REST ARE HANDLED HERE *******************/
   /*******************************************************/
   else {
-
-    /* Sensor message received */
-    /* TODO store sensors data as a ring buffer with timestamp */
-
-    
     
     /* trickle message received */
     if (message->request == CONECTRIC_ROUTE_REQUEST)
