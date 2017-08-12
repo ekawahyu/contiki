@@ -151,7 +151,6 @@ typedef struct {
 
 #define MAX_RHT_EVENTS 32   // move this to config
 #define RHT_EVENT_SIZE 6   // move this to config
-#define CONECTRIC_BURST_NUMBER 5  // move this to common config file
 //static uint8_t rht_old_start;
 //static uint8_t rht_new_start;
 //static uint8_t rht_end;
@@ -161,12 +160,17 @@ static rht_event_t rht_event_list[MAX_RHT_EVENTS];
 #define CHILD_SENSOR_STATUS_UNUSED 0
 #define CHILD_SENSOR_STATUS_INUSE  1
 
+// for tracking sensor device_state - link health
+#define CONECTRIC_BURST_NUMBER 5  // move this to common config file
+#define DEVICE_STATE_REPORT_HIST 5 // number of collections of bursts to avg over
+
 typedef struct {
   linkaddr_t    sensor_addr;
   uint8_t       rssi;
   uint8_t       batt;
   uint8_t       device_state;
   uint8_t       status;
+  uint8_t       seqno_cnt;  // 4 bits seq no, 4 bits cnt of bursts received
 } child_sensor_t;
 
 #define MAX_CHILD_SENSORS  10   // move this to config
@@ -314,8 +318,9 @@ static void process_route_request(uint8_t * payload)
         linkaddr_copy(&child_sensors[ct].sensor_addr, &child_addr); 
         child_sensors[ct].rssi = 0x00;
         child_sensors[ct].batt = 0x00;
-        child_sensors[ct].device_state = 0x00;
+        child_sensors[ct].device_state = (CONECTRIC_BURST_NUMBER << 5);  // initialize to no missed packets
         child_sensors[ct].status = CHILD_SENSOR_STATUS_INUSE;
+        child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
       }
     }
   }
@@ -1612,10 +1617,21 @@ call_decision_maker(void * incoming, uint8_t type)
           
           sensor_list_entry->rssi = (uint8_t)(message->rssi >> 8);
           sensor_list_entry->batt =  message->payload[2];
-          // update device state
-          //     sensor_list_entry->device_state  
 
           seqno = message->seqno;
+          
+          // keep track of burst count for link status (device_state)
+          if((seqno & 0x0F) == (uint8_t)((sensor_list_entry->seqno_cnt & 0xF0) >> 4))
+            sensor_list_entry->seqno_cnt++;
+          else // new burst
+          {
+            uint8_t total;
+            // add previous burst data to device_state
+            total = ((sensor_list_entry->device_state & 0xE0) >> 5) * (DEVICE_STATE_REPORT_HIST-1);
+            sensor_list_entry->device_state &= ((total + (sensor_list_entry->seqno_cnt & 0x0F)) / DEVICE_STATE_REPORT_HIST) << 5;
+            sensor_list_entry->seqno_cnt = ((seqno & 0x0F) << 4) + 1;      
+          }
+          
           temp = (uint16_t)((message->payload[3] << 8) + message->payload[4]);
           hum = (uint16_t)((message->payload[5] << 8) + message->payload[6]);
           rht_event_list_add(message->sender, seqno, temp, hum);
