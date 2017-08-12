@@ -161,8 +161,14 @@ static rht_event_t rht_event_list[MAX_RHT_EVENTS];
 #define CHILD_SENSOR_STATUS_INUSE  1
 
 // for tracking sensor device_state - link health
+#define DEVICE_STATE_LINK_MSK 0xE0
+#define DEVICE_STATE_CONN_MSK 0x03
 #define CONECTRIC_BURST_NUMBER 5  // move this to common config file
 #define DEVICE_STATE_REPORT_HIST 5 // number of collections of bursts to avg over
+#define DEVICE_STATE_STABLE 3
+#define DEVICE_STATE_UNSTABLE 2
+#define DEVICE_STATE_DISCONNECT 1
+#define DEVICE_STATE_UNKNOWN 0
 
 typedef struct {
   linkaddr_t    sensor_addr;
@@ -318,7 +324,7 @@ static void process_route_request(uint8_t * payload)
         linkaddr_copy(&child_sensors[ct].sensor_addr, &child_addr); 
         child_sensors[ct].rssi = 0x00;
         child_sensors[ct].batt = 0x00;
-        child_sensors[ct].device_state = (CONECTRIC_BURST_NUMBER << 5);  // initialize to no missed packets
+        child_sensors[ct].device_state = (CONECTRIC_BURST_NUMBER << 5) + DEVICE_STATE_UNKNOWN;  // initialize to no missed packets
         child_sensors[ct].status = CHILD_SENSOR_STATUS_INUSE;
         child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
       }
@@ -1620,15 +1626,21 @@ call_decision_maker(void * incoming, uint8_t type)
 
           seqno = message->seqno;
           
+          // reset supervisor timer
+          
           // keep track of burst count for link status (device_state)
           if((seqno & 0x0F) == (uint8_t)((sensor_list_entry->seqno_cnt & 0xF0) >> 4))
+          {
             sensor_list_entry->seqno_cnt++;
+            // received multiple bursts, set state to stable connection
+            sensor_list_entry->device_state = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) + DEVICE_STATE_STABLE);
+          }
           else // new burst
           {
             uint8_t total;
             // add previous burst data to device_state
-            total = ((sensor_list_entry->device_state & 0xE0) >> 5) * (DEVICE_STATE_REPORT_HIST-1);
-            sensor_list_entry->device_state &= ((total + (sensor_list_entry->seqno_cnt & 0x0F)) / DEVICE_STATE_REPORT_HIST) << 5;
+            total = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) >> 5) * (DEVICE_STATE_REPORT_HIST-1);
+            sensor_list_entry->device_state = (sensor_list_entry->device_state & 0x1F) + (uint8_t)(((total + (sensor_list_entry->seqno_cnt & 0x0F)) / DEVICE_STATE_REPORT_HIST) << 5);
             sensor_list_entry->seqno_cnt = ((seqno & 0x0F) << 4) + 1;      
           }
           
