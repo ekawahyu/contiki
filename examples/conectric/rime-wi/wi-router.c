@@ -151,6 +151,7 @@ typedef struct {
 
 #define MAX_RHT_EVENTS 32   // move this to config
 #define RHT_EVENT_SIZE 6   // move this to config
+#define CONECTRIC_BURST_NUMBER 5  // move this to common config file
 //static uint8_t rht_old_start;
 //static uint8_t rht_new_start;
 //static uint8_t rht_end;
@@ -465,7 +466,6 @@ static void wi_state_write()
         *pyld++ = child_sensors[cnt].batt;
         *pyld++ = child_sensors[cnt].device_state;
         size += CHILD_SENSOR_SIZE;
-        child_sensors[cnt].status = CHILD_SENSOR_STATUS_UNUSED;
       }
   }
   // write size 
