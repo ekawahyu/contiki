@@ -5,39 +5,25 @@
 extern "C" {
 #endif
 
-  // Conectric Network Message Types
-enum {
-  CONECTRIC_ATTR_NONE,          
-  /* commissioning messages */  
-  CONECTRIC_ROUTE_REQUEST,      
-  CONECTRIC_ROUTE_REPLY,        
-  CONECTRIC_ROUTE_REQUEST_BY_SN,
-  // CONECTRIC_TIME_SYNC,
-  /* reporting messages */
-  CONECTRIC_SENSOR_BROADCAST_RHT,
-  CONECTRIC_SENSOR_BROADCAST_OC,
-  CONECTRIC_SENSOR_BROADCAST_SW,
-  CONECTRIC_SUPERVISORY_REPORT,
-  CONECTRIC_SENSOR_UPDATE,
-  CONECTRIC_SET_STATE,
-  CONECTRIC_POLL_RS485,
-  CONECTRIC_POLL_RS485_REPLY,
-  CONECTRIC_POLL_RS485_CHUNK,
-  CONECTRIC_POLL_RS485_CHUNK_REPLY,
-  CONECTRIC_POLL_WI,
-  CONECTRIC_POLL_WI_REPLY,  
-  
-//  CONECTRIC_SET_LONG_MAC,
-//  CONECTRIC_SET_LONG_MAC_REPLY,
-//  CONECTRIC_GET_LONG_MAC,
-//  CONECTRIC_GET_LONG_MAC_REPLY,
-//  CONECTRIC_POLL_NEIGHBORS,
-//  CONECTRIC_POLL_NEIGHBORS_REPLY,
-//  CONECTRIC_MULTIHOP_PING,
-//  CONECTRIC_MULTIHOP_PING_REPLY,
-  CONECTRIC_ATTR_MAX
-};
-
+// Conectric Network Message Types
+//    Commissioning  
+#define CONECTRIC_ROUTE_REQUEST                 0x01
+#define CONECTRIC_ROUTE_REQUEST_BY_SN           0x02
+#define CONECTRIC_ROUTE_REPLY                   0x03
+//    Reporting
+#define CONECTRIC_SENSOR_BROADCAST_RHT          0x30
+#define CONECTRIC_SENSOR_BROADCAST_SW           0x31
+#define CONECTRIC_SENSOR_BROADCAST_OC           0x32
+#define CONECTRIC_SUPERVISORY_REPORT            0x33
+#define CONECTRIC_SENSOR_UPDATE                 0x34
+#define CONECTRIC_SET_STATE                     0x35
+#define CONECTRIC_POLL_RS485                    0x36
+#define CONECTRIC_POLL_RS485_REPLY              0x37
+#define CONECTRIC_POLL_RS485_CHUNK              0x38
+#define CONECTRIC_POLL_RS485_CHUNK_REPLY        0x39
+#define CONECTRIC_POLL_WI                       0x3A
+#define CONECTRIC_POLL_WI_REPLY                 0x3B
+    
 // Generic Message Structure
 typedef struct {
   clock_time_t  timestamp;
