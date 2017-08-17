@@ -298,12 +298,35 @@ static child_sensor_t * child_sensors_find(linkaddr_t addr)
   return NULL;
 }
 
+static void child_sensor_restore()
+{
+  uint8_t * state;
+  uint8_t size;
+  linkaddr_t child_addr;
+  
+  size = flashstate_read(FLASH_STATE_WI_SENSOR_LIST, state);
+  
+  wi_state.num_child_sensors = (uint8_t)(size >> 1);  // 2 bytes per child
+      
+  for(int ct = 0; ct < wi_state.num_child_sensors; ct++)
+  {
+    child_addr.u8[0] = *state++;
+    child_addr.u8[1] = *state++;;
+    linkaddr_copy(&child_sensors[ct].sensor_addr, &child_addr); 
+    child_sensors[ct].rssi = 0x00;
+    child_sensors[ct].batt = 0x00;
+    child_sensors[ct].device_state = (CONECTRIC_BURST_NUMBER << 5) + DEVICE_STATE_UNKNOWN;  // initialize to no missed packets
+    child_sensors[ct].status = CHILD_SENSOR_STATUS_INUSE;
+    child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
+  }
+}
+
 static void process_route_request(uint8_t * payload)
 {
   uint16_t timestamp;
   uint8_t num_sensors;
   linkaddr_t child_addr;
-  
+  uint8_t * sensor_list;
   volatile uint8_t length, request;
   
   length = *payload++;  // request length
@@ -316,7 +339,10 @@ static void process_route_request(uint8_t * payload)
         
     // check for num_sensors > MAX_CHILD_SENSORS
     wi_state.num_child_sensors = (num_sensors < MAX_CHILD_SENSORS) ? num_sensors : MAX_CHILD_SENSORS;
-      
+    
+    // save pointer to where addresses are located in payload
+    sensor_list = payload;
+    
     for(int ct=0; ct<num_sensors; ct++)
     {
       if(ct < MAX_CHILD_SENSORS) {
@@ -330,6 +356,9 @@ static void process_route_request(uint8_t * payload)
         child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
       }
     }
+    
+    // save state in Flash
+    flashstate_write(FLASH_STATE_WI_SENSOR_LIST, sensor_list, (uint8_t)(wi_state.num_child_sensors >> 1));
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -629,7 +658,7 @@ PROCESS(example_multihop_process, "ConMHop");
 //PROCESS(modbus_in_process, "ModbusIn");
 //PROCESS(modbus_out_process, "ModbusOut");
 PROCESS(modbus_wi_test, "WITest");
-PROCESS(flash_log_process, "FlashLog");
+PROCESS(flash_process, "FlashLog");
 //#if BUTTON_SENSOR_ON
 //PROCESS(buttons_test_process, "ButtonTest");
 //AUTOSTART_PROCESSES(
@@ -640,7 +669,7 @@ PROCESS(flash_log_process, "FlashLog");
 ////    &modbus_in_process,
 ////    &modbus_out_process,
 //    &modbus_wi_test,
-//    &flash_log_process,
+//    &flash_process,
 //    &buttons_test_process);
 //#else
 AUTOSTART_PROCESSES(
@@ -651,7 +680,7 @@ AUTOSTART_PROCESSES(
 //    &modbus_in_process,
 //    &modbus_out_process,
     &modbus_wi_test,
-    &flash_log_process);
+    &flash_process);
 //#endif
 
 /*---------------------------------------------------------------------------*/
@@ -1256,31 +1285,23 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(flash_log_process, ev, data)
+PROCESS_THREAD(flash_process, ev, data)
 {
   static struct etimer et;
 
   PROCESS_BEGIN();
 
   flashlogging_init();
-  // initialize flash state - BMB: this should be part of the main, not specific to logging but not sure where to put it
   flashstate_init();
 
+  child_sensor_restore();
+  
   while (1)
   {
-    // REMOVE BMB
-    static uint8_t testwrt[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10};
-    static uint8_t testd[47] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20,0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30,0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40,0x41};
-
-    //    etimer_set(&et, LOGGING_REF_TIME_PD);
-    etimer_set(&et, CLOCK_SECOND*1); //BMB
+    etimer_set(&et, LOGGING_REF_TIME_PD);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
-    
-    // test state write
-    flashstate_write(FLASH_STATE_WI_SENSOR_LIST, testwrt, 10);
-    flashstate_write(FLASH_STATE_TEST, testd, 41);
   }
 
   PROCESS_END();

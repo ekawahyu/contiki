@@ -29,7 +29,6 @@ enum
 {
   FLASH_STATE_PG_HEADER = 0x01,
   FLASH_STATE_WI_SENSOR_LIST = 0x02,
-  FLASH_STATE_TEST = 0x03,  // remove BMB
 };
 
 void flashstate_init();

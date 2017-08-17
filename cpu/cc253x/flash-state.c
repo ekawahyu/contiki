@@ -166,8 +166,36 @@ void flashstate_write(uint8_t stateId, uint8_t *data, uint8_t size)
 }
 /*---------------------------------------------------------------------------*/
 // Read state from Flash
-// Return size of state information
+// Return: size of state information (0 means not found)
 uint8_t flashstate_read(uint8_t stateId, uint8_t *data)
 {
-//      flash_read(FLASH_PAGE(flash_logging_addr), FLASH_PAGE_OFFSET(flash_logging_addr), read_buf, FLASH_WRITE_SIZE_MIN);
+  struct state_header hdr;
+  uint32_t flash_addr;
+
+  // search for existing valid entry
+  flash_addr = pg_addr_in_use + HDR_SIZE;
+  
+  while (flash_addr < (pg_addr_in_use + FLASH_PAGE_SIZE))
+  {
+    flash_read(FLASH_PAGE(flash_addr), FLASH_PAGE_OFFSET(flash_addr), (uint8_t *)&hdr, HDR_SIZE);
+    if(hdr.valid == HDR_VALID && hdr.id == stateId)
+    {
+      // found existing valid entry, read into buffer
+      flash_read(FLASH_PAGE(flash_addr), FLASH_PAGE_OFFSET(flash_addr), read_buf, FLASH_READ_SIZE(hdr.size));
+      
+      // set return pointer
+      data = read_buf;
+      return hdr.size;     
+    } 
+    else if (hdr.valid != HDR_UNUSED) 
+    {
+      flash_addr += HDR_SIZE + FLASH_READ_SIZE(hdr.size);
+    }
+    else
+    {
+      // unused, check to ensure that writing state does not take us beyond the page boundary
+      break;  // hdr unused (free space), exit and write
+    }
+  }
+  return 0;
 }
