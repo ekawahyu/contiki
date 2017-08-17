@@ -65,6 +65,13 @@ extern "C" {
 
 #define CONECTRIC_BURST_NUMBER                5
 
+/* Last page of Flash in code Bank 7 contains Flash Lock Bits */
+//#define FLASH_LOGGING_START                   0x20000  // Code bank 4
+//#define FLASH_LOGGING_END                     0x3F000  // Code bank 7 - 2 pages from end
+
+// supports a single page of state information (cyclical write)
+//#define FLASH_STATE_PG_ADDR                   0x3F000  // 2nd to last page of code bank 7 
+  
 #ifdef __cplusplus
 }
 #endif

@@ -50,6 +50,7 @@
 
 // Conectric Device
 #include "flash-logging.h"
+#include "flash-state.h"
 //#include "dev/button-sensor.h"
 #include "dev/rs485-arch.h"
 #include "dev/serial-line.h"  // REMOVE AFTER DEBUG
@@ -399,6 +400,7 @@ static void wi_test()
 
 static void wi_state_init()
 {
+  // random default values added for test purposes - set back to 00
   wi_state.timestamp = 0x0000;
   wi_state.onboard_temp = 0x0102;
   wi_state.setpoint_temp = 0x0304;
@@ -768,6 +770,8 @@ PROCESS_THREAD(example_abc_process, ev, data)
   abc_open(&abc, 128, &abc_call);
 
   while(1) {
+    // manage timers for child devices - supervisory timeout
+    
     PROCESS_YIELD();
   }
 
@@ -1259,13 +1263,24 @@ PROCESS_THREAD(flash_log_process, ev, data)
   PROCESS_BEGIN();
 
   flashlogging_init();
+  // initialize flash state - BMB: this should be part of the main, not specific to logging but not sure where to put it
+  flashstate_init();
 
   while (1)
   {
-    etimer_set(&et, LOGGING_REF_TIME_PD);
+    // REMOVE BMB
+    static uint8_t testwrt[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10};
+    static uint8_t testd[47] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20,0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30,0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40,0x41};
+
+    //    etimer_set(&et, LOGGING_REF_TIME_PD);
+    etimer_set(&et, CLOCK_SECOND*1); //BMB
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+    
+    // test state write
+    flashstate_write(FLASH_STATE_WI_SENSOR_LIST, testwrt, 10);
+    flashstate_write(FLASH_STATE_TEST, testd, 41);
   }
 
   PROCESS_END();
