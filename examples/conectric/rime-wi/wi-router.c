@@ -121,6 +121,8 @@ extern volatile uint16_t deep_sleep_requested;
 // Trickle state
 //static uint16_t rank = 255;
 
+// device general
+#define DEVICE_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 30U)) // BMB
 
 // WI state
 #define WI_ROOM_STATUS_BIT_SHIFT 7
@@ -165,7 +167,7 @@ static rht_event_t rht_event_list[MAX_RHT_EVENTS];
 #define DEVICE_STATE_LINK_MSK 0xE0
 #define DEVICE_STATE_CONN_MSK 0x03
 #define CONECTRIC_BURST_NUMBER 5  // move this to common config file
-#define DEVICE_STATE_REPORT_HIST 5 // number of collections of bursts to avg over
+//#define DEVICE_STATE_REPORT_HIST 2 // number of collections of bursts to avg over (more than 2 will not average up over time because of divide)
 #define DEVICE_STATE_STABLE 3
 #define DEVICE_STATE_UNSTABLE 2
 #define DEVICE_STATE_DISCONNECT 1
@@ -178,6 +180,7 @@ typedef struct {
   uint8_t       device_state;
   uint8_t       status;
   uint8_t       seqno_cnt;  // 4 bits seq no, 4 bits cnt of bursts received
+  struct ctimer sup_timer;
 } child_sensor_t;
 
 #define MAX_CHILD_SENSORS  10   // move this to config
@@ -245,6 +248,39 @@ static uint8_t dump_buffer = 0;
 #endif
 
 /*---------------------------------------------------------------------------*/
+PROCESS(example_abc_process, "ConBurst");
+PROCESS(example_trickle_process, "ConTB");
+PROCESS(example_multihop_process, "ConMHop");
+//PROCESS(serial_in_process, "SerialIn");
+//PROCESS(modbus_in_process, "ModbusIn");
+//PROCESS(modbus_out_process, "ModbusOut");
+PROCESS(modbus_wi_test, "WITest");
+PROCESS(flash_process, "FlashLog");
+//#if BUTTON_SENSOR_ON
+//PROCESS(buttons_test_process, "ButtonTest");
+//AUTOSTART_PROCESSES(
+//    &example_abc_process,
+//    &example_trickle_process,
+//    &example_multihop_process,
+////    &serial_in_process,
+////    &modbus_in_process,
+////    &modbus_out_process,
+//    &modbus_wi_test,
+//    &flash_process,
+//    &buttons_test_process);
+//#else
+AUTOSTART_PROCESSES(
+    &example_abc_process,
+    &example_trickle_process,
+    &example_multihop_process,
+//    &serial_in_process,
+//    &modbus_in_process,
+//    &modbus_out_process,
+    &modbus_wi_test,
+    &flash_process);
+//#endif
+
+/*---------------------------------------------------------------------------*/
 /// MOVE THIS TO GENERAL Conectric Network Functions
 static uint8_t
 shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
@@ -283,6 +319,15 @@ static void rht_event_list_add(linkaddr_t addr, uint8_t seqno, uint16_t temp, ui
 
 /*---------------------------------------------------------------------------*/
 // Child Sensor Management Functions
+
+// Manage sensor Supervisory timeout
+static void
+sensor_timeout(void * arg)
+{
+  /* Wake up consumer process */
+  process_poll(&example_abc_process);
+}
+
 static void child_sensors_init(void)
 {
   for(int x=0; x < MAX_CHILD_SENSORS; x++)
@@ -303,6 +348,7 @@ static void child_sensor_restore()
   uint8_t * state;
   uint8_t size;
   linkaddr_t child_addr;
+  uint8_t ptr;  // parameter to timeout function
   
   size = flashstate_read(FLASH_STATE_WI_SENSOR_LIST, state);
   
@@ -318,6 +364,7 @@ static void child_sensor_restore()
     child_sensors[ct].device_state = (CONECTRIC_BURST_NUMBER << 5) + DEVICE_STATE_UNKNOWN;  // initialize to no missed packets
     child_sensors[ct].status = CHILD_SENSOR_STATUS_INUSE;
     child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
+    ctimer_set(&child_sensors[ct].sup_timer, DEVICE_SUP_TIMEOUT, sensor_timeout, &ptr); // start supervisory timer
   }
 }
 
@@ -343,9 +390,9 @@ static void process_route_request(uint8_t * payload)
     // save pointer to where addresses are located in payload
     sensor_list = payload;
     
-    for(int ct=0; ct<num_sensors; ct++)
+    for(int ct=0; ct<MAX_CHILD_SENSORS; ct++)
     {
-      if(ct < MAX_CHILD_SENSORS) {
+      if(ct < num_sensors) {
         child_addr.u8[0] = *payload++;
         child_addr.u8[1] = *payload++;;
         linkaddr_copy(&child_sensors[ct].sensor_addr, &child_addr); 
@@ -354,6 +401,11 @@ static void process_route_request(uint8_t * payload)
         child_sensors[ct].device_state = (CONECTRIC_BURST_NUMBER << 5) + DEVICE_STATE_UNKNOWN;  // initialize to no missed packets
         child_sensors[ct].status = CHILD_SENSOR_STATUS_INUSE;
         child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
+        ctimer_set(&child_sensors[ct].sup_timer, DEVICE_SUP_TIMEOUT, sensor_timeout, &timestamp); // start supervisory timer
+      }
+      else // clear unused entries
+      {
+        child_sensors[ct].status = CHILD_SENSOR_STATUS_UNUSED;
       }
     }
     
@@ -651,39 +703,6 @@ dump_payload(void)
 }
 
 /*---------------------------------------------------------------------------*/
-PROCESS(example_abc_process, "ConBurst");
-PROCESS(example_trickle_process, "ConTB");
-PROCESS(example_multihop_process, "ConMHop");
-//PROCESS(serial_in_process, "SerialIn");
-//PROCESS(modbus_in_process, "ModbusIn");
-//PROCESS(modbus_out_process, "ModbusOut");
-PROCESS(modbus_wi_test, "WITest");
-PROCESS(flash_process, "FlashLog");
-//#if BUTTON_SENSOR_ON
-//PROCESS(buttons_test_process, "ButtonTest");
-//AUTOSTART_PROCESSES(
-//    &example_abc_process,
-//    &example_trickle_process,
-//    &example_multihop_process,
-////    &serial_in_process,
-////    &modbus_in_process,
-////    &modbus_out_process,
-//    &modbus_wi_test,
-//    &flash_process,
-//    &buttons_test_process);
-//#else
-AUTOSTART_PROCESSES(
-    &example_abc_process,
-    &example_trickle_process,
-    &example_multihop_process,
-//    &serial_in_process,
-//    &modbus_in_process,
-//    &modbus_out_process,
-    &modbus_wi_test,
-    &flash_process);
-//#endif
-
-/*---------------------------------------------------------------------------*/
 static void
 abc_recv(struct abc_conn *c)
 {
@@ -800,8 +819,15 @@ PROCESS_THREAD(example_abc_process, ev, data)
 
   while(1) {
     // manage timers for child devices - supervisory timeout
-    
     PROCESS_YIELD();
+    
+    for(int x=0; x < MAX_CHILD_SENSORS; x++)
+    {
+      // determine which timer expired
+      if (child_sensors[x].status == CHILD_SENSOR_STATUS_INUSE && ctimer_expired(&(child_sensors[x].sup_timer))) {
+        child_sensors[x].device_state = (child_sensors[x].device_state == DEVICE_STATE_STABLE) ? DEVICE_STATE_UNSTABLE : DEVICE_STATE_DISCONNECT;
+      }  
+    }
   }
 
   PROCESS_END();
@@ -1662,8 +1688,6 @@ call_decision_maker(void * incoming, uint8_t type)
 
           seqno = message->seqno;
           
-          // reset supervisor timer
-          
           // keep track of burst count for link status (device_state)
           if((seqno & 0x0F) == (uint8_t)((sensor_list_entry->seqno_cnt & 0xF0) >> 4))
           {
@@ -1673,11 +1697,18 @@ call_decision_maker(void * incoming, uint8_t type)
           }
           else // new burst
           {
-            uint8_t total;
-            // add previous burst data to device_state
-            total = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) >> 5) * (DEVICE_STATE_REPORT_HIST-1);
-            sensor_list_entry->device_state = (sensor_list_entry->device_state & 0x1F) + (uint8_t)(((total + (sensor_list_entry->seqno_cnt & 0x0F)) / DEVICE_STATE_REPORT_HIST) << 5);
-            sensor_list_entry->seqno_cnt = ((seqno & 0x0F) << 4) + 1;      
+            int8_t health;
+            // update device_state based on last burst data (increment / decrement by 1)
+            health = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) >> 5);
+            health += ((sensor_list_entry->seqno_cnt & 0x0F) >= 3) ? 1 : -1;
+            if(health < 0) 
+              health = 0;
+            if(health > CONECTRIC_BURST_NUMBER) 
+              health = CONECTRIC_BURST_NUMBER;
+            sensor_list_entry->device_state = (sensor_list_entry->device_state & 0x1F) + ((uint8_t)(health) << 5);
+            sensor_list_entry->seqno_cnt = ((seqno & 0x0F) << 4) + 1;    
+            // restart Supevisory timer
+            ctimer_restart(&(sensor_list_entry->sup_timer));
           }
           
           temp = (uint16_t)((message->payload[3] << 8) + message->payload[4]);
