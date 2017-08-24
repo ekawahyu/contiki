@@ -201,7 +201,7 @@ typedef struct {
 
 static wi_state_t wi_state;
 // Can't be over 256 or we need 2 bytes for storing size
-#define WI_MSG_MAX_SIZE (sizeof(wi_state_t) + (MAX_CHILD_SENSORS * CHILD_SENSOR_SIZE) + (MAX_RHT_EVENTS + RHT_EVENT_SIZE))    // move this to config
+#define WI_MSG_MAX_SIZE (uint8_t)(sizeof(wi_state_t) + (MAX_CHILD_SENSORS * CHILD_SENSOR_SIZE) + (MAX_RHT_EVENTS * RHT_EVENT_SIZE))    // move this to config
 // byte 0 is size
 static uint8_t wi_msg[WI_MSG_MAX_SIZE+1];    // move this to FLASH???
 
@@ -563,7 +563,16 @@ static void wi_state_write()
       }
   }
   // write size 
-  wi_msg[0] = size;   
+  wi_msg[0] = size;  
+  
+//  puthex(WI_MSG_MAX_SIZE);
+//  putstring("w");
+//  for(cnt = 0; cnt < WI_MSG_MAX_SIZE+1; cnt++)
+//  {
+//    puthex(wi_msg[cnt]);
+//  }
+//  putstring("\n");
+  
 }
 
 // build the wi msg payload 
@@ -599,6 +608,10 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
        if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
           *header |= WI_REQUEST_MORE_MSK;
        *mem_idx = fragment * WI_FRAG_SIZE+1;
+//       
+//       putstring("i");
+//       puthex(*mem_idx);
+//       putstring("\n");
      } 
   }
   else
@@ -610,6 +623,10 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
   
     wi_state_write();
     
+//    putstring("i");
+//    putstring("1");
+//    putstring("\n");
+//    
     *mem_idx = 1;
     total_size = wi_msg[0];
     size = (total_size < WI_FRAG_SIZE) ? total_size : WI_FRAG_SIZE;
@@ -1705,16 +1722,16 @@ call_decision_maker(void * incoming, uint8_t type)
               health = 0;
             if(health > CONECTRIC_BURST_NUMBER) 
               health = CONECTRIC_BURST_NUMBER;
-            sensor_list_entry->device_state = (sensor_list_entry->device_state & 0x1F) + ((uint8_t)(health) << 5);
+            sensor_list_entry->device_state = (sensor_list_entry->device_state & ~DEVICE_STATE_LINK_MSK) + ((uint8_t)(health) << 5);
             sensor_list_entry->seqno_cnt = ((seqno & 0x0F) << 4) + 1;    
             // restart Supevisory timer
             ctimer_restart(&(sensor_list_entry->sup_timer));
-          }
           
-          temp = (uint16_t)((message->payload[3] << 8) + message->payload[4]);
-          hum = (uint16_t)((message->payload[5] << 8) + message->payload[6]);
-          rht_event_list_add(message->sender, seqno, temp, hum);
- 
+            // write to event list
+            temp = (uint16_t)((message->payload[3] << 8) + message->payload[4]);
+            hum = (uint16_t)((message->payload[5] << 8) + message->payload[6]);
+            rht_event_list_add(message->sender, seqno, temp, hum);
+          }
         }
     } 
   }
