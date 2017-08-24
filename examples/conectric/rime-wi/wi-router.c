@@ -173,6 +173,10 @@ static rht_event_t rht_event_list[MAX_RHT_EVENTS];
 #define DEVICE_STATE_DISCONNECT 1
 #define DEVICE_STATE_UNKNOWN 0
 
+// BMB: move to common header
+#define SW_BUTTON_OPEN          0x71
+#define SW_BUTTON_CLOSED        0x72
+
 typedef struct {
   linkaddr_t    sensor_addr;
   uint8_t       rssi;
@@ -417,15 +421,15 @@ static void process_route_request(uint8_t * payload)
 // WI State Functions
 
 // REMOVE THIS
-static void wi_test()
-{
-  wi_state.timestamp = clock_seconds();
-  wi_state.onboard_temp += 0x0101;
-  wi_state.setpoint_temp += 0x0101;
-  wi_state.heating += 0x01;
-  wi_state.cooling += 0x01;
-  wi_state.fan_speed += 0x01;
-  wi_state.stage_cooling_heating += 0x01;
+//static void wi_test()
+//{
+//  wi_state.timestamp = clock_seconds();
+//  wi_state.onboard_temp += 0x0101;
+//  wi_state.setpoint_temp += 0x0101;
+//  wi_state.heating += 0x01;
+//  wi_state.cooling += 0x01;
+//  wi_state.fan_speed += 0x01;
+//  wi_state.stage_cooling_heating += 0x01;
   
 //  wi_state.num_rht_events = 0x08;
 //  rht_event_list[0].rht_addr.u16 = 0x1111;
@@ -477,18 +481,18 @@ static void wi_test()
 //  child_sensors[2].batt = 0x33;
 //  child_sensors[2].device_state = 0x33;
 //  child_sensors[2].status = CHILD_SENSOR_STATUS_INUSE;
-}
+//}
 
 static void wi_state_init()
 {
   // random default values added for test purposes - set back to 00
   wi_state.timestamp = 0x0000;
-  wi_state.onboard_temp = 0x0102;
-  wi_state.setpoint_temp = 0x0304;
-  wi_state.heating = 0x05;
-  wi_state.cooling = 0x06;
-  wi_state.fan_speed = 0x07;
-  wi_state.stage_cooling_heating = 0x08;
+  wi_state.onboard_temp = 0x0000;
+  wi_state.setpoint_temp = 0x0000;
+  wi_state.heating = 0x00;
+  wi_state.cooling = 0x00;
+  wi_state.fan_speed = 0x00;
+  wi_state.stage_cooling_heating = 0x00;
   wi_state.num_rht_events = 0x00;
   wi_state.num_child_sensors = 0x00;
 }
@@ -507,6 +511,9 @@ static void wi_state_write()
  
   // zero out previous message
   memset(wi_msg, 0, WI_MSG_MAX_SIZE+1);
+  
+  // timestamp
+  wi_state.timestamp = clock_seconds();
   
   // Write WI State to memory
   size = sizeof(wi_state_t);
@@ -619,7 +626,7 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
     wi_last_request_id ^= WI_REQUEST_REQID_MSK;  // toggle ID for re-request or follow up reads
     
     // test simulate wi state
-    wi_test();  // REMOVE THIS
+    // wi_test();  // REMOVE THIS
   
     wi_state_write();
     
@@ -1688,51 +1695,82 @@ call_decision_maker(void * incoming, uint8_t type)
   /* Sensor message received */
   else if(type == MESSAGE_ABC_RECV)
   {
+    uint8_t first_burst = 0x00;
     
-    /* TODO store sensors data as a ring buffer with timestamp */
-
-    if(message->request == CONECTRIC_SENSOR_BROADCAST_RHT)
-    {
-        source_addr = message->sender;
+    /* General ABC Processing */
+    source_addr = message->sender;
         
-        sensor_list_entry = child_sensors_find(source_addr);
-        if(sensor_list_entry != NULL)
-        {
-          static uint16_t temp, hum;
-          
-          sensor_list_entry->rssi = (uint8_t)(message->rssi >> 8);
-          sensor_list_entry->batt =  message->payload[2];
+    sensor_list_entry = child_sensors_find(source_addr);
+    if(sensor_list_entry == NULL)
+      return NULL; // not in child list
 
-          seqno = message->seqno;
+    sensor_list_entry->rssi = (uint8_t)(message->rssi >> 8);
+    sensor_list_entry->batt =  message->payload[2];
+
+    seqno = message->seqno;
+   
+    // keep track of burst count for link status (device_state)
+    if((seqno & 0x0F) == (uint8_t)((sensor_list_entry->seqno_cnt & 0xF0) >> 4))
+    {
+      sensor_list_entry->seqno_cnt++;
+      // received multiple bursts, set state to stable connection
+      sensor_list_entry->device_state = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) + DEVICE_STATE_STABLE);
+    }
+    else // new burst
+    {
+      int8_t health;
+      
+      first_burst = 0x01;
+      
+      // update device_state based on last burst data (increment / decrement by 1)
+      health = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) >> 5);
+      health += ((sensor_list_entry->seqno_cnt & 0x0F) >= 3) ? 1 : -1;
+      if(health < 0) 
+        health = 0;
+      if(health > CONECTRIC_BURST_NUMBER) 
+        health = CONECTRIC_BURST_NUMBER;
+      sensor_list_entry->device_state = (sensor_list_entry->device_state & ~DEVICE_STATE_LINK_MSK) + ((uint8_t)(health) << 5);
+      sensor_list_entry->seqno_cnt = ((seqno & 0x0F) << 4) + 1;    
+      // restart Supevisory timer
+      ctimer_restart(&(sensor_list_entry->sup_timer));
+    }
+
+    // Handle specific messages
+    if(first_burst == 0x01) 
+    {
+      if(message->request == CONECTRIC_SENSOR_BROADCAST_RHT)
+      {
+        static uint16_t temp, hum;
           
-          // keep track of burst count for link status (device_state)
-          if((seqno & 0x0F) == (uint8_t)((sensor_list_entry->seqno_cnt & 0xF0) >> 4))
-          {
-            sensor_list_entry->seqno_cnt++;
-            // received multiple bursts, set state to stable connection
-            sensor_list_entry->device_state = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) + DEVICE_STATE_STABLE);
-          }
-          else // new burst
-          {
-            int8_t health;
-            // update device_state based on last burst data (increment / decrement by 1)
-            health = ((sensor_list_entry->device_state & DEVICE_STATE_LINK_MSK) >> 5);
-            health += ((sensor_list_entry->seqno_cnt & 0x0F) >= 3) ? 1 : -1;
-            if(health < 0) 
-              health = 0;
-            if(health > CONECTRIC_BURST_NUMBER) 
-              health = CONECTRIC_BURST_NUMBER;
-            sensor_list_entry->device_state = (sensor_list_entry->device_state & ~DEVICE_STATE_LINK_MSK) + ((uint8_t)(health) << 5);
-            sensor_list_entry->seqno_cnt = ((seqno & 0x0F) << 4) + 1;    
-            // restart Supevisory timer
-            ctimer_restart(&(sensor_list_entry->sup_timer));
-          
-            // write to event list
-            temp = (uint16_t)((message->payload[3] << 8) + message->payload[4]);
-            hum = (uint16_t)((message->payload[5] << 8) + message->payload[6]);
-            rht_event_list_add(message->sender, seqno, temp, hum);
-          }
+        // write to event list
+        temp = (uint16_t)((message->payload[3] << 8) + message->payload[4]);
+        hum = (uint16_t)((message->payload[5] << 8) + message->payload[6]);
+        rht_event_list_add(message->sender, seqno, temp, hum);
+      }
+      else if(message->request == CONECTRIC_SENSOR_BROADCAST_SW)
+      {
+        uint8_t button;
+        
+        button = message->payload[4];
+
+        // WI occupied algorithm for SW event
+        // BMB: THIS OBVIOUSLY NEEDS TO BE CHANGED - Just placeholder for now
+        if(button == SW_BUTTON_OPEN)
+        {
+          wi_state.stage_cooling_heating |= (1 << WI_DOOR_STATUS_BIT_SHIFT);
+          wi_state.stage_cooling_heating ^= (1 << WI_ROOM_STATUS_BIT_SHIFT);
         }
+        else // door closed event
+        {
+          wi_state.stage_cooling_heating &= ~(1 << WI_DOOR_STATUS_BIT_SHIFT);          
+        }
+      }
+      else if(message->request == CONECTRIC_SENSOR_BROADCAST_OC)
+      {
+        // WI occupied algorithm for OC event
+        // BMB: THIS OBVIOUSLY NEEDS TO BE CHANGED - Just placeholder for now
+        wi_state.stage_cooling_heating |= (1 << WI_OCC_STATUS_BIT_SHIFT) + (1 << WI_ROOM_STATUS_BIT_SHIFT);
+      }
     } 
   }
   

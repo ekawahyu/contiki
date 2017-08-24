@@ -78,7 +78,14 @@ PROCESS(rht_abc_process, "RHT Sensor");
 PROCESS(flash_log_process, "Flash Log process");
 AUTOSTART_PROCESSES(&rht_abc_process, &flash_log_process);
 /*---------------------------------------------------------------------------*/
-static const struct abc_callbacks abc_call = {NULL};
+static void
+abc_recv(struct abc_conn *c)
+{
+  memset(message, 0, sizeof(message));
+  memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
+  printf("abc message received (%d) '%s'\n", strlen(message), message);
+}
+static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(rht_abc_process, ev, data)
@@ -101,11 +108,11 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
   abc_open(&abc, 128, &abc_call);
 
-  etimer_set(&et, CLOCK_SECOND);
-
-  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-  // initial "I'm alive" message - DO WE STILL NEED THIS??  Not defined
+//  etimer_set(&et, CLOCK_SECOND);
+//
+//  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//
+  // initial "I'm alive" message - DO WE STILL NEED THIS??  Not defined or processed
 //  memset(message, 0, 40);
 //  message[0] = 0;
 //  message[1] = 0;
