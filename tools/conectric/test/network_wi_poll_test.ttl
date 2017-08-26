@@ -10,60 +10,74 @@ timeout = 1
 
 setecho 1
 ; route_request to 1E20 w/ Timestamp ABAB, Children 361C, 3273 (RH1);  
-w1_addr = '1e20'
 sendln "<0C011E2001ABAB02361C3273"
-waitregex w1_addr
-toupper inputstr inputstr
-strcopy inputstr 6 2 w1_hops_str
-str2int w1_hops w1_hops_str
-strcopy inputstr 14 (w1_hops * 4) w1_route 
-messagebox w1_route 'route'
-
-; 1E20 - Build WI_POLL strings
-w1_cmd_len = 13 + (w1_hops * 4)
-int2str w1_cmd_len_str w1_cmd_len 
-readw1_frag00 = '<'
-strconcat readw1_frag00  083A1E20031E2000'
-
+pause 5
 ; route_request to D873 w/ Timestamp ABAB, Children 3273 (RH1);  
-;sendln "<0A01D87301ABAB013273"
+sendln "<0A01D87301ABAB013273"
+pause 5
 ; route_request to A07B w/ Timestamp ABAB, Children 46C5 (RH1);  
-;sendln "<0A01A07B01ABAB0146C5"
-; route_request to 5453 w/ Timestamp ABAB, Children 46C5 (RH1);  
-;sendln "<0A01545301ABAB0146C5"
+sendln "<0A01A07B01ABAB0146C5"
+pause 5
+; route_request to 5453 w/ Timestamp ABAB, Children 46C5, 361C (RH1);  
+sendln "<0C01545301ABAB0246C5361C"
+pause 5
 
 	
 for i 1 100
 
-	pause 60
+;	pause 30
 
-	; Read WI-1 (1E20), direct, seq_no 0, fragments 0-4
-	
-	readw1_frag01 = '<083A1E20031E2001'
-	readw1_frag02 = '<083A1E20031E2002'
-	readw1_frag03 = '<083A1E20031E2003'
+	; Read WI-1 (1E20), direct, seq_no 0, fragments 0-4	
+	readw1_frag00 = '<083A1E20031E2000'
+	;readw1_frag01 = '<083A1E20031E2001'
+	;readw1_frag02 = '<083A1E20031E2002'
+	;readw1_frag03 = '<083A1E20031E2003'
 	sendln readw1_frag00
-	pause 1
-	sendln readw1_frag01
-	pause 1
-	sendln readw1_frag02
-	pause 1
-	sendln readw1_frag03
-	
-	pause 60
+	pause 5
 
+	; Read WI-2 (D873), 5453, 1E20, GW, seq_no 0, fragments 0-4	
+	readw2_frag00 = '<0C3AD87307D87354531E2000'
+	;readw2_frag01 = '<0C3AD87307D87354531E2001'
+	;readw2_frag02 = '<0C3AD87307D87354531E2002'
+	;readw2_frag03 = '<0C3AD87307D87354531E2003'
+	sendln readw2_frag00
+	pause 5
+
+    ; Read WI-3 (A07B), D873, 1E20, GW, seq_no 0, fragments 0	
+	readw3_frag00 = '<0C3AA07B07A07BD8731E2000'
+	sendln readw3_frag00
+	pause 5
+
+    ; Read WI-4 (5453), A07B, 1E20, GW, seq_no 0, fragments 0	
+	readw4_frag00 = '<0C3A5453075453A07B1E2000'
+	sendln readw4_frag00
+	pause 5
+	
 	; Read WI-1 (1E20), direct, seq_no 1, fragments 0-4
 	readw1_frag10 = '<083A1E20031E2080'
-	readw1_frag11 = '<083A1E20031E2081'
-	readw1_frag12 = '<083A1E20031E2082'
-	readw1_frag13 = '<083A1E20031E2083'
+	;readw1_frag11 = '<083A1E20031E2081'
+	;readw1_frag12 = '<083A1E20031E2082'
+	;readw1_frag13 = '<083A1E20031E2083'
 	sendln readw1_frag10
-	pause 1
-	sendln readw1_frag11
-	pause 1
-	sendln readw1_frag12
-	pause 1
-	sendln readw1_frag13
+	pause 5
+
+	; Read WI-2 (D873), 5453, 1E20, GW, seq_no 1, fragments 0-4	
+	readw2_frag10 = '<0C3AD87307D87354531E2080'
+	;readw2_frag11 = '<0C3AD87307D87354531E2081'
+	;readw2_frag12 = '<0C3AD87307D87354531E2082'
+	;readw2_frag13 = '<0C3AD87307D87354531E2083'
+	sendln readw2_frag10
+	pause 5
+
+    ; Read WI-3 (A07B), D873, 1E20, GW, seq_no 1, fragments 0	
+	readw3_frag10 = '<0C3AA07B07A07BD8731E2080'
+	sendln readw3_frag10
+	pause 5
+
+    ; Read WI-4 (5453), A07B, 1E20, GW, seq_no 0, fragments 0	
+	readw4_frag10 = '<0C3A5453075453A07B1E2080'
+	sendln readw4_frag10
+	pause 5
 	
 next
 

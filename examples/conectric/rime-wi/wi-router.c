@@ -1782,13 +1782,14 @@ call_decision_maker(void * incoming, uint8_t type)
     /* trickle message received */
     if (message->request == CONECTRIC_ROUTE_REQUEST)
     {
-      // handle Route Request Payload      
-      process_route_request(message->payload);
-      
       // Trigger Route Reply Send
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
+      {
+        // handle Route Request Payload      
+        process_route_request(message->payload);    
         process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
             message->payload);
+      }
     }
     
 //    if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
