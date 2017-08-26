@@ -29,53 +29,41 @@ for i 1 100
 
 	; Read WI-1 (1E20), direct, seq_no 0, fragments 0-4	
 	readw1_frag00 = '<083A1E20031E2000'
-	;readw1_frag01 = '<083A1E20031E2001'
-	;readw1_frag02 = '<083A1E20031E2002'
-	;readw1_frag03 = '<083A1E20031E2003'
 	sendln readw1_frag00
 	pause 5
 
 	; Read WI-2 (D873), 5453, 1E20, GW, seq_no 0, fragments 0-4	
-	readw2_frag00 = '<0C3AD87307D87354531E2000'
-	;readw2_frag01 = '<0C3AD87307D87354531E2001'
-	;readw2_frag02 = '<0C3AD87307D87354531E2002'
-	;readw2_frag03 = '<0C3AD87307D87354531E2003'
+	readw2_frag00 = '<0C3AD8730754531E20D87300'
 	sendln readw2_frag00
 	pause 5
 
     ; Read WI-3 (A07B), D873, 1E20, GW, seq_no 0, fragments 0	
-	readw3_frag00 = '<0C3AA07B07A07BD8731E2000'
+	readw3_frag00 = '<0C3AA07B07D8731E20A07B00'
 	sendln readw3_frag00
 	pause 5
 
     ; Read WI-4 (5453), A07B, 1E20, GW, seq_no 0, fragments 0	
-	readw4_frag00 = '<0C3A5453075453A07B1E2000'
+	readw4_frag00 = '<0C3A545307A07B1E20545300'
 	sendln readw4_frag00
 	pause 5
 	
 	; Read WI-1 (1E20), direct, seq_no 1, fragments 0-4
 	readw1_frag10 = '<083A1E20031E2080'
-	;readw1_frag11 = '<083A1E20031E2081'
-	;readw1_frag12 = '<083A1E20031E2082'
-	;readw1_frag13 = '<083A1E20031E2083'
 	sendln readw1_frag10
 	pause 5
 
 	; Read WI-2 (D873), 5453, 1E20, GW, seq_no 1, fragments 0-4	
-	readw2_frag10 = '<0C3AD87307D87354531E2080'
-	;readw2_frag11 = '<0C3AD87307D87354531E2081'
-	;readw2_frag12 = '<0C3AD87307D87354531E2082'
-	;readw2_frag13 = '<0C3AD87307D87354531E2083'
+	readw2_frag10 = '<0C3AD8730754531E20D87380'
 	sendln readw2_frag10
 	pause 5
 
     ; Read WI-3 (A07B), D873, 1E20, GW, seq_no 1, fragments 0	
-	readw3_frag10 = '<0C3AA07B07A07BD8731E2080'
+	readw3_frag10 = '<0C3AA07B07D8731E20A07B80'
 	sendln readw3_frag10
 	pause 5
 
     ; Read WI-4 (5453), A07B, 1E20, GW, seq_no 0, fragments 0	
-	readw4_frag10 = '<0C3A5453075453A07B1E2080'
+	readw4_frag10 = '<0C3A545307A07B1E20545380'
 	sendln readw4_frag10
 	pause 5
 	
