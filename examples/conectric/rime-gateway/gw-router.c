@@ -333,7 +333,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         mhop_message_recv.esender.u8[0], mhop_message_recv.esender.u8[1],
         mhop_message_recv.hops, clock_seconds());
-
+  
   call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_RECV);
 }
 /*---------------------------------------------------------------------------*/
@@ -354,10 +354,10 @@ multihop_forward(struct multihop_conn *c,
 
   forward_addr = call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_FWD);
 
-  printf("%d.%d: multihop forwarding address is %d.%d - %d hops\n",
+  PRINTF("%d.%d: multihop forwarding address is %d.%d - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       forward_addr->u8[0], forward_addr->u8[1], mhop_message_recv.hops);
-
+  
   return forward_addr;
 }
 static const struct multihop_callbacks multihop_call = {multihop_recv, multihop_forward};
@@ -410,7 +410,7 @@ PROCESS_THREAD(example_trickle_process, ev, data)
     /* send the packet */
     trickle_send(&trickle);
 
-    printf("%d.%d: route request sent to %d.%d - %lu\n",
+    PRINTF("%d.%d: route request sent to %d.%d - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         to.u8[0], to.u8[1], clock_seconds());
   }
@@ -452,7 +452,7 @@ PROCESS_THREAD(example_multihop_process, ev, data)
     /* Send the packet */
     multihop_send(&multihop, &to);
 
-    printf("%d.%d: multihop sent to %d.%d - %lu\n",
+    PRINTF("%d.%d: multihop sent to %d.%d - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         to.u8[0], to.u8[1], clock_seconds());
   }
@@ -500,8 +500,9 @@ PROCESS_THREAD(serial_in_process, ev, data)
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
-    printf("%s\n", (uint8_t *)data);
+    PRINTF("%s\n", (uint8_t *)data);
 
     request = (uint8_t *)data;
     memset(bytereq, 0, sizeof(bytereq));

@@ -197,7 +197,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
       
       memset(message, 0, SW_HEADER_SIZE + SW_PAYLOAD_SIZE);
       message[0] = SW_HEADER_SIZE;                      // Header Length
-      message[1] = seq_no++;                             // Sequence number
+      message[1] = seq_no++;                            // Sequence number
       message[2] = SW_PAYLOAD_SIZE;                     // Payload Length
       message[3] = CONECTRIC_SUPERVISORY_REPORT;        // Payload Type                    
       message[4] = (char)(dec*10)+(char)(frac*10);      // battery
@@ -216,8 +216,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
           deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
         else
           deep_sleep_requested = 10 * CLOCK_SECOND; // BMB how does sleep work?
-      }
-      
+      }   
     }
   }
 
