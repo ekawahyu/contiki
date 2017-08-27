@@ -54,8 +54,8 @@ process_event_t modbus_line_event_message;
 int
 modbus_line_input_byte(unsigned char c)
 {
-  if(++pos < BUFSIZE)
-    modbus_rx_data[pos] = c;
+  if(pos < BUFSIZE)
+    modbus_rx_data[++pos] = c;
 
   // refresh timer as long as data keeps coming in
   etimer_adjust(&mt, (CLOCK_SECOND/8));

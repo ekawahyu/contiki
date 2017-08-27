@@ -605,9 +605,13 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     for(cnt = 0; cnt < datasize; cnt++)
     {
       puthex((dataptr[cnt]) & 0x7F);
-      submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
+      if (ekm_in_pos <= BUFSIZE)
+        submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
     }
     putstring("\n");
+
+    printf("datasize = %i\n", datasize);
+    printf("ekm_in_pos = %i\n", ekm_in_pos);
 
     if(ekm_in_pos >= 0xFF)
     {
