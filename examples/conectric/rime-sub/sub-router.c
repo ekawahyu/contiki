@@ -610,9 +610,6 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     }
     putstring("\n");
 
-    printf("datasize = %i\n", datasize);
-    printf("ekm_in_pos = %i\n", ekm_in_pos);
-
     if(ekm_in_pos >= 0xFF)
     {
       
