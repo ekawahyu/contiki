@@ -25,7 +25,21 @@ pause 5
 	
 for i 1 10000
 
-;	pause 30
+	; Read SUB EKM
+	trigger_ekm = '<1836A02D03A02D2F3F303030303130303037303736210D0A'
+	read_ekm_1 = '<0938A02D03A02D0040'
+	read_ekm_2 = '<0938A02D03A02D0140'
+	read_ekm_3 = '<0938A02D03A02D0240'
+	read_ekm_4 = '<0938A02D03A02D0340'
+	sendln trigger_ekm
+	pause 2
+	sendln read_ekm_1
+	pause 2
+	sendln read_ekm_2
+	pause 2
+	sendln read_ekm_3
+	pause 2
+	sendln read_ekm_4
 
 	; Read WI-1 (1E20), direct, seq_no 0, fragments 0-4	
 	readw1_frag00 = '<083A1E20031E2000'
@@ -66,7 +80,7 @@ for i 1 10000
 	readw4_frag10 = '<0C3A545307A07B1E20545380'
 	sendln readw4_frag10
 	pause 5
-	
+		
 next
 
 

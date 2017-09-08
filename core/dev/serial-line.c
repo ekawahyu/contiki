@@ -38,6 +38,7 @@
 #define BUFSIZE SERIAL_LINE_CONF_BUFSIZE
 #else /* SERIAL_LINE_CONF_BUFSIZE */
 #define BUFSIZE 128
+#define RING_BUF_SIZE 32
 #endif /* SERIAL_LINE_CONF_BUFSIZE */
 
 #if (BUFSIZE & (BUFSIZE - 1)) != 0
@@ -49,7 +50,7 @@
 #define END 0x0a
 
 static struct ringbuf rxbuf;
-static uint8_t rxbuf_data[BUFSIZE];
+static uint8_t ring_buffer[RING_BUF_SIZE];
 
 PROCESS(serial_line_process, "Serial driver");
 
@@ -131,7 +132,7 @@ PROCESS_THREAD(serial_line_process, ev, data)
 void
 serial_line_init(void)
 {
-  ringbuf_init(&rxbuf, rxbuf_data, sizeof(rxbuf_data));
+  ringbuf_init(&rxbuf, ring_buffer, RING_BUF_SIZE);
   process_start(&serial_line_process, NULL);
 }
 /*---------------------------------------------------------------------------*/

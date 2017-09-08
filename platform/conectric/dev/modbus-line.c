@@ -128,6 +128,6 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 void
 modbus_line_init(void)
 {
-  ringbuf_init(&modbus_rxbuf, ring_buffer, RING_BUF_SIZE); // sizeof(modbus_rxbuf_data));
+  ringbuf_init(&modbus_rxbuf, ring_buffer, RING_BUF_SIZE);
   process_start(&modbus_line_process, NULL);
 }
