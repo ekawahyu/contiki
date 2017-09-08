@@ -136,7 +136,8 @@ extern volatile uint16_t deep_sleep_requested;
 #define WI_REQUEST_MORE_MSK      (uint8_t) 0x40 // 01000000b
 #define WI_REQUEST_ERR_MSK       (uint8_t) 0x20 // 00100000b
 #define WI_REQUEST_FRAG_MSK      (uint8_t) 0x0F // 00001111b
-#define WI_FRAG_SIZE              64
+#define WI_FRAG_SIZE              32
+#define WI_MAX_PYLD_SIZE          64
 uint8_t wi_last_request_id = WI_REQUEST_REQID_MSK;
 
 // RHT Event Management
@@ -603,10 +604,10 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
        *header |= WI_REQUEST_ERR_MSK;
        size = 0;
      }
-     else  // send in WI_FRAG_SIZE byte chunks
+     else  // send in WI_MAX_PYLD_SIZE byte chunks
      {
-       size = (total_size - (fragment * WI_FRAG_SIZE) < WI_FRAG_SIZE) ? (total_size - (fragment * WI_FRAG_SIZE)) : WI_FRAG_SIZE;
-       if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
+       size = (total_size - (fragment * WI_FRAG_SIZE) < WI_MAX_PYLD_SIZE) ? (total_size - (fragment * WI_FRAG_SIZE)) : WI_MAX_PYLD_SIZE;
+       if(size == WI_MAX_PYLD_SIZE && total_size > ((fragment * WI_FRAG_SIZE) + WI_MAX_PYLD_SIZE)) 
           *header |= WI_REQUEST_MORE_MSK;
        // handle error case where there is no data to read
        if(size == 0)
@@ -634,8 +635,8 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
 //    
     *mem_idx = 1;
     total_size = wi_msg[0];
-    size = (total_size < WI_FRAG_SIZE) ? total_size : WI_FRAG_SIZE;
-    if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
+    size = (total_size < WI_MAX_PYLD_SIZE) ? total_size : WI_MAX_PYLD_SIZE;
+    if(size == WI_MAX_PYLD_SIZE && total_size > WI_MAX_PYLD_SIZE) 
       *header |= WI_REQUEST_MORE_MSK;
   }
   return size; 
