@@ -1,0 +1,22 @@
+; Tera Term test of Conectric WI network
+;
+; File: network_wi_poll_test.ttl
+; Description: 
+; Environment: 
+; Update: 2017/8/25
+; Author: Brian Blum
+
+timeout = 1
+
+setecho 1
+read_ekmsn = '<1602FFFF012F3F303030303130303037303736210D0A'
+
+for i 1 500
+
+	sendln read_ekmsn
+	pause 10
+	
+next
+
+
+end

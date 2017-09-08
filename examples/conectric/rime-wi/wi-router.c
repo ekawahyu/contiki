@@ -209,12 +209,6 @@ static wi_state_t wi_state;
 // byte 0 is size
 static uint8_t wi_msg[WI_MSG_MAX_SIZE+1];    // move this to FLASH???
 
-// Store sent messages in FLash until they are ACK'd
-// pointer to last sent message, NULL when all ACK'd
-// seq no for last sent message (verification)
-
-
-
 #if CC2530_CONF_MAC_FROM_PRIMARY
 #if defined __IAR_SYSTEMS_ICC__
   volatile unsigned char *gmacp = &X_IEEE_ADDR;
@@ -614,6 +608,10 @@ static uint8_t wi_msg_build(uint8_t * wi_request, uint8_t * header, uint8_t *mem
        size = (total_size - (fragment * WI_FRAG_SIZE) < WI_FRAG_SIZE) ? (total_size - (fragment * WI_FRAG_SIZE)) : WI_FRAG_SIZE;
        if(size == WI_FRAG_SIZE && total_size > ((fragment+1) * WI_FRAG_SIZE)) 
           *header |= WI_REQUEST_MORE_MSK;
+       // handle error case where there is no data to read
+       if(size == 0)
+         *header |= WI_REQUEST_ERR_MSK;
+       
        *mem_idx = fragment * WI_FRAG_SIZE+1;
 //       
 //       putstring("i");

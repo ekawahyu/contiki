@@ -61,7 +61,7 @@
 #include "examples/conectric/conectric-messages.h"
 
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -898,7 +898,7 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* Request bytes to be sent as trickle */
     if (request == CONECTRIC_ROUTE_REQUEST 
-        // || request == CONECTRIC_ROUTE_REQUEST_BY_SN
+        || request == CONECTRIC_ROUTE_REQUEST_BY_SN
           )
       process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
 

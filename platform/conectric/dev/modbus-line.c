@@ -39,10 +39,11 @@
 
 #include "lib/ringbuf.h"
 
-#define BUFSIZE 128
+#define RING_BUF_SIZE 32
+#define BUFSIZE 260
 
 static struct ringbuf modbus_rxbuf;
-static uint8_t modbus_rxbuf_data[BUFSIZE];
+static uint8_t ring_buffer[RING_BUF_SIZE];
 
 PROCESS(modbus_line_process, "MODBUS driver");
 
@@ -84,7 +85,7 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 {
   static struct ctimer ct;
   static char buf[BUFSIZE];
-  static int ptr;
+  static uint16_t ptr;
 
   PROCESS_BEGIN();
   
@@ -127,6 +128,6 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 void
 modbus_line_init(void)
 {
-  ringbuf_init(&modbus_rxbuf, modbus_rxbuf_data, sizeof(modbus_rxbuf_data));
+  ringbuf_init(&modbus_rxbuf, ring_buffer, RING_BUF_SIZE); // sizeof(modbus_rxbuf_data));
   process_start(&modbus_line_process, NULL);
 }
