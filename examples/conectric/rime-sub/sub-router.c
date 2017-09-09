@@ -586,7 +586,11 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     }
     putstring("\n");
 
-    if(ekm_in_pos >= 0xFF)
+    /* If ekm_in_pos >= 0xFF and the buffer is not fragmented, then we go ahead
+     * and send a reply. Otherwise, let the gateway poll again. When the EKM data
+     * gets fragmented, its content is always incorrect.
+     */
+    if((ekm_in_pos >= 0xFF) && (ekm_in_pos == datasize))
     {
       
       if (ekm_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {

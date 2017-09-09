@@ -902,6 +902,11 @@ call_decision_maker(void * incoming, uint8_t type)
       putstring(CONECTRIC_PROJECT_STRING "\n");
     }
 
+    else if (bytereq[0] == '@' && bytereq[1] == 'B' && bytereq[2] == 'O' && bytereq[3] == 'O' && bytereq[4] == 'T') {
+      putstring("Rebooting...\n");
+      while(1);
+    }
+
     /* Unknown command */
     else {
       puthex(linkaddr_node_addr.u8[0]);
