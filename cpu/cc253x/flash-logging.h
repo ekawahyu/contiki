@@ -11,11 +11,15 @@
 #ifndef FLASH_LOGGING_H_
 #define FLASH_LOGGING_H_
 
-// Default start address for cyclical write to Flash (Bank 3)
-#define FLASH_LOGGING_START 0x18000
+// Default start address for cyclical write to Flash (Bank 4)
+#ifndef FLASH_LOGGING_START
+#define FLASH_LOGGING_START 0x20000
+#endif
 
-// Default end address for cyclical write to Flash (beginning last Page Bank 8)
-#define FLASH_LOGGING_END   0x3F800
+// Default end address for cyclical write to Flash (beginning last Page Bank 7)
+#ifndef FLASH_LOGGING_END
+#define FLASH_LOGGING_END   0x3E800
+#endif
 
 /* FLASH LOGGING Globals */
 enum

@@ -24,6 +24,7 @@ extern "C" {
 #define FLASH_BANK_PAGES 16
 #define FLASH_PAGE(addr) (addr / FLASH_PAGE_SIZE)
 #define FLASH_PAGE_OFFSET(addr) (addr % FLASH_PAGE_SIZE)
+#define FLASH_WRT_SZ 4
 
 void flash_write_DMA(uint8_t *data, uint16_t length, uint16_t flashwordadr);
 void flash_read(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t size);

@@ -1,0 +1,87 @@
+; Tera Term test of Conectric WI network
+;
+; File: network_wi_poll_test.ttl
+; Description: 
+; Environment: 
+; Update: 2017/8/25
+; Author: Brian Blum
+
+timeout = 1
+
+setecho 1
+; route_request to 1E20 w/ Timestamp ABAB, Children 361C, 3273 (RH1);  
+sendln "<0C011E2001ABAB02361C3273"
+pause 5
+; route_request to D873 w/ Timestamp ABAB, Children 3273 (RH1);  
+sendln "<0A01D87301ABAB013273"
+pause 5
+; route_request to A07B w/ Timestamp ABAB, Children 46C5 (RH1);  
+sendln "<0A01A07B01ABAB0146C5"
+pause 5
+; route_request to 5453 w/ Timestamp ABAB, Children 46C5, 361C (RH1);  
+sendln "<0C01545301ABAB0246C5361C"
+pause 5
+
+	
+for i 1 10000
+
+	; Read SUB EKM
+	trigger_ekm = '<1836A02D03A02D2F3F303030303130303037303736210D0A'
+	read_ekm_1 = '<0938A02D03A02D0040'
+	read_ekm_2 = '<0938A02D03A02D0140'
+	read_ekm_3 = '<0938A02D03A02D0240'
+	read_ekm_4 = '<0938A02D03A02D0340'
+	sendln trigger_ekm
+	pause 2
+	sendln read_ekm_1
+	pause 2
+	sendln read_ekm_2
+	pause 2
+	sendln read_ekm_3
+	pause 2
+	sendln read_ekm_4
+
+	; Read WI-1 (1E20), direct, seq_no 0, fragments 0-4	
+	readw1_frag00 = '<083A1E20031E2000'
+	sendln readw1_frag00
+	pause 5
+
+	; Read WI-2 (D873), 5453, 1E20, GW, seq_no 0, fragments 0-4	
+	readw2_frag00 = '<0C3AD8730754531E20D87300'
+	sendln readw2_frag00
+	pause 5
+
+    ; Read WI-3 (A07B), D873, 1E20, GW, seq_no 0, fragments 0	
+	readw3_frag00 = '<0C3AA07B07D8731E20A07B00'
+	sendln readw3_frag00
+	pause 5
+
+    ; Read WI-4 (5453), A07B, 1E20, GW, seq_no 0, fragments 0	
+	readw4_frag00 = '<0C3A545307A07B1E20545300'
+	sendln readw4_frag00
+	pause 5
+	
+	; Read WI-1 (1E20), direct, seq_no 1, fragments 0-4
+	readw1_frag10 = '<083A1E20031E2080'
+	sendln readw1_frag10
+	pause 5
+
+	; Read WI-2 (D873), 5453, 1E20, GW, seq_no 1, fragments 0-4	
+	readw2_frag10 = '<0C3AD8730754531E20D87380'
+	sendln readw2_frag10
+	pause 5
+
+    ; Read WI-3 (A07B), D873, 1E20, GW, seq_no 1, fragments 0	
+	readw3_frag10 = '<0C3AA07B07D8731E20A07B80'
+	sendln readw3_frag10
+	pause 5
+
+    ; Read WI-4 (5453), A07B, 1E20, GW, seq_no 0, fragments 0	
+	readw4_frag10 = '<0C3A545307A07B1E20545380'
+	sendln readw4_frag10
+	pause 5
+		
+next
+
+
+end

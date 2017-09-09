@@ -41,7 +41,7 @@ typedef struct {
  * input parameters
  *
  * @param       data - Valid buffer space at least as big as 'cnt' X 4.
- * @param       length - Number of 4-byte blocks to write.
+ * @param       length - Number of bytes (must be 4-byte block) to write.
  * @param       flashwordaddr - Valid flash write address: actual addr / 4 and quad-aligned.
  *
  * output parameters
