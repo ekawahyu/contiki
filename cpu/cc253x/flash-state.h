@@ -27,8 +27,10 @@ extern uint8_t read_buf[FLASH_STATE_SIZE_MAX];
 // state ID's (ensure no duplicates)
 enum
 {
-  FLASH_STATE_PG_HEADER = 0x01,
-  FLASH_STATE_WI_SENSOR_LIST = 0x02,
+  FLASH_STATE_PG_HEADER =       0x01,
+  FLASH_STATE_WI_SENSOR_LIST =  0x02,
+  FLASH_STATE_OTA_IMG_VERSION = 0x03,
+  FLASH_STATE_OTA_IMG_SIZE =    0x04
 };
 
 void flashstate_init();

@@ -294,7 +294,7 @@
         <option>
           <name>CCDefines</name>
           <state>chip=cc2530</state>
-          <state>WATCHDOG=1</state>
+          <state>WATCHDOG=0</state>
           <state>AUTOSTART_ENABLE=1</state>
           <state>PROJECT_CONF_H="project-conf.h"</state>
           <state>CONTIKI_WITH_RIME=1</state>
@@ -953,11 +953,11 @@
         </option>
         <option>
           <name>AllowExtraOutput</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GenerateExtraOutput</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>XExtraOutOverride</name>
@@ -1685,6 +1685,9 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-state.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\cpu\cc253x\ota.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>

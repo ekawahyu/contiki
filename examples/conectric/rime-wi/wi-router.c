@@ -51,6 +51,7 @@
 // Conectric Device
 #include "flash-logging.h"
 #include "flash-state.h"
+#include "ota.h"
 //#include "dev/button-sensor.h"
 #include "dev/rs485-arch.h"
 #include "dev/serial-line.h"  // REMOVE AFTER DEBUG
@@ -79,6 +80,11 @@
 #define PUTDEC(...)
 #define PUTCHAR(...)
 #endif
+
+// Device Configuration
+#define CONECTRIC_DEVICE_TYPE_WI 0x90
+static const uint16_t WI_Version = WI_VERSION;
+static uint16_t ota_img_version = OTA_NO_IMG;  
 
 typedef union {
   uint16_t len;
@@ -286,6 +292,17 @@ shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
 {
   return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
 }
+/*--------------------------------------------------------------------------*/
+// Device Management Functions
+
+void ota_img_version_restore()
+{
+  uint8_t *data;
+  uint8_t size;
+  size = flashstate_read(FLASH_STATE_OTA_IMG_VERSION, data);
+  if(size == 2)
+    memcpy(&ota_img_version, data, size);
+}
 
 /*---------------------------------------------------------------------------*/
 // RHT Event Management Functions
@@ -365,6 +382,56 @@ static void child_sensor_restore()
     child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
     ctimer_set(&child_sensors[ct].sup_timer, DEVICE_SUP_TIMEOUT, sensor_timeout, &ptr); // start supervisory timer
   }
+}
+
+static void process_img_update_bcst(uint8_t * payload)
+{
+   static uint8_t img_segment[OTA_SEGMENT_MAX];    
+   uint16_t img_version;
+   uint16_t addr_offset;
+   uint8_t dev_type;
+   uint8_t checksum;
+   uint8_t data_len;
+   
+   img_version = (payload[2] << 8) + payload[3];
+   addr_offset = (payload[4] << 8) + payload[5];
+   dev_type = payload[6];
+   checksum = payload[7];
+   data_len = payload[8];
+   
+   // exit if not for me
+   if(dev_type != CONECTRIC_DEVICE_TYPE_WI)
+     return;
+   
+   // exit if old version
+   if(img_version <= WI_VERSION)
+     return;
+   
+   // validate checksum (including data_len): BMB - set to FF for test, need to implement checksum
+   if(checksum != 0xFF || data_len > OTA_SEGMENT_MAX)
+     return;
+   
+   if((ota_img_version == OTA_NO_IMG && img_version > WI_Version) || (img_version > ota_img_version))
+   { // first image segment of a new image
+
+     // clear flash
+     ota_clear();
+     // save img version in state variables
+     flashstate_write(FLASH_STATE_OTA_IMG_VERSION, (uint8_t*)&img_version, sizeof(img_version));
+     ota_img_version = img_version;
+   }
+   else if(img_version != ota_img_version) 
+   { 
+     // old image
+     return;
+   }
+
+   // copy data out of payload in case it gets overwritten by another process
+   memcpy(img_segment, &payload[9], data_len);
+   // write segment of current image
+   ota_flashwrite(addr_offset, data_len, img_segment);
+   // update ota image map
+   // BMB     
 }
 
 static void process_route_request(uint8_t * payload)
@@ -1344,6 +1411,7 @@ PROCESS_THREAD(flash_process, ev, data)
   flashstate_init();
 
   child_sensor_restore();
+  ota_img_version_restore();
   
   while (1)
   {
@@ -1791,6 +1859,10 @@ call_decision_maker(void * incoming, uint8_t type)
       }
     }
     
+    if (message->request == CONECTRIC_IMG_UPDATE_BCST)
+    {
+       process_img_update_bcst(message->payload);
+    }
 //    if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
 //      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
 //        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,

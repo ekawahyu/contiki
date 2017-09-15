@@ -493,7 +493,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
   static uint8_t * request;
   static uint8_t counter;
   static uint8_t hex_string[2];
-  static uint8_t bytereq[128];
+  static uint8_t bytereq[256];
 
   PROCESS_BEGIN();
 
@@ -899,6 +899,7 @@ call_decision_maker(void * incoming, uint8_t type)
     /* Request bytes to be sent as trickle */
     if (request == CONECTRIC_ROUTE_REQUEST 
         || request == CONECTRIC_ROUTE_REQUEST_BY_SN
+        || request == CONECTRIC_IMG_UPDATE_BCST
           )
       process_post(&example_trickle_process, PROCESS_EVENT_CONTINUE, bytereq);
 
@@ -907,7 +908,9 @@ call_decision_maker(void * incoming, uint8_t type)
         // request == CONECTRIC_MULTIHOP_PING ||
         request == CONECTRIC_POLL_RS485  ||
         request == CONECTRIC_POLL_RS485_CHUNK  ||
-        request == CONECTRIC_POLL_WI  
+        request == CONECTRIC_POLL_WI ||  
+        request == CONECTRIC_IMG_UPDATE_DIR || 
+        request == CONECTRIC_IMG_COMPLETE
         //  || request == CONECTRIC_GET_LONG_MAC
           )
       process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);

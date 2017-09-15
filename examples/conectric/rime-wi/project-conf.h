@@ -41,6 +41,7 @@
 extern "C" {
 #endif
 
+#define WI_VERSION                            0x0001
 #define STARTUP_CONF_VERBOSE                  1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
 
