@@ -30,7 +30,13 @@ void ota_update_map(uint16_t addr)
 // restore the segment map on reset (if <partial> new image is in OTA Flash)
 void ota_restore_map()
 {
-  
+  uint32_t data;
+  for(uint32_t seg = OTA_FLASH_START; seg < OTA_FLASH_END; seg += OTA_SEGMENT_MAX)
+  {
+    flash_read(FLASH_PAGE(seg), FLASH_PAGE_OFFSET(seg), (uint8_t *)&data, sizeof(data));
+    if(data != 0xFFFFFFFF)
+      ota_update_map((uint16_t)(seg - OTA_FLASH_START));
+  }  
 }
 
 /*---------------------------------------------------------------------------*/
