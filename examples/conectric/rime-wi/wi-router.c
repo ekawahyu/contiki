@@ -299,9 +299,13 @@ void ota_img_version_restore()
 {
   uint8_t *data;
   uint8_t size;
-  size = flashstate_read(FLASH_STATE_OTA_IMG_VERSION, data);
+  size = flashstate_read(FLASH_STATE_OTA_IMG_VERSION, &data);
   if(size == 2)
+  {
     memcpy(&ota_img_version, data, size);
+    if(ota_img_version > WI_Version)
+      ota_restore_map();
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -361,12 +365,12 @@ static child_sensor_t * child_sensors_find(linkaddr_t addr)
 
 static void child_sensor_restore()
 {
-  uint8_t * state;
+  uint8_t *state;
   uint8_t size;
   linkaddr_t child_addr;
   uint8_t ptr;  // parameter to timeout function
   
-  size = flashstate_read(FLASH_STATE_WI_SENSOR_LIST, state);
+  size = flashstate_read(FLASH_STATE_WI_SENSOR_LIST, &state);
   
   wi_state.num_child_sensors = (uint8_t)(size >> 1);  // 2 bytes per child
       
@@ -431,7 +435,7 @@ static void process_img_update_bcst(uint8_t * payload)
    // write segment of current image
    ota_flashwrite(addr_offset, data_len, img_segment);
    // update ota image map
-   // BMB     
+   ota_update_map(addr_offset);     
 }
 
 static void process_route_request(uint8_t * payload)
@@ -1409,6 +1413,7 @@ PROCESS_THREAD(flash_process, ev, data)
 
   flashlogging_init();
   flashstate_init();
+  ota_init();
 
   child_sensor_restore();
   ota_img_version_restore();

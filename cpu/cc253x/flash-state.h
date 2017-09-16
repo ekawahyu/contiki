@@ -37,6 +37,6 @@ void flashstate_init();
 void flashstate_write(uint8_t stateId, uint8_t *data, uint8_t size);
 // Read state from Flash
 // Return size of state information
-uint8_t flashstate_read(uint8_t stateId, uint8_t *data);
+uint8_t flashstate_read(uint8_t stateId, uint8_t **data);
 
 #endif /* FLASH_STATE_H_ */
