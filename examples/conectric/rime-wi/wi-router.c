@@ -84,7 +84,7 @@
 // Device Configuration
 #define CONECTRIC_DEVICE_TYPE_WI 0x90
 static const uint16_t WI_Version = WI_VERSION;
-static uint16_t ota_img_version = OTA_NO_IMG;  
+uint16_t ota_img_version = OTA_NO_IMG;  
 
 typedef union {
   uint16_t len;
@@ -719,7 +719,7 @@ static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
   uint8_t packetlen, hdrlen;
-  uint8_t *dataptr;
+//  uint8_t *dataptr;
 
   /* Backup the previous senders and receivers */
   linkaddr_copy(&message->prev_sender, &message->sender);
@@ -1497,7 +1497,9 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  uint8_t chunk_number = 0;
 //  uint8_t chunk_size = 0;
   uint8_t i;
-  uint8_t wi_request = 0;
+  uint8_t header_status = 0;
+  uint16_t ota_version; 
+  uint16_t ota_next_addr = 0x0000;
   
 //  reqlen = *radio_request++;
   *radio_request++;
@@ -1534,10 +1536,40 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  }
   if (req == CONECTRIC_POLL_WI) {
     // Update length based on WI State structure
-    responselen += wi_msg_build(radio_request, &wi_request, &mem_idx) + 1;  // add 1 for header
+    responselen += wi_msg_build(radio_request, &header_status, &mem_idx) + 1;  // add 1 for header
     response = CONECTRIC_POLL_WI_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
+  if (req == CONECTRIC_IMG_COMPLETE) {
+    // verify image and send appropriate response
+    ota_version = (radio_request[0] << 8) + radio_request[1];
+    uint16_t ota_size = (radio_request[2] << 8) + radio_request[3];
+    uint16_t ota_crc = (radio_request[4] << 8) + radio_request[5];
+    uint16_t ota_reboot_delay = (radio_request[6] << 8) + radio_request[7];
+    
+    if(ota_version != ota_img_version)
+    {
+      header_status = OTA_IMG_INVALID_VER;
+    } 
+    else if(ota_next_segment(ota_size, &ota_next_addr))
+    {     
+      header_status = OTA_IMG_INCOMPLETE;
+    }
+    else if (ota_verify_crc(ota_size, ota_crc))
+    {
+      // set timer for reboot BMB   
+      header_status = OTA_IMG_SUCCESS;
+    } 
+    else
+    {
+      header_status = OTA_IMG_INVALID_CRC;
+    }
+    
+    responselen += 5;  // CONECTRIC_IMG_REBOOT_SIZE;
+    response = CONECTRIC_IMG_REBOOT;
+    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+  }
+
 //  if (req == CONECTRIC_GET_LONG_MAC) {
 //    response = CONECTRIC_GET_LONG_MAC_REPLY;
 //    responselen += 8;
@@ -1552,13 +1584,21 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   
   if (req == CONECTRIC_POLL_WI) {
     // add header
-    *packet++ = wi_request;
+    *packet++ = header_status;
     for(uint8_t x=0; x<(i-1); x++) {
       *packet++ = wi_msg[mem_idx+x];
       //puthex(pyld[x]);
     }
   }
   
+  if(req == CONECTRIC_IMG_COMPLETE)
+  {
+    // build response
+    *packet++ = (uint8_t)(ota_img_version >> 8);
+    *packet++ = (uint8_t)(ota_img_version);
+    *packet++ = header_status;
+    *packet++ = ota_next_addr;
+  }
 //  if (req == CONECTRIC_POLL_RS485) {
 //    /* FIXME this has to be calculated from RS485 reply length */
 //    *packet++ = 0x04; /* number of chunks available to poll */
@@ -1877,7 +1917,8 @@ call_decision_maker(void * incoming, uint8_t type)
     if (
         // message->request == CONECTRIC_MULTIHOP_PING ||
         // message->request == CONECTRIC_POLL_RS485_CHUNK  ||
-        message->request == CONECTRIC_POLL_WI  
+        message->request == CONECTRIC_POLL_WI ||
+        message->request == CONECTRIC_IMG_COMPLETE
         // || message->request == CONECTRIC_GET_LONG_MAC
           )
     {

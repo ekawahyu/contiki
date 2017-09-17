@@ -39,6 +39,38 @@ void ota_restore_map()
   }  
 }
 
+// Determine the first missing segment of the img map
+// *next_addr: first missing segment address 
+// return: true if segment missing
+uint8_t ota_next_segment(uint16_t img_size, uint16_t *next_addr)
+{
+  uint8_t seg_missing = 0;
+  *next_addr = 0x0000;
+  // convert image size to # bytes in segment map
+  img_size = img_size >> OTA_UPDATE_MAP_SHIFT;
+  
+  // find the first missing segment and exit loop when found
+  for(uint8_t idx = 0; idx < img_size; idx++)
+  {
+    if(img_segment_map[idx] == 0xFF)
+      continue;
+    
+    *next_addr = idx * 8;
+    
+    uint8_t bits = img_segment_map[idx];
+    while (bits % 2) {
+      *next_addr++;
+      bits = bits >> 1;
+    } 
+    *next_addr++;
+    *next_addr = *next_addr << OTA_UPDATE_MAP_SHIFT;
+    seg_missing = 1;
+    break;
+  }
+
+  return seg_missing;
+}
+  
 /*---------------------------------------------------------------------------*/
 void ota_clear()
 {
@@ -58,4 +90,12 @@ void ota_copyandreset()
 {
   
 }
-
+/*---------------------------------------------------------------------------*/
+// Verify the IMG CRC
+// size: Size of image
+// crc: CRC16 of image
+// return: success / fail
+uint8_t ota_verify_crc(uint16_t size, uint16_t crc)
+{
+  return 1;
+}
