@@ -1597,7 +1597,9 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     *packet++ = (uint8_t)(ota_img_version >> 8);
     *packet++ = (uint8_t)(ota_img_version);
     *packet++ = header_status;
-    *packet++ = ota_next_addr;
+    *packet++ = (uint8_t)(ota_next_addr >> 8);
+    *packet++ = (uint8_t)(ota_next_addr);
+    
   }
 //  if (req == CONECTRIC_POLL_RS485) {
 //    /* FIXME this has to be calculated from RS485 reply length */

@@ -46,8 +46,8 @@ uint8_t ota_next_segment(uint16_t img_size, uint16_t *next_addr)
 {
   uint8_t seg_missing = 0;
   *next_addr = 0x0000;
-  // convert image size to # bytes in segment map
-  img_size = img_size >> OTA_UPDATE_MAP_SHIFT;
+  // convert image size to # bytes in segment map (map_shift to bytes, + 3 -> bits)
+  img_size = img_size >> (OTA_UPDATE_MAP_SHIFT + 3);
   
   // find the first missing segment and exit loop when found
   for(uint8_t idx = 0; idx < img_size; idx++)
@@ -55,15 +55,15 @@ uint8_t ota_next_segment(uint16_t img_size, uint16_t *next_addr)
     if(img_segment_map[idx] == 0xFF)
       continue;
     
-    *next_addr = idx * 8;
+    // each block of 8 bits represents 8 64 byte blocks
+    *next_addr = idx * 8 * OTA_SEGMENT_MAX;
     
     uint8_t bits = img_segment_map[idx];
+    // each bit is another 64 byte block
     while (bits % 2) {
-      *next_addr++;
+      (*next_addr)+= OTA_SEGMENT_MAX;
       bits = bits >> 1;
     } 
-    *next_addr++;
-    *next_addr = *next_addr << OTA_UPDATE_MAP_SHIFT;
     seg_missing = 1;
     break;
   }
