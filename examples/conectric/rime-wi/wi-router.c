@@ -388,7 +388,7 @@ static void child_sensor_restore()
   }
 }
 
-static void process_img_update_bcst(uint8_t * payload)
+static void process_img_update(uint8_t * payload)
 {
    static uint8_t img_segment[OTA_SEGMENT_MAX];    
    uint16_t img_version;
@@ -398,10 +398,10 @@ static void process_img_update_bcst(uint8_t * payload)
    uint8_t data_len;
    
    img_version = (payload[2] << 8) + payload[3];
-   addr_offset = (payload[4] << 8) + payload[5];
-   dev_type = payload[6];
-   checksum = payload[7];
-   data_len = payload[8];
+   dev_type = payload[4];
+   checksum = payload[8];
+   addr_offset = (payload[10] << 8) + payload[11];
+   data_len = payload[12];
    
    // exit if not for me
    if(dev_type != CONECTRIC_DEVICE_TYPE_WI)
@@ -431,7 +431,7 @@ static void process_img_update_bcst(uint8_t * payload)
    }
 
    // copy data out of payload in case it gets overwritten by another process
-   memcpy(img_segment, &payload[9], data_len);
+   memcpy(img_segment, &payload[13], data_len);
    // write segment of current image
    ota_flashwrite(addr_offset, data_len, img_segment);
    // update ota image map
@@ -1496,7 +1496,6 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t responselen;
 //  uint8_t chunk_number = 0;
 //  uint8_t chunk_size = 0;
-  uint8_t i;
   uint8_t header_status = 0;
   uint16_t ota_version; 
   uint16_t ota_next_addr = 0x0000;
@@ -1540,22 +1539,23 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     response = CONECTRIC_POLL_WI_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
-  if (req == CONECTRIC_IMG_COMPLETE) {
+  if (req == CONECTRIC_IMG_COMPLETE || req == CONECTRIC_IMG_UPDATE_DIR) {
     // verify image and send appropriate response
     ota_version = (radio_request[0] << 8) + radio_request[1];
-    uint16_t ota_size = (radio_request[2] << 8) + radio_request[3];
-    uint16_t ota_crc = (radio_request[4] << 8) + radio_request[5];
-    uint16_t ota_reboot_delay = (radio_request[6] << 8) + radio_request[7];
+    // skip device type (assume multihop addressed correctly)
+    uint16_t img_size = (radio_request[3] << 8) + radio_request[4];
+    uint16_t img_crc = (radio_request[5] << 8) + radio_request[6];
+    // uint8_t reboot_delay = radio_request[7];
     
     if(ota_version != ota_img_version)
     {
       header_status = OTA_IMG_INVALID_VER;
     } 
-    else if(ota_next_segment(ota_size, &ota_next_addr))
+    else if(ota_next_segment(img_size, &ota_next_addr))
     {     
       header_status = OTA_IMG_INCOMPLETE;
     }
-    else if (ota_verify_crc(ota_size, ota_crc))
+    else if (ota_verify_crc(img_size, img_crc))
     {
       // set timer for reboot BMB   
       header_status = OTA_IMG_SUCCESS;
@@ -1565,8 +1565,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
       header_status = OTA_IMG_INVALID_CRC;
     }
     
-    responselen += 5;  // CONECTRIC_IMG_REBOOT_SIZE;
-    response = CONECTRIC_IMG_REBOOT;
+    responselen += 5;  // CONECTRIC_IMG_ACK_SIZE;
+    response = CONECTRIC_IMG_ACK;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
 
@@ -1580,9 +1580,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   *packet++ = responselen;
   *packet++ = response;
 
-  i = responselen-2;
-  
   if (req == CONECTRIC_POLL_WI) {
+    uint8_t i = responselen-2;
     // add header
     *packet++ = header_status;
     for(uint8_t x=0; x<(i-1); x++) {
@@ -1591,7 +1590,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     }
   }
   
-  if(req == CONECTRIC_IMG_COMPLETE)
+  if(req == CONECTRIC_IMG_COMPLETE || req == CONECTRIC_IMG_UPDATE_DIR)
   {
     // build response
     *packet++ = (uint8_t)(ota_img_version >> 8);
@@ -1908,13 +1907,24 @@ call_decision_maker(void * incoming, uint8_t type)
     
     if (message->request == CONECTRIC_IMG_UPDATE_BCST)
     {
-       process_img_update_bcst(message->payload);
+       process_img_update(message->payload);
     }
 //    if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
 //      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
 //        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
 //            message);
 
+    if (message->request == CONECTRIC_IMG_UPDATE_DIR)
+    {
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
+        
+        // process the image segment
+        process_img_update(message->payload);   
+        // send response
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+            message->payload);
+    }
+    
     /* multihop message received */
     if (
         // message->request == CONECTRIC_MULTIHOP_PING ||
