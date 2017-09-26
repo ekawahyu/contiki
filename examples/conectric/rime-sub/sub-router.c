@@ -959,7 +959,9 @@ call_decision_maker(void * incoming, uint8_t type)
         // mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
-        mhop_message_recv.request == CONECTRIC_POLL_WI  
+        mhop_message_recv.request == CONECTRIC_POLL_WI ||
+        mhop_message_recv.request == CONECTRIC_IMG_UPDATE_DIR ||
+        mhop_message_recv.request == CONECTRIC_IMG_COMPLETE  
         // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC
           ) {
       forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
@@ -970,7 +972,8 @@ call_decision_maker(void * incoming, uint8_t type)
         //mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY 
+        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY ||
+        mhop_message_recv.request == CONECTRIC_IMG_ACK  
         // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY
           ) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);

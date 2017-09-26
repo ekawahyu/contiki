@@ -130,6 +130,8 @@ extern volatile uint16_t deep_sleep_requested;
 // device general
 #define DEVICE_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 30U)) // BMB
 
+struct ctimer img_reset_timer;
+
 // WI state
 #define WI_ROOM_STATUS_BIT_SHIFT 7
 #define WI_HEATING_BIT_SHIFT 6
@@ -394,12 +396,12 @@ static void process_img_update(uint8_t * payload)
    uint16_t img_version;
    uint16_t addr_offset;
    uint8_t dev_type;
-   uint8_t checksum;
+   uint16_t crc16, crc16_result;
    uint8_t data_len;
    
    img_version = (payload[2] << 8) + payload[3];
    dev_type = payload[4];
-   checksum = payload[8];
+   crc16 = (payload[7] << 8) + payload[8];
    addr_offset = (payload[10] << 8) + payload[11];
    data_len = payload[12];
    
@@ -411,8 +413,11 @@ static void process_img_update(uint8_t * payload)
    if(img_version <= WI_VERSION)
      return;
    
+   // BMB: Not implemented
+   // crc16_result = crc16_data(&payload[13], data_len, crc16_result);
+   
    // validate checksum (including data_len): BMB - set to FF for test, need to implement checksum
-   if(checksum != 0xFF || data_len > OTA_SEGMENT_MAX)
+   if(crc16 != 0xFFFF || data_len > OTA_SEGMENT_MAX)
      return;
    
    if((ota_img_version == OTA_NO_IMG && img_version > WI_Version) || (img_version > ota_img_version))
@@ -1545,7 +1550,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     // skip device type (assume multihop addressed correctly)
     uint16_t img_size = (radio_request[3] << 8) + radio_request[4];
     uint16_t img_crc = (radio_request[5] << 8) + radio_request[6];
-    // uint8_t reboot_delay = radio_request[7];
+    uint8_t reboot_delay = radio_request[7];
     
     if(ota_version != ota_img_version)
     {
@@ -1557,7 +1562,11 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     }
     else if (ota_verify_crc(img_size, img_crc))
     {
-      // set timer for reboot BMB   
+      clock_time_t reset_time = 2^reboot_delay;
+      
+      // set timer for image copy and reboot BMB
+      ctimer_set(&img_reset_timer, reset_time, ota_copyandreset, &reboot_delay); // start supervisory timer
+      
       header_status = OTA_IMG_SUCCESS;
     } 
     else
@@ -1773,7 +1782,10 @@ call_decision_maker(void * incoming, uint8_t type)
         //mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
-        mhop_message_recv.request == CONECTRIC_POLL_WI  
+        mhop_message_recv.request == CONECTRIC_POLL_WI ||
+        mhop_message_recv.request == CONECTRIC_IMG_UPDATE_DIR ||
+        mhop_message_recv.request == CONECTRIC_IMG_COMPLETE
+          
         // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC
           ) {
       forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
@@ -1784,7 +1796,8 @@ call_decision_maker(void * incoming, uint8_t type)
         //mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
         mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY 
+        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY ||
+        mhop_message_recv.request == CONECTRIC_IMG_ACK 
         // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY
           ) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);

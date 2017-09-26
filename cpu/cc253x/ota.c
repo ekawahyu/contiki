@@ -86,10 +86,16 @@ void ota_flashwrite(uint16_t addr, uint8_t size, uint8_t *data)
 }
 
 /*---------------------------------------------------------------------------*/
-void ota_copyandreset()
+void ota_copyandreset(void * arg)
 {
+  // erase existing "code"
+  //for(uint32_t pg = OTA_IMG_START; pg < OTA_IMG_END; pg += FLASH_PAGE_SIZE)
+  //  flash_page_erase(FLASH_PAGE(pg));
   
+  // copy flash from OTA_FLASH_START to OTA_IMG_START
+  //flash_write_DMA(...)
 }
+
 /*---------------------------------------------------------------------------*/
 // Verify the IMG CRC
 // size: Size of image
