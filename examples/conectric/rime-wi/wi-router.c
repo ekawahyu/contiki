@@ -221,15 +221,15 @@ static uint8_t wi_msg[WI_MSG_MAX_SIZE+1];    // move this to FLASH???
 #endif
 
 /* RS485 */
-//#define BUFSIZE 256
-//static uint16_t rs485_in_pos;
-//static uint8_t rs485_buffer[BUFSIZE];
+#define BUFSIZE 256
+static uint16_t rs485_in_pos;
+static uint8_t rs485_buffer[BUFSIZE];
 
 /* EKM Messaging */
-//#define RS485_DATA_MAX_SIZE 20
-//static uint8_t rs485_data_request;
-//static linkaddr_t rs485_data_recv;
-//static uint8_t rs485_data_payload[RS485_DATA_MAX_SIZE];
+#define RS485_DATA_MAX_SIZE 20
+static uint8_t rs485_data_request;
+static linkaddr_t rs485_data_recv;
+static uint8_t rs485_data_payload[RS485_DATA_MAX_SIZE];
 
 // Serial Debug
 static uint8_t dump_buffer = 0;
@@ -252,7 +252,7 @@ PROCESS(example_trickle_process, "ConTB");
 PROCESS(example_multihop_process, "ConMHop");
 //PROCESS(serial_in_process, "SerialIn");
 //PROCESS(modbus_in_process, "ModbusIn");
-//PROCESS(modbus_out_process, "ModbusOut");
+PROCESS(modbus_out_process, "ModbusOut");
 PROCESS(modbus_wi_test, "WITest");
 PROCESS(flash_process, "FlashLog");
 //#if BUTTON_SENSOR_ON
@@ -274,7 +274,7 @@ AUTOSTART_PROCESSES(
     &example_multihop_process,
 //    &serial_in_process,
 //    &modbus_in_process,
-//    &modbus_out_process,
+    &modbus_out_process,
     &modbus_wi_test,
     &flash_process);
 //#endif
@@ -1069,47 +1069,47 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 //  PROCESS_END();
 //}
 /*---------------------------------------------------------------------------*/
-//PROCESS_THREAD(modbus_out_process, ev, data)
-//{
-//  static struct etimer et;
-//  static message_recv * message;
-//  static uint8_t * serial_data;
-//  static uint8_t reqlen;
-//  static uint8_t req;
-//  static uint8_t len;
-//
-//  PROCESS_BEGIN();
-//
-//  while(1) {
-//
-//    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
-//
-//    message = (message_recv *)data;
-//    serial_data = message->payload;
-//    reqlen = *serial_data++;
-//    req = *serial_data++;
-//
-//    len = reqlen - 2;
-//
-//    /* reset modbus input index */
-//    rs485_in_pos = 0;
-//
-//    /* modbus write */
-//    putstring("modbus_out_process: ");
-//    while(len--) {
-//      puthex(*serial_data);
-//      uart_arch_writeb(*serial_data++);
-//    }
-//    putstring("\n");
-//    
-//    // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
-//    rs485_data_request = message->request;
-//    linkaddr_copy(&rs485_data_recv, &message->ereceiver);
-//    memcpy(rs485_data_payload, message->payload, message->length);
-//  }
-//
-//  PROCESS_END();
-//}
+PROCESS_THREAD(modbus_out_process, ev, data)
+{
+  static struct etimer et;
+  static message_recv * message;
+  static uint8_t * serial_data;
+  static uint8_t reqlen;
+  static uint8_t req;
+  static uint8_t len;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
+
+    message = (message_recv *)data;
+    serial_data = message->payload;
+    reqlen = *serial_data++;
+    req = *serial_data++;
+
+    len = reqlen - 2;
+
+    /* reset modbus input index */
+    rs485_in_pos = 0;
+
+    /* modbus write */
+    putstring("modbus_out_process: ");
+    while(len--) {
+      puthex(*serial_data);
+      uart_arch_writeb(*serial_data++);
+    }
+    putstring("\n");
+
+    // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
+    rs485_data_request = message->request;
+    linkaddr_copy(&rs485_data_recv, &message->ereceiver);
+    memcpy(rs485_data_payload, message->payload, message->length);
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
 void
 fill_modbus_payload(uint8_t * payload, modbus_request * modreq)
@@ -1324,7 +1324,7 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
     for (i = 0; i < (sizeof(modreq)/6); i++) {
       message.payload = payload;
       fill_modbus_payload(payload, &modreq[i]);
-      // process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     }
