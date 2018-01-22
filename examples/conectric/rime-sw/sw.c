@@ -57,7 +57,7 @@
 #include "examples/conectric/conectric-messages.h"
 
 // SW Network Parameters
-#define SW_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 30U)) // BMB
+#define SW_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 5U)) // BMB
 #define SW_HEADER_SIZE         2
 #define SW_PAYLOAD_SIZE        4
 static uint8_t message[SW_HEADER_SIZE + SW_PAYLOAD_SIZE];
@@ -80,11 +80,11 @@ enum
 /*---------------------------------------------------------------------------*/
 PROCESS(sw_abc_process, "SW Sensor");
 PROCESS(sw_supervisory_process, "SW Supervisory process");
-PROCESS(flash_log_process, "Flash Log process");
+//PROCESS(flash_log_process, "Flash Log process");
 
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &buttons_test_process, &flash_log_process);
+AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &buttons_test_process/*, &flash_log_process*/);
 #else
 AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &flash_log_process);
 #endif
@@ -188,7 +188,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
         if (loop)
           deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
         else
-          deep_sleep_requested = 10 * CLOCK_SECOND; // BMB how does sleep work?
+          deep_sleep_requested = 60 * CLOCK_SECOND; // BMB how does sleep work?
       }
     }
     else if(*sensor_data == SW_SUP_EVT)
@@ -215,7 +215,8 @@ PROCESS_THREAD(sw_abc_process, ev, data)
         if (loop)
           deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
         else
-          deep_sleep_requested = 10 * CLOCK_SECOND; // BMB how does sleep work?
+          // deep_sleep_requested = 10 * CLOCK_SECOND; // BMB how does sleep work?
+          deep_sleep_requested = SW_SUP_TIMEOUT;
       }   
     }
   }
