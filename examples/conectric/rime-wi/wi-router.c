@@ -98,6 +98,9 @@ typedef struct {
 static void compose_response_to_packetbuf(
     uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
 static linkaddr_t * call_decision_maker(void * incoming, uint8_t type);
+void fill_modbus_payload(uint8_t * payload, modbus_request * modreq);
+void decode_modbus_payload(uint8_t * payload, modbus_request * modrep, uint16_t * data);
+process_event_t modbus_reply_event_message;
 
 #define REQUEST_HEADER_LEN    4
 
@@ -252,7 +255,7 @@ PROCESS(example_abc_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
 PROCESS(example_multihop_process, "ConMHop");
 //PROCESS(serial_in_process, "SerialIn");
-//PROCESS(modbus_in_process, "ModbusIn");
+PROCESS(modbus_in_process, "ModbusIn");
 PROCESS(modbus_out_process, "ModbusOut");
 PROCESS(modbus_wi_test, "WITest");
 PROCESS(flash_process, "FlashLog");
@@ -274,7 +277,7 @@ AUTOSTART_PROCESSES(
     &example_trickle_process,
     &example_multihop_process,
 //    &serial_in_process,
-//    &modbus_in_process,
+    &modbus_in_process,
     &modbus_out_process,
     &modbus_wi_test,
     &flash_process);
@@ -730,8 +733,32 @@ dump_payload(void)
 static void
 abc_recv(struct abc_conn *c)
 {
+  static uint8_t i;
+  static uint8_t payload[20];
+  static uint8_t payload2[20];
+  static message_recv message;
+  static message_recv message2;
+  static modbus_request modreq[] =
+  {
+    /*** programmer key in proximity ***/
+    {.id = 0x01, .fc = 0x06, .addr = 16-1, .third.value = 0x8000 | 0x0700, .infostring = NULL},
+    /*** no programmer key in proximity ***/
+    {.id = 0x01, .fc = 0x06, .addr = 16-1, .third.value = 0x0000 | 0x0000, .infostring = NULL},
+    /*** clock 12:30 ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0x0c1e, .infostring = NULL},
+    /*** clock blank ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0xffff, .infostring = NULL},
+  };
+
   packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
-  
+
+  message.payload = payload;
+  if (abc_message_recv.rssi > -25)
+    fill_modbus_payload(payload, &modreq[0]);
+  else
+    fill_modbus_payload(payload, &modreq[1]);
+  process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+
     /* TODO only the sink should dump packetbuf,
      * but routers have to store sensors data
      */
@@ -1040,35 +1067,68 @@ PROCESS_THREAD(example_multihop_process, ev, data)
 //  PROCESS_END();
 //}
 /*---------------------------------------------------------------------------*/
-//PROCESS_THREAD(modbus_in_process, ev, data)
-//{
-//  static uint8_t datasize;
-//  static uint8_t* dataptr;
-//  static uint16_t crc;
-//  uint8_t cnt;
-//
-//  PROCESS_BEGIN();
-//
-//  /* FIXME workaround to send at least one character out so that
-//   * PROCESS_WAIT_EVENT() can receive modbus_line_event_message
-//   */
-//  uart_arch_writeb(0);
-//
-//  while(1) {
-//
-//    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
-//    dataptr = data;
+PROCESS_THREAD(modbus_in_process, ev, data)
+{
+  static uint8_t datasize;
+  static uint8_t* dataptr;
+  static uint16_t moddata;
+  static uint16_t crc;
+  uint8_t cnt;
+  static struct etimer et;
+  static uint8_t payload[20];
+  static message_recv message;
+  static modbus_request modrep;
+  static modbus_request modreq[] =
+  {
+    /*** clock 12:30 ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0x0c1e, .infostring = NULL},
+    /*** clock blank ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0xffff, .infostring = NULL},
+  };
+
+  PROCESS_BEGIN();
+
+  /* FIXME workaround to send at least one character out so that
+   * PROCESS_WAIT_EVENT() can receive modbus_line_event_message
+   */
+  uart_arch_writeb(0);
+
+  modbus_reply_event_message = process_alloc_event();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
+    dataptr = data;
+
 //    printf("got modbus data (%d)\n", *dataptr);
 //    dataptr++;
 //    while (*dataptr != 0) {
 //      puthex(*dataptr++);
 //    }
 //    putstring("\n");
-//    
-//  }
+
+    decode_modbus_payload(dataptr, &modrep, &moddata);
+
+    if (modrep.fc == 0x03) {
+      message.payload = payload;
+      process_post(PROCESS_BROADCAST, modbus_reply_event_message, &moddata);
+//      message.payload = payload;
+//      fill_modbus_payload(payload, &modreq[0]);
+//      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//      etimer_set(&et, CLOCK_SECOND/2);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 //
-//  PROCESS_END();
-//}
+//      message.payload = payload;
+//      fill_modbus_payload(payload, &modreq[1]);
+//      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//      etimer_set(&et, CLOCK_SECOND/2);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_out_process, ev, data)
 {
@@ -1132,208 +1192,357 @@ fill_modbus_payload(uint8_t * payload, modbus_request * modreq)
   *payload++ = (crc16_result & 0xFF00) >> 8;
 }
 /*---------------------------------------------------------------------------*/
+void
+decode_modbus_payload(uint8_t * payload, modbus_request * modrep, uint16_t * data)
+{
+  static uint16_t crc16_result;
+  static uint8_t * modbus_payload;
+
+  payload++; /* length, not part of modbus */
+  modbus_payload = payload;
+  modrep->id = *payload++; /* slave id */
+  modrep->fc = *payload++; /* function code */
+  if (modrep->fc == 0x03) {
+    modrep->third.len = *payload++; /* byte length */
+  }
+
+  *data = *payload++ << 8;
+  *data = *data | *payload++;
+
+//  /* calculate crc and see if it is a match */
+//  crc16_result = modbus_crc16_calc(modbus_payload, 5);
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_wi_test, ev, data)
 {
+//  static uint16_t crc16_result;
+//  static uint16_t counter;
+//  static modbus_request modreq[] =
+//  {
+//      /*** read register holding from 1-18 one at a time ***/
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0000, .third.len = 0x0001, .infostring = "Read reg 1-18\n"},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0001, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0002, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0003, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0004, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0005, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0006, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0007, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0008, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0009, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x000a, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x000b, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x000c, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x000d, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x000e, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x000f, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0010, .third.len = 0x0001, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0011, .third.len = 0x0001, .infostring = NULL},
+//
+//      /*** read register holding from 1-18 all at once ***/
+//      {.id = 0x01, .fc = 0x03, .addr = 0x0000, .third.len = 0x0012, .infostring = "Read reg 1-18 at once\n"},
+//
+//      /* read register holding from 1-18 one at a time FROM DEVICE ID=2,
+//       * WI should not respond to any of these read request
+//       */
+//      {.id = 0x02, .fc = 0x03, .addr = 0x0000, .third.len = 0x0012, .infostring = "Read reg 1-18 at once from device ID=2\n"},
+//
+//      /*** modify setpoint temperature value to 27 degree C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0003, .third.value = 270, .infostring = "Setpoint=27C\n"},
+//
+//      /*** modify set temperature low limit value to 20 degree C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0005, .third.value = 200, .infostring = "Low limit=20C\n"},
+//
+//      /*** modify set temperature high limit value to 32 degree C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0006, .third.value = 320, .infostring = "High limit=32C\n"},
+//
+//      /*** modify current time to 00:00, 12:30, 99:99, then blank ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0x0000, .infostring = "Current time\n"},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0x0c1e, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0x6363, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0xffff, .infostring = "Current time as blank\n"},
+//
+//      /*** dimming down backlight ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 7 << 4, .infostring = "Backlight down\n"},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 6 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 5 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 4 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 3 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 2 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 1 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 0 << 4, .infostring = NULL},
+//
+//      /*** dimming up backlight ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 0 << 4, .infostring = "Backlight up\n"},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 1 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 2 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 3 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 4 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 5 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 6 << 4, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 7 << 4, .infostring = NULL},
+//
+//      /*** set backlight delay off to 10 seconds ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 5 << 4 | 1, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 10 << 8 | 6 << 4 | 1, .infostring = NULL},
+//
+//      /*** set backlight to default ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 5 << 4, .infostring = "Backlight default\n"},
+//
+//      /*** current schedule show 0-9/A-F/L/H/P/U/r, then off ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3000, .infostring = "Current schedule\n"},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3100, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3200, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3300, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3400, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3500, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3600, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3700, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3800, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x3900, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4100, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4200, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4300, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4400, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4500, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4600, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4C00, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x4800, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x5000, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x5500, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x7200, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x0000, .infostring = "Current schedule as blank\n"},
+//
+//      /*** days icons show 1-7, then blank ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x0001, .infostring = "Days icons\n"}, /* ignore value, blank */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x0003, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x0007, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x000f, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x001f, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x003f, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x007f, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x00ff, .infostring = NULL},
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x0000, .infostring = "Days icons as blank\n"},
+//
+//      /*** set temp compensation to +5.0 deg C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 50 << 8, .infostring = "Temperature compensation\n"},
+//
+//      /*** set temp compensation to +4.5 deg C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 45 << 8, .infostring = NULL},
+//
+//      /*** set temp compensation to -5.0 deg C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x00CE << 8, .infostring = NULL},
+//
+//      /*** set temp compensation to -4.5 deg C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x00D3 << 8, .infostring = NULL},
+//
+//      /*** set temp display setting as ambient display in degree C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0000, .infostring = "Ambient temperature in C\n"},
+//
+//      /*** set temp display setting as ambient display in degree F ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0001, .infostring = "Ambient temperature in F\n"},
+//
+//      /*** set temp display setting as setpoint display in degree C ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0002, .infostring = "Setpoint temperature in C\n"},
+//
+//      /*** set temp display setting as setpoint display in degree F ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 0x0003, .infostring = "Setpoint temperature in F\n"},
+//
+//      /*** set fan speed ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0000 << 12 | 0x000d, .infostring = "Fan speeds\n"}, /* Off */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0001 << 12 | 0x000d, .infostring = NULL}, /* Low */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0002 << 12 | 0x000d, .infostring = NULL}, /* Med */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0003 << 12 | 0x000d, .infostring = NULL}, /* High */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0004 << 12 | 0x000d, .infostring = NULL}, /* Auto-Off */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0005 << 12 | 0x000d, .infostring = NULL}, /* Auto-Low */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0006 << 12 | 0x000d, .infostring = NULL}, /* Auto-Med */
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0007 << 12 | 0x000d, .infostring = NULL}, /* Auto-High */
+//
+//      /*** lock WI ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0080, .infostring = "Lock WI\n"},
+//
+//      /*** unlock WI ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0000, .infostring = "Unlock WI\n"},
+//
+//      /*** show cool icon ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0040, .infostring = "Show icons\n"},
+//
+//      /*** show heat icon ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0020, .infostring = NULL},
+//
+//      /*** show fan icon ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0010, .infostring = NULL},
+//
+//      /*** show dry icon ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0008, .infostring = NULL},
+//
+//      /*** show wireless icon ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0004, .infostring = NULL},
+//
+//      /*** turn off icons ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0000, .infostring = NULL},
+//
+//      /*** write any value to CB configuration ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x1234, .infostring = "Write CB config\n"},
+//
+//      /*** read the value back from CB configuration ***/
+//      {.id = 0x01, .fc = 0x03, .addr = 0x000e, .third.len = 0x0001, .infostring = "Read CB config\n"},
+//
+//      /*** set power off ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 0, .infostring = "Power Off\n"},
+//
+//      /*** set power on ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 0x0008, .third.value = 1, .infostring = "Power On\n"},
+//
+//      /*** Std Mode ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 14-1, .third.value = 0x8000, .infostring = "Std Mode\n"},
+//
+//      /*** Prog Mode ***/
+//      {.id = 0x01, .fc = 0x06, .addr = 14-1, .third.value = 0x0000, .infostring = "Prog Mode\n"},
+//  };
+
   static struct etimer et;
   static uint8_t payload[20];
   static message_recv message;
-//  static uint16_t crc16_result;
-//  static uint16_t counter;
   static uint8_t i;
+  static uint16_t moddata;
+  static uint16_t temperature;
+  static uint16_t setpoint;
+  static modbus_request modrequest;
   static modbus_request modreq[] =
   {
-      /*** read register holding from 1-18 one at a time ***/
-      {.id = 0x01, .fc = 0x03, .addr = 0x0001, .third.len = 0x0001, .infostring = "Read reg 1-18\n"},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0002, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0003, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0004, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0005, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0006, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0007, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0008, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0009, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x000a, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x000b, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x000c, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x000d, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x000e, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x000f, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0010, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0011, .third.len = 0x0001, .infostring = NULL},
-      {.id = 0x01, .fc = 0x03, .addr = 0x0012, .third.len = 0x0001, .infostring = NULL},
-
-      /*** read register holding from 1-18 all at once ***/
-      {.id = 0x01, .fc = 0x03, .addr = 0x0001, .third.len = 0x0012, .infostring = "Read reg 1-18 at once\n"},
-
-      /* read register holding from 1-18 one at a time FROM DEVICE ID=2,
-       * WI should not respond to any of these read request
-       */
-      {.id = 0x02, .fc = 0x03, .addr = 0x0001, .third.len = 0x0012, .infostring = "Read reg 1-18 at once from device ID=2\n"},
-
-      /*** modify setpoint temperature value to 27 degree C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x0005, .third.value = 270, .infostring = "Setpoint=27C\n"},
-
-      /*** modify set temperature low limit value to 20 degree C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x0006, .third.value = 200, .infostring = "Low limit=20C\n"},
-
-      /*** modify set temperature high limit value to 32 degree C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x0007, .third.value = 320, .infostring = "High limit=32C\n"},
-
-      /*** modify current time to 00:00, 12:30, 99:99, then blank ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0000, .infostring = "Current time\n"},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0x0c1e, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x6363, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000a, .third.value = 0xffff, .infostring = "Current time as blank\n"},
-
-      /*** current schedule show 0-9/A-F/L/H/P/U/r, then off ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3000, .infostring = "Current schedule\n"},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3100, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3200, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3300, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3400, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3500, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3600, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3700, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3800, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x3900, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4100, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4200, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4200, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4300, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4400, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4500, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4600, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4C00, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x4800, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x5000, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x5500, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x7200, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0000, .infostring = "Current schedule as blank\n"},
-
-      /*** days icons show 1-7, then blank ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0001, .infostring = "Days icons\n"}, /* ignore value, blank */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0003, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0007, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x000f, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x001f, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x003f, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x007f, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x00ff, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 0x0000, .infostring = "Days icons as blank\n"},
-
-      /*** set backlight delay off to 60 seconds ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8, .infostring = NULL},
-
-      /*** dimming up backlight ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 0 << 4, .infostring = "Backlight up\n"},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 1 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 2 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 3 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 4 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 5 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 6 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 7 << 4, .infostring = NULL},
-
-      /*** dimming down backlight ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 7 << 4, .infostring = "Backlight down\n"},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 6 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 5 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 4 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 3 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 2 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 1 << 4, .infostring = NULL},
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 0 << 4, .infostring = NULL},
-
-      /*** set backlight to default ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000c, .third.value = 60 << 8 | 5 << 4, .infostring = "Backlight default\n"},
-
-      /*** set temp compensation to +5.0 deg C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 50 << 8, .infostring = "Temperature compensation\n"},
-
-      /*** set temp compensation to +4.5 deg C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 45 << 8, .infostring = NULL},
-
-      /*** set temp compensation to -5.0 deg C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x00CE << 8, .infostring = NULL},
-
-      /*** set temp compensation to -4.5 deg C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x00D3 << 8, .infostring = NULL},
-
-      /*** set temp display setting as ambient display in degree C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0000, .infostring = "Ambient temperature in C\n"},
-
-      /*** set temp display setting as ambient display in degree F ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0001, .infostring = "Ambient temperature in F\n"},
-
-      /*** set temp display setting as setpoint display in degree C ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0002, .infostring = "Setpoint temperature in C\n"},
-
-      /*** set temp display setting as setpoint display in degree F ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0003, .infostring = "Setpoint temperature in F\n"},
-
-      /*** set fan speed ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0000 << 12 | 0x000d, .infostring = "Fan speeds\n"}, /* Off */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0001 << 12 | 0x000d, .infostring = NULL}, /* Low */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0002 << 12 | 0x000d, .infostring = NULL}, /* Med */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0003 << 12 | 0x000d, .infostring = NULL}, /* High */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0004 << 12 | 0x000d, .infostring = NULL}, /* Auto-Off */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0005 << 12 | 0x000d, .infostring = NULL}, /* Auto-Low */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0006 << 12 | 0x000d, .infostring = NULL}, /* Auto-Med */
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0007 << 12 | 0x000d, .infostring = NULL}, /* Auto-High */
-
-      /*** lock WI ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0080, .infostring = "Lock WI\n"},
-
-      /*** unlock WI ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0000, .infostring = "Unlock WI\n"},
-
-      /*** show cool icon ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0040, .infostring = "Show icons\n"},
-
-      /*** show heat icon ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0020, .infostring = NULL},
-
-      /*** show fan icon ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0010, .infostring = NULL},
-
-      /*** show dry icon ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0008, .infostring = NULL},
-
-      /*** show wireless icon ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0004, .infostring = NULL},
-
-      /*** turn off icons ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000e, .third.value = 0x0000, .infostring = NULL},
-
-      /*** write any value to CB configuration ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x000f, .third.value = 0x1234, .infostring = "Write CB config\n"},
-
-      /*** read the value back from CB configuration ***/
-      {.id = 0x01, .fc = 0x03, .addr = 0x000f, .third.len = 0x0001, .infostring = "Read CB config\n"},
-
-      /*** set power off ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 0, .infostring = "Power Off\n"},
-
-      /*** set power on ***/
-      {.id = 0x01, .fc = 0x06, .addr = 0x0009, .third.value = 1, .infostring = "Power On\n"},
+    /*** set backlight to 5 ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 5 << 4 | 1, .infostring = NULL},
+    /*** set backlight to 6 ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x000b, .third.value = 60 << 8 | 6 << 4 | 1, .infostring = NULL},
+    /*** show cool icon ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0040, .infostring = NULL},
+    /*** show heat icon ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0020, .infostring = NULL},
+    /*** show none ***/
+    {.id = 0x01, .fc = 0x06, .addr = 0x000d, .third.value = 0x0000, .infostring = NULL},
   };
 
   PROCESS_BEGIN();
 
+//  while(1) {
+//
+//    for (i = 0; i < (sizeof(modreq)/8); i++) {
+//      message.payload = payload;
+//      fill_modbus_payload(payload, &modreq[i]);
+//      if (modreq[i].infostring) {
+//        printf("INFO:");
+//        printf(modreq[i].infostring);
+//      }
+//      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//      etimer_set(&et, 4 * CLOCK_SECOND);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
+//
+//  }
+
   while(1) {
 
-    for (i = 0; i < (sizeof(modreq)/8); i++) {
+    /* keep backlight on */
+    message.payload = payload;
+    fill_modbus_payload(payload, &modreq[0]);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    /* keep backlight on */
+    message.payload = payload;
+    fill_modbus_payload(payload, &modreq[1]);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    /* set ambient temperature viewing and internal sensor */
+    message.payload = payload;
+    modrequest.id = 0x01;
+    modrequest.fc = 0x03;
+    modrequest.addr = 0x000c;
+    modrequest.third.len = 1;
+    modrequest.infostring = NULL;
+
+    fill_modbus_payload(payload, &modrequest);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_reply_event_message || etimer_expired(&et));
+
+    if (data != NULL) {
+      moddata = *(uint16_t*)data;
+
       message.payload = payload;
-      fill_modbus_payload(payload, &modreq[i]);
-      if (modreq[i].infostring) {
-        printf("INFO:");
-        printf(modreq[i].infostring);
-      }
+      modrequest.id = 0x01;
+      modrequest.fc = 0x06;
+      modrequest.addr = 0x000c;
+      modrequest.third.value = moddata & ~0x0006;
+      modrequest.infostring = NULL;
+
+      fill_modbus_payload(payload, &modrequest);
       process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
       etimer_set(&et, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     }
 
+    /* read internal temperature reading */
+    message.payload = payload;
+    modrequest.id = 0x01;
+    modrequest.fc = 0x03;
+    modrequest.addr = 0x0000;
+    modrequest.third.len = 1;
+    modrequest.infostring = NULL;
+
+    fill_modbus_payload(payload, &modrequest);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_reply_event_message || etimer_expired(&et));
+
+    if (data != NULL) {
+      temperature = *(uint16_t*)data;
+    }
+
+    /* read setpoint temperature */
+    message.payload = payload;
+    modrequest.id = 0x01;
+    modrequest.fc = 0x03;
+    modrequest.addr = 0x0004;
+    modrequest.third.len = 1;
+    modrequest.infostring = NULL;
+
+    fill_modbus_payload(payload, &modrequest);
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+    etimer_set(&et, CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_reply_event_message || etimer_expired(&et));
+
+    if (data != NULL) {
+      setpoint = *(uint16_t*)data;
+    }
+
+    if (temperature > setpoint + 20) {
+      message.payload = payload;
+      fill_modbus_payload(payload, &modreq[2]);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+    if (temperature < setpoint - 20) {
+      message.payload = payload;
+      fill_modbus_payload(payload, &modreq[3]);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+
+    if (temperature <= setpoint + 20 && temperature >= setpoint - 20) {
+      message.payload = payload;
+      fill_modbus_payload(payload, &modreq[4]);
+      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+      etimer_set(&et, CLOCK_SECOND);
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
   }
 
   PROCESS_END();
