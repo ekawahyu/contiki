@@ -434,7 +434,7 @@ main(void) CC_NON_BANKED
         ASM(nop)
       __asm_end;
 
-      //fade_fast(LEDS_GREEN);
+      fade_fast(LEDS_RED);
 
       /* TODO not supposed to be here for Anaren A2530E */
 #if MODELS_CONF_ANAREN_A2530E_MODULE

@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 #define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      0
+#define MODELS_CONF_ANAREN_A2530E_MODULE      1
 
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     nullrdc_driver
@@ -57,7 +57,7 @@ extern "C" {
 
 #define LPM_CONF_MODE                         2
 
-#define BUTTON_SENSOR_CONF_INPUT_3STATE       0
+#define BUTTON_SENSOR_CONF_INPUT_3STATE       1
 
 #define CONECTRIC_BURST_NUMBER                5
 
