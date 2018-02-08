@@ -883,36 +883,40 @@ call_decision_maker(void * incoming, uint8_t type)
     /* Command line interpreter */
     if (bytereq[0] == 'M' && bytereq[1] == 'R') {
       gmacp = &X_IEEE_ADDR;
+      putstring("MR:");
       for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       putstring("\n");
     }
 
     else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
       dump_buffer = 0;
-      putstring("Ok DP\n");
+      putstring("DP:Ok\n");
     }
 
     else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
       dump_buffer = 1;
-      putstring("Ok DB\n");
+      putstring("DB:Ok\n");
     }
 
     else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
+      putstring("VER:");
       putstring(CONTIKI_VERSION_STRING "\n");
+      putstring("VER:");
       putstring(CONECTRIC_PROJECT_STRING "\n");
     }
 
     else if (bytereq[0] == '@' && bytereq[1] == 'B' && bytereq[2] == 'O' && bytereq[3] == 'O' && bytereq[4] == 'T') {
-      putstring("Rebooting...\n");
+      putstring("@BOOT:Rebooting...\n");
       while(1);
     }
 
     /* Unknown command */
     else {
-      puthex(linkaddr_node_addr.u8[0]);
-      putstring(".");
-      puthex(linkaddr_node_addr.u8[1]);
-      putstring(": Bad command!\n");
+//      puthex(linkaddr_node_addr.u8[0]);
+//      putstring(".");
+//      puthex(linkaddr_node_addr.u8[1]);
+      putstring(bytereq);
+      putstring(":Bad command!\n");
     }
 
   }
