@@ -752,12 +752,12 @@ abc_recv(struct abc_conn *c)
 
   packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
 
-  message.payload = payload;
-  if (abc_message_recv.rssi > -25)
-    fill_modbus_payload(payload, &modreq[0]);
-  else
-    fill_modbus_payload(payload, &modreq[1]);
-  process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//  message.payload = payload;
+//  if (abc_message_recv.rssi > -25)
+//    fill_modbus_payload(payload, &modreq[0]);
+//  else
+//    fill_modbus_payload(payload, &modreq[1]);
+//  process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
 
     /* TODO only the sink should dump packetbuf,
      * but routers have to store sensors data
@@ -1197,8 +1197,11 @@ decode_modbus_payload(uint8_t * payload, modbus_request * modrep, uint16_t * dat
 {
   static uint16_t crc16_result;
   static uint8_t * modbus_payload;
+  static uint8_t debugpayload[20];
+  static uint8_t debuglen;
 
-  payload++; /* length, not part of modbus */
+  debuglen = *payload++; /* length, not part of modbus */
+  memcpy(debugpayload, payload, debuglen);
   modbus_payload = payload;
   modrep->id = *payload++; /* slave id */
   modrep->fc = *payload++; /* function code */
@@ -1443,48 +1446,48 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
 
   while(1) {
 
-    /* keep backlight on */
-    message.payload = payload;
-    fill_modbus_payload(payload, &modreq[0]);
-    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    /* keep backlight on */
-    message.payload = payload;
-    fill_modbus_payload(payload, &modreq[1]);
-    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    /* set ambient temperature viewing and internal sensor */
-    message.payload = payload;
-    modrequest.id = 0x01;
-    modrequest.fc = 0x03;
-    modrequest.addr = 0x000c;
-    modrequest.third.len = 1;
-    modrequest.infostring = NULL;
-
-    fill_modbus_payload(payload, &modrequest);
-    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-    etimer_set(&et, CLOCK_SECOND);
-    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_reply_event_message || etimer_expired(&et));
-
-    if (data != NULL) {
-      moddata = *(uint16_t*)data;
-
-      message.payload = payload;
-      modrequest.id = 0x01;
-      modrequest.fc = 0x06;
-      modrequest.addr = 0x000c;
-      modrequest.third.value = moddata & ~0x0006;
-      modrequest.infostring = NULL;
-
-      fill_modbus_payload(payload, &modrequest);
-      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-      etimer_set(&et, CLOCK_SECOND);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
+//    /* keep backlight on */
+//    message.payload = payload;
+//    fill_modbus_payload(payload, &modreq[0]);
+//    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//    etimer_set(&et, CLOCK_SECOND);
+//    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//
+//    /* keep backlight on */
+//    message.payload = payload;
+//    fill_modbus_payload(payload, &modreq[1]);
+//    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//    etimer_set(&et, CLOCK_SECOND);
+//    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//
+//    /* set ambient temperature viewing and internal sensor */
+//    message.payload = payload;
+//    modrequest.id = 0x01;
+//    modrequest.fc = 0x03;
+//    modrequest.addr = 0x000c;
+//    modrequest.third.len = 1;
+//    modrequest.infostring = NULL;
+//
+//    fill_modbus_payload(payload, &modrequest);
+//    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//    etimer_set(&et, CLOCK_SECOND);
+//    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_reply_event_message || etimer_expired(&et));
+//
+//    if (data != NULL) {
+//      moddata = *(uint16_t*)data;
+//
+//      message.payload = payload;
+//      modrequest.id = 0x01;
+//      modrequest.fc = 0x06;
+//      modrequest.addr = 0x000c;
+//      modrequest.third.value = moddata & ~0x0006;
+//      modrequest.infostring = NULL;
+//
+//      fill_modbus_payload(payload, &modrequest);
+//      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//      etimer_set(&et, CLOCK_SECOND);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
 
     /* read internal temperature reading */
     message.payload = payload;
@@ -1503,46 +1506,49 @@ PROCESS_THREAD(modbus_wi_test, ev, data)
       temperature = *(uint16_t*)data;
     }
 
-    /* read setpoint temperature */
-    message.payload = payload;
-    modrequest.id = 0x01;
-    modrequest.fc = 0x03;
-    modrequest.addr = 0x0004;
-    modrequest.third.len = 1;
-    modrequest.infostring = NULL;
-
-    fill_modbus_payload(payload, &modrequest);
-    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
     etimer_set(&et, CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_reply_event_message || etimer_expired(&et));
 
-    if (data != NULL) {
-      setpoint = *(uint16_t*)data;
-    }
-
-    if (temperature > setpoint + 20) {
-      message.payload = payload;
-      fill_modbus_payload(payload, &modreq[2]);
-      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-      etimer_set(&et, CLOCK_SECOND);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
-
-    if (temperature < setpoint - 20) {
-      message.payload = payload;
-      fill_modbus_payload(payload, &modreq[3]);
-      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-      etimer_set(&et, CLOCK_SECOND);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
-
-    if (temperature <= setpoint + 20 && temperature >= setpoint - 20) {
-      message.payload = payload;
-      fill_modbus_payload(payload, &modreq[4]);
-      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
-      etimer_set(&et, CLOCK_SECOND);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
+//    /* read setpoint temperature */
+//    message.payload = payload;
+//    modrequest.id = 0x01;
+//    modrequest.fc = 0x03;
+//    modrequest.addr = 0x0004;
+//    modrequest.third.len = 1;
+//    modrequest.infostring = NULL;
+//
+//    fill_modbus_payload(payload, &modrequest);
+//    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//    etimer_set(&et, CLOCK_SECOND);
+//    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_reply_event_message || etimer_expired(&et));
+//
+//    if (data != NULL) {
+//      setpoint = *(uint16_t*)data;
+//    }
+//
+//    if (temperature > setpoint + 20) {
+//      message.payload = payload;
+//      fill_modbus_payload(payload, &modreq[2]);
+//      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//      etimer_set(&et, CLOCK_SECOND);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
+//
+//    if (temperature < setpoint - 20) {
+//      message.payload = payload;
+//      fill_modbus_payload(payload, &modreq[3]);
+//      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//      etimer_set(&et, CLOCK_SECOND);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
+//
+//    if (temperature <= setpoint + 20 && temperature >= setpoint - 20) {
+//      message.payload = payload;
+//      fill_modbus_payload(payload, &modreq[4]);
+//      process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &message);
+//      etimer_set(&et, CLOCK_SECOND);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
   }
 
   PROCESS_END();
