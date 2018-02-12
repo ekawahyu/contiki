@@ -54,7 +54,7 @@
 
 #define DUPLICATE_THRESHOLD 1
 
-#define SEQNO_LT(a, b) ((a)<(b))
+#define SEQNO_LT(a, b) ((int16_t)((a) - (b)) < 0)
 
 static const struct packetbuf_attrlist attributes[] =
   {
@@ -151,7 +151,7 @@ recv(struct broadcast_conn *bc, const linkaddr_t *from)
   if(seqno == c->seqno) {
     //c->cb->recv(c);
     ++c->duplicates;
-  } else if(SEQNO_LT(seqno, c->seqno) && seqno) {
+  } else if(SEQNO_LT(seqno, c->seqno)) {
     c->interval_scaling = 0;
     send(c);
   } else { /* hdr->seqno > c->seqno */
