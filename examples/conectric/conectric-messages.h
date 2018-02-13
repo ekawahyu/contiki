@@ -14,6 +14,14 @@ extern "C" {
 #define CONECTRIC_IMG_UPDATE_DIR                0x11
 #define CONECTRIC_IMG_ACK                       0x12
 #define CONECTRIC_IMG_COMPLETE                  0x13
+#define CONECTRIC_MULTIHOP_PING                 0x14
+#define CONECTRIC_MULTIHOP_PING_REPLY           0x15
+#define CONECTRIC_REBOOT_REQUEST                0x16
+#define CONECTRIC_REBOOT_REPLY                  0x17
+#define CONECTRIC_SET_LONG_MAC                  0x18
+#define CONECTRIC_SET_LONG_MAC_REPLY            0x19
+#define CONECTRIC_GET_LONG_MAC                  0x1A
+#define CONECTRIC_GET_LONG_MAC_REPLY            0x1B
 
 //    Reporting
 #define CONECTRIC_SENSOR_BROADCAST_RHT          0x30
@@ -28,6 +36,12 @@ extern "C" {
 #define CONECTRIC_POLL_RS485_CHUNK_REPLY        0x39
 #define CONECTRIC_POLL_WI                       0x3A
 #define CONECTRIC_POLL_WI_REPLY                 0x3B
+#define CONECTRIC_POLL_SENSORS                  0x3C
+#define CONECTRIC_POLL_SENSORS_REPLY            0x3D
+#define CONECTRIC_POLL_NEIGHBORS                0x3E
+#define CONECTRIC_POLL_NEIGHBORS_REPLY          0x3F
+#define CONECTRIC_MULTIHOP_PING                 0x40
+#define CONECTRIC_MULTIHOP_PING_REPLY           0x41
     
 // Generic Message Structure
 typedef struct {
