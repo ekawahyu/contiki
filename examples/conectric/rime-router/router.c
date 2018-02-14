@@ -185,7 +185,7 @@ static uint8_t dump_buffer = 0;
 #define CONECTRIC_VERSION_STRING "Contiki-unknown"
 #endif
 #ifndef CONECTRIC_PROJECT_STRING
-#define CONECTRIC_PROJECT_STRING "unknow"
+#define CONECTRIC_PROJECT_STRING "unknown"
 #endif
 /*---------------------------------------------------------------------------*/
 static uint8_t
