@@ -10,6 +10,7 @@ extern "C" {
 #define CONECTRIC_ROUTE_REQUEST                 0x01
 #define CONECTRIC_ROUTE_REQUEST_BY_SN           0x02
 #define CONECTRIC_ROUTE_REPLY                   0x03
+#define CONECTRIC_BOOT_STATUS                   0x04
 #define CONECTRIC_IMG_UPDATE_BCST               0x10
 #define CONECTRIC_IMG_UPDATE_DIR                0x11
 #define CONECTRIC_IMG_ACK                       0x12

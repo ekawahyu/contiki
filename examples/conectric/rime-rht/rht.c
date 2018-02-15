@@ -32,31 +32,39 @@
 
 /**
  * \file
- *         Testing the abc layer in Rime
+ *         Conectric SHT21/20 Sensor Node (initially taken from abc example)
  * \author
  *         Adam Dunkels <adam@sics.se>
+ *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
  */
 
-// General
+/* General */
 #include <stdio.h>
 
-// Contiki
+/* Contiki */
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "random.h"
 
-// Conectric Device
+/* Conectric Device */
 #include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 
-// Conectric Network
+/* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
+#define DEBUG 0
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
-// RHT Network Parameters
+/* RHT Network Parameters */
 #define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         2
 #define RHT_PAYLOAD_SIZE        7
@@ -66,6 +74,7 @@ extern volatile uint16_t deep_sleep_requested;
 /* Flash Logging */
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
+/* Logging reference time every 12 hours */
 #define LOGGING_REF_TIME_PD ((clock_time_t)(12U * CLOCK_SECOND * 60U * 60U))
 enum
 {
@@ -75,7 +84,7 @@ enum
 
 /*---------------------------------------------------------------------------*/
 PROCESS(rht_abc_process, "RHT Sensor");
-PROCESS(flash_log_process, "Flash Log process");
+PROCESS(flash_log_process, "Flash Log");
 AUTOSTART_PROCESSES(&rht_abc_process, &flash_log_process);
 /*---------------------------------------------------------------------------*/
 static void
@@ -83,7 +92,7 @@ abc_recv(struct abc_conn *c)
 {
   memset(message, 0, sizeof(message));
   memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  printf("abc message received (%d) '%s'\n", strlen(message), message);
+  PRINTF("abc message received (%d) '%s'\n", strlen(message), message);
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -141,6 +150,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
     PROCESS_WAIT_EVENT();
 
+    /* Battery level acquisition */
     NETSTACK_MAC.off(0);
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
