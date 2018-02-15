@@ -40,8 +40,6 @@ extern "C" {
 #define CONECTRIC_POLL_SENSORS_REPLY            0x3D
 #define CONECTRIC_POLL_NEIGHBORS                0x3E
 #define CONECTRIC_POLL_NEIGHBORS_REPLY          0x3F
-#define CONECTRIC_MULTIHOP_PING                 0x40
-#define CONECTRIC_MULTIHOP_PING_REPLY           0x41
     
 // Generic Message Structure
 typedef struct {
