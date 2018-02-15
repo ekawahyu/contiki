@@ -117,40 +117,44 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
   abc_open(&abc, 128, &abc_call);
 
-//  etimer_set(&et, CLOCK_SECOND);
-//
-//  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-//
-  // initial "I'm alive" message - DO WE STILL NEED THIS??  Not defined or processed
-//  memset(message, 0, 40);
-//  message[0] = 0;
-//  message[1] = 0;
-//  message[2] = 0xFF;
-//  message[3] = 0xFF;
-//  message[4] = 0x60;
-//  message[5] = counter++;
-//  message[6] = clock_reset_cause();
-//
-//  loop = CONECTRIC_BURST_NUMBER;
-//
-//  while(loop--) {
-//    packetbuf_copyfrom(message, 7);
-//    NETSTACK_MAC.on();
-//    abc_send(&abc);
-//
-//    PROCESS_WAIT_EVENT();
-//
-//    if (loop)
-//      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
-//    else
-//      deep_sleep_requested = CLOCK_SECOND;
-//  }
+  /* Wait until system is completely booted up and ready */
+  etimer_set(&et, CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  /* Composing boot status message */
+  memset(message, 0, 2 + 4);
+  message[0] = 2;
+  message[1] = seqno++;
+  message[2] = 4;
+  message[3] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+  sane = batt * 3 * 1.15 / 2047;
+  dec = sane;
+  frac = sane - dec;
+  message[4] = (char)(dec*10)+(char)(frac*10);
+  message[5] = clock_reset_cause();
+
+  loop = CONECTRIC_BURST_NUMBER;
+
+  while(loop--) {
+
+    packetbuf_copyfrom(message, 2 + 4);
+    NETSTACK_MAC.on();
+    abc_send(&abc);
+
+    PROCESS_WAIT_EVENT();
+
+    if (loop)
+      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+    else
+      deep_sleep_requested = CLOCK_SECOND;
+  }
 
   while(1) {
 
     PROCESS_WAIT_EVENT();
 
-    /* Battery level acquisition */
+    /* Battery and temperature acquisition */
     NETSTACK_MAC.off(0);
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
@@ -161,6 +165,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
     PROCESS_WAIT_EVENT();
 
+    /* Humidity acquisition */
     NETSTACK_MAC.off(0);
     prev_temp = temp;
     temp = sht21_sensor.value(SHT21_SENSOR_TEMP_RESULT);
@@ -173,32 +178,21 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     prev_humid = humid;
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
 
+    /* Composing RHT sensor message */
     memset(message, 0, RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE);
-    message[0] = RHT_HEADER_SIZE;                    // Header Length
-    message[1] = seqno++;                            // Sequence number
-    message[2] = RHT_PAYLOAD_SIZE;                   // Payload Length
-    message[3] = CONECTRIC_SENSOR_BROADCAST_RHT;     // Payload Type                    
-    message[4] = (char)(dec*10)+(char)(frac*10);     // Battery
-    message[5] = (char)(temp >> 8);                  // Temp High
-    message[6] = (char)(temp & 0xFC);                 // Temp Low
-    message[7] = (char)(humid >> 8);                 // Humidity High
-    message[8] = (char)(humid & 0xFC);               // Humidity Low
+    message[0] = RHT_HEADER_SIZE;
+    message[1] = seqno++;
+    message[2] = RHT_PAYLOAD_SIZE;
+    message[3] = CONECTRIC_SENSOR_BROADCAST_RHT;
+    message[4] = (char)(dec*10)+(char)(frac*10);
+    message[5] = (char)(temp >> 8);
+    message[6] = (char)(temp & 0xFC);
+    message[7] = (char)(humid >> 8);
+    message[8] = (char)(humid & 0xFC);
 
-//    packetbuf_copyfrom(message, RHT_PAYLOAD_SIZE);
-    
-//    // build header
-//    packetbuf_hdralloc(6);    
-//    header = (uint8_t *)packetbuf_hdrptr();
-//    *header++ = 6;                /* header len */
-//    *header++ = seqno++;            /* seqno */
-//    *header++ = 0;                /* hop count */
-//    *header++ = 0;                /* number of hops */
-//    *header++ = 0xFF; /* destination addr H */
-//    *header++ = 0xFF; /* destination addr L */
-    
     loop = CONECTRIC_BURST_NUMBER;
 
-    // Log data that will be sent out over the air
+    /* Log data that will be sent out over the air */
     logData[0] = (char)(humid >> 8);
     logData[1] = (char)(humid & 0xFC);
     logData[2] = (char)(temp >> 8);

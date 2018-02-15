@@ -5,12 +5,11 @@
 extern "C" {
 #endif
 
-// Conectric Network Message Types
-//    Commissioning  
+/* Conectric Network Message Types */
+/*   Commissioning */
 #define CONECTRIC_ROUTE_REQUEST                 0x01
 #define CONECTRIC_ROUTE_REQUEST_BY_SN           0x02
 #define CONECTRIC_ROUTE_REPLY                   0x03
-#define CONECTRIC_BOOT_STATUS                   0x04
 #define CONECTRIC_IMG_UPDATE_BCST               0x10
 #define CONECTRIC_IMG_UPDATE_DIR                0x11
 #define CONECTRIC_IMG_ACK                       0x12
@@ -24,7 +23,7 @@ extern "C" {
 #define CONECTRIC_GET_LONG_MAC                  0x1A
 #define CONECTRIC_GET_LONG_MAC_REPLY            0x1B
 
-//    Reporting
+/*   Reporting */
 #define CONECTRIC_SENSOR_BROADCAST_RHT          0x30
 #define CONECTRIC_SENSOR_BROADCAST_SW           0x31
 #define CONECTRIC_SENSOR_BROADCAST_OC           0x32
@@ -41,8 +40,12 @@ extern "C" {
 #define CONECTRIC_POLL_SENSORS_REPLY            0x3D
 #define CONECTRIC_POLL_NEIGHBORS                0x3E
 #define CONECTRIC_POLL_NEIGHBORS_REPLY          0x3F
-    
-// Generic Message Structure
+
+/*   Reporting boot status */
+#define CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS  0x60
+
+
+/* Conectric Message Structure */
 typedef struct {
   clock_time_t  timestamp;
   uint8_t       message_type;
