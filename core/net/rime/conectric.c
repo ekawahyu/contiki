@@ -55,7 +55,19 @@ static int conectric_status;
 
 /*---------------------------------------------------------------------------*/
 static void
-data_packet_received(struct multihop_conn *multihop,
+abc_recv(struct abc_conn *c)
+{
+
+}
+/*---------------------------------------------------------------------------*/
+static void
+trickle_recv(struct trickle_conn *c)
+{
+
+}
+/*---------------------------------------------------------------------------*/
+static void
+multihop_received(struct multihop_conn *multihop,
 		     const linkaddr_t *from,
 		     const linkaddr_t *prevhop, uint8_t hops)
 {
@@ -76,7 +88,7 @@ data_packet_received(struct multihop_conn *multihop,
 }
 /*---------------------------------------------------------------------------*/
 static linkaddr_t *
-data_packet_forward(struct multihop_conn *multihop,
+multihop_forward(struct multihop_conn *multihop,
 		    const linkaddr_t *originator,
 		    const linkaddr_t *dest,
 		    const linkaddr_t *prevhop, uint8_t hops)
@@ -149,20 +161,22 @@ route_timed_out(struct route_discovery_conn *rdc)
   }
 }
 /*---------------------------------------------------------------------------*/
-static const struct multihop_callbacks data_callbacks = { data_packet_received,
-						    data_packet_forward };
-static const struct route_discovery_callbacks route_discovery_callbacks =
-  { found_route, route_timed_out };
+static const struct abc_callbacks abc_call = { abc_recv };
+static struct trickle_callbacks trickle_call = { trickle_recv };
+static const struct multihop_callbacks multihop_call = { multihop_received, multihop_forward };
+static const struct route_discovery_callbacks route_discovery_callbacks = { found_route, route_timed_out };
 /*---------------------------------------------------------------------------*/
 void
 conectric_open(struct conectric_conn *c, uint16_t channels,
 	  const struct conectric_callbacks *callbacks)
 {
   route_init();
-  multihop_open(&c->multihop, channels, &data_callbacks);
+  abc_open(&c->abc, channels, &abc_call);
+  trickle_open(&c->trickle, CLOCK_SECOND, channels + 1, &trickle_call);
+  multihop_open(&c->multihop, channels + 2, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
 		       CLOCK_SECOND * 2,
-		       channels + 1,
+		       channels + 3,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
 }
