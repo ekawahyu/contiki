@@ -59,11 +59,6 @@ extern "C" {
 
 #define BUTTON_SENSOR_CONF_INPUT_3STATE       1
 
-/* TODO this is just a workaround of a repurposed RS485 board for door sensor */
-#define RS485_CONF_ENABLE                     1
-#define UART1_CONF_ENABLE                     0
-/* end of workaround of a repurposed RS485 board for door sensor */
-
 #define CONECTRIC_BURST_NUMBER                5
 
 #ifdef __cplusplus

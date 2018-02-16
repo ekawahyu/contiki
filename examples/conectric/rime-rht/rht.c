@@ -79,7 +79,7 @@ static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 enum
 {
   RHT_RESERVED = 0x00,    // reserved
-  RHT_SEND     = 0x01,    // send data event 
+  RHT_SEND     = 0x01,    // send data event
 };
 
 /*---------------------------------------------------------------------------*/
