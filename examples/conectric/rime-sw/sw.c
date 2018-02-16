@@ -306,6 +306,9 @@ PROCESS_THREAD(flash_log_process, ev, data)
 void
 invoke_process_before_sleep(void)
 {
+  /* need to watch every so often if this sensor wakes up and does not go back to sleep */
+  // add safety counter here
+
   process_post_synch(&sw_abc_process, PROCESS_EVENT_CONTINUE, NULL);
 }
 /*---------------------------------------------------------------------------*/
