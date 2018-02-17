@@ -88,18 +88,17 @@ enum
   SW_RESERVED = 0x00,    // reserved
   SW_SEND     = 0x01,    // send data event
 };
+
 /*---------------------------------------------------------------------------*/
 PROCESS(sw_abc_process, "SW Sensor");
-PROCESS(sw_supervisory_process, "SW Supervisory process");
-//PROCESS(flash_log_process, "Flash Log process");
-
+PROCESS(sw_supervisory_process, "SW Supervisory");
+//PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
-PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &buttons_test_process/*, &flash_log_process*/);
+PROCESS(sw_interrupt_process, "SW Interrupt");
+AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &sw_interrupt_process/*, &flash_log_process*/);
 #else
 AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process/*, &flash_log_process*/);
 #endif
-/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv(struct abc_conn *c)
@@ -183,12 +182,12 @@ PROCESS_THREAD(sw_abc_process, ev, data)
       message[4] = (char)(dec*10)+(char)(frac*10);
       message[5] = *sensor_data;
 
-      /* Log data that will be sent out over the air */
-      logData[0] = (char)(dec*10)+(char)(frac*10);
-      logData[1] = *sensor_data;
-      logData[2] = 0x00;
-      logData[3] = 0x00;
-      flashlogging_write4(RIME_SW_CMP_ID, SW_SEND, logData);  
+//      /* Log data that will be sent out over the air */
+//      logData[0] = (char)(dec*10)+(char)(frac*10);
+//      logData[1] = *sensor_data;
+//      logData[2] = 0x00;
+//      logData[3] = 0x00;
+//      flashlogging_write4(RIME_SW_CMP_ID, SW_SEND, logData);
     
       loop = CONECTRIC_BURST_NUMBER;
 
@@ -241,7 +240,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 #if BUTTON_SENSOR_ON
-PROCESS_THREAD(buttons_test_process, ev, data)
+PROCESS_THREAD(sw_interrupt_process, ev, data)
 {
   struct sensors_sensor *sensor;
   static uint8_t counter;
@@ -321,9 +320,6 @@ PROCESS_THREAD(sw_supervisory_process, ev, data)
 void
 invoke_process_before_sleep(void)
 {
-  /* need to watch every so often if this sensor wakes up and does not go back to sleep */
-  // add safety counter here
-
   process_post_synch(&sw_abc_process, PROCESS_EVENT_CONTINUE, NULL);
 }
 /*---------------------------------------------------------------------------*/

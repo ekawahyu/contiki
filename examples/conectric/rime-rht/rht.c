@@ -192,12 +192,12 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
     loop = CONECTRIC_BURST_NUMBER;
 
-    /* Log data that will be sent out over the air */
-    logData[0] = (char)(humid >> 8);
-    logData[1] = (char)(humid & 0xFC);
-    logData[2] = (char)(temp >> 8);
-    logData[3] = (char)(temp & 0xFC);
-    flashlogging_write4(RIME_RHT_CMP_ID, RHT_SEND, logData);  
+//    /* Log data that will be sent out over the air */
+//    logData[0] = (char)(humid >> 8);
+//    logData[1] = (char)(humid & 0xFC);
+//    logData[2] = (char)(temp >> 8);
+//    logData[3] = (char)(temp & 0xFC);
+//    flashlogging_write4(RIME_RHT_CMP_ID, RHT_SEND, logData);
 
     while(loop--) {
       
