@@ -66,7 +66,7 @@
 #endif
 
 /* SW Network Parameters */
-#define SW_SUP_TIMEOUT         10 /* minutes */
+#define SW_SUP_TIMEOUT         180 /* minutes */
 #define SW_HEADER_SIZE         2
 #define SW_PAYLOAD_SIZE        4
 static uint8_t message[SW_HEADER_SIZE + SW_PAYLOAD_SIZE];
@@ -158,7 +158,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
     if (loop)
       deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
     else
-      deep_sleep_requested = CLOCK_SECOND;
+      deep_sleep_requested = 60 * CLOCK_SECOND;
   }
 
   while(1) {
