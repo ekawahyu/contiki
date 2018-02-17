@@ -84,8 +84,8 @@ enum
 
 /*---------------------------------------------------------------------------*/
 PROCESS(rht_abc_process, "RHT Sensor");
-PROCESS(flash_log_process, "Flash Log");
-AUTOSTART_PROCESSES(&rht_abc_process, &flash_log_process);
+//PROCESS(flash_log_process, "Flash Log");
+AUTOSTART_PROCESSES(&rht_abc_process/*, &flash_log_process*/);
 /*---------------------------------------------------------------------------*/
 static void
 abc_recv(struct abc_conn *c)
@@ -221,24 +221,24 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(flash_log_process, ev, data)
-{
-  static struct etimer et;
-  
-  PROCESS_BEGIN();
-
-  flashlogging_init();
-  
-  while (1)
-  {
-    etimer_set(&et, LOGGING_REF_TIME_PD);  
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    
-    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
-  }
-
-  PROCESS_END();
-}
+//PROCESS_THREAD(flash_log_process, ev, data)
+//{
+//  static struct etimer et;
+//
+//  PROCESS_BEGIN();
+//
+//  flashlogging_init();
+//
+//  while (1)
+//  {
+//    etimer_set(&et, LOGGING_REF_TIME_PD);
+//    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//
+//    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+//  }
+//
+//  PROCESS_END();
+//}
 /*---------------------------------------------------------------------------*/
 void
 invoke_process_before_sleep(void)

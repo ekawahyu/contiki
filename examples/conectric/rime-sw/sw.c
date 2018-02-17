@@ -66,7 +66,7 @@
 #endif
 
 /* SW Network Parameters */
-#define SW_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 5U))
+#define SW_SUP_TIMEOUT         10 /* minutes */
 #define SW_HEADER_SIZE         2
 #define SW_PAYLOAD_SIZE        4
 static uint8_t message[SW_HEADER_SIZE + SW_PAYLOAD_SIZE];
@@ -76,6 +76,7 @@ extern volatile uint16_t deep_sleep_requested;
 #define SW_BUTTON_CLOSED        0x71
 #define SW_BUTTON_OPEN          0x72
 #define SW_SUP_EVT              0xBB
+#define SW_SUP_NOEVT            0x00
 
 /* Flash Logging */
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
@@ -90,13 +91,13 @@ enum
 /*---------------------------------------------------------------------------*/
 PROCESS(sw_abc_process, "SW Sensor");
 PROCESS(sw_supervisory_process, "SW Supervisory process");
-PROCESS(flash_log_process, "Flash Log process");
+//PROCESS(flash_log_process, "Flash Log process");
 
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &buttons_test_process, &flash_log_process);
+AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &buttons_test_process/*, &flash_log_process*/);
 #else
-AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process, &flash_log_process);
+AUTOSTART_PROCESSES(&sw_abc_process, &sw_supervisory_process/*, &flash_log_process*/);
 #endif
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -210,7 +211,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
       
       memset(message, 0, SW_HEADER_SIZE + SW_PAYLOAD_SIZE);
       message[0] = SW_HEADER_SIZE;                      // Header Length
-      message[1] = seqno++;                            // Sequence number
+      message[1] = seqno++;                             // Sequence number
       message[2] = SW_PAYLOAD_SIZE;                     // Payload Length
       message[3] = CONECTRIC_SUPERVISORY_REPORT;        // Payload Type                    
       message[4] = (char)(dec*10)+(char)(frac*10);      // battery
@@ -228,8 +229,11 @@ PROCESS_THREAD(sw_abc_process, ev, data)
         if (loop)
           deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
         else
-          deep_sleep_requested = SW_SUP_TIMEOUT;
-      }   
+          deep_sleep_requested = 60 * CLOCK_SECOND;
+      }
+    }
+    else if(*sensor_data == SW_SUP_NOEVT) {
+      deep_sleep_requested = 60 * CLOCK_SECOND;
     }
   }
 
@@ -268,40 +272,51 @@ PROCESS_THREAD(sw_supervisory_process, ev, data)
 {
   static struct etimer et;
   static uint8_t event;
+  static int16_t supervisory_counter;
 
   PROCESS_BEGIN();
 
+  supervisory_counter = SW_SUP_TIMEOUT;
+
   while (1)
   {
-    etimer_set(&et, SW_SUP_TIMEOUT);
+    etimer_set(&et, 60 * CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     /* Send supervisory message */
-    event = SW_SUP_EVT;
-    process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &event);
+    if (supervisory_counter > 1) {
+      supervisory_counter--;
+      event = SW_SUP_NOEVT;
+      process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+    else {
+      supervisory_counter = SW_SUP_TIMEOUT;
+      event = SW_SUP_EVT;
+      process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &event);
+    }
   }
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(flash_log_process, ev, data)
-{
-  static struct etimer et;
-  
-  PROCESS_BEGIN();
-
-  flashlogging_init();
-  
-  while (1)
-  {
-    etimer_set(&et, LOGGING_REF_TIME_PD);  
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    
-    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
-  }
-
-  PROCESS_END();
-}
+//PROCESS_THREAD(flash_log_process, ev, data)
+//{
+//  static struct etimer et;
+//
+//  PROCESS_BEGIN();
+//
+//  flashlogging_init();
+//
+//  while (1)
+//  {
+//    etimer_set(&et, LOGGING_REF_TIME_PD);
+//    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//
+//    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+//  }
+//
+//  PROCESS_END();
+//}
 /*---------------------------------------------------------------------------*/
 void
 invoke_process_before_sleep(void)
