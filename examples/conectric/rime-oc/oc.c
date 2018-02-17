@@ -32,44 +32,55 @@
 
 /**
  * \file
- *         Testing the abc layer in Rime
+ *         Conectric Switch Sensor (initially taken from abc example)
  * \author
  *         Adam Dunkels <adam@sics.se>
+ *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
  */
 
-// General
+/* General */
 #include <stdio.h>
 
-// Contiki
+/* Contiki */
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "random.h"
 
-// Conectric Device
+/* Conectric Device */
 #include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 #include "dev/rs485-arch.h"
 
-// Conectric Network
+/* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
-// OC Network Parameters
-#define OC_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 30U)) // BMB
+#define DEBUG 0
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+/* OC Network Parameters */
+#define OC_SUP_TIMEOUT         180 /* minutes */
 #define OC_HEADER_SIZE         2
 #define OC_PAYLOAD_SIZE        4
 static uint8_t message[OC_HEADER_SIZE + OC_PAYLOAD_SIZE];
 extern volatile uint16_t deep_sleep_requested;
 
-// OC Device Parameters
-#define OC_EVT            0xAA
+/* OC Device Parameters */
+#define OC_EVT            0x81
 #define OC_SUP_EVT        0xBB
+#define OC_SUP_NOEVT      0x00
 
 /* Flash Logging */
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
+/* Logging reference time every 12 hours */
 #define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
 enum
 {
@@ -79,13 +90,13 @@ enum
 
 /*---------------------------------------------------------------------------*/
 PROCESS(oc_abc_process, "PIR Sensor");
-PROCESS(oc_supervisory_process, "OC Supervisory process");
-PROCESS(flash_log_process, "Flash Log process");
+PROCESS(oc_supervisory_process, "OC Supervisory");
+//PROCESS(flash_log_process, "Flash Log process");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &buttons_test_process, &flash_log_process);
+AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &buttons_test_process/*, &flash_log_process*/);
 #else
-AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &flash_log_process);
+AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process/*, &flash_log_process*/);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -277,24 +288,24 @@ PROCESS_THREAD(oc_supervisory_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(flash_log_process, ev, data)
-{
-  static struct etimer et;
-  
-  PROCESS_BEGIN();
-
-  flashlogging_init();
-  
-  while (1)
-  {
-    etimer_set(&et, LOGGING_REF_TIME_PD);  
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    
-    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
-  }
-
-  PROCESS_END();
-}
+//PROCESS_THREAD(flash_log_process, ev, data)
+//{
+//  static struct etimer et;
+//
+//  PROCESS_BEGIN();
+//
+//  flashlogging_init();
+//
+//  while (1)
+//  {
+//    etimer_set(&et, LOGGING_REF_TIME_PD);
+//    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//
+//    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+//  }
+//
+//  PROCESS_END();
+//}
 /*---------------------------------------------------------------------------*/
 void
 invoke_process_before_sleep(void)
