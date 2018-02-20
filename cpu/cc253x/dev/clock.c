@@ -55,8 +55,12 @@ volatile uint8_t sleep_flag;
 #if defined __IAR_SYSTEMS_ICC__
 /* TODO How to declare a variable at a particular location in IAR? */
 static volatile unsigned long timer_value = 0;
+static volatile unsigned long timer_value_now = 0;
+static volatile unsigned long timer_value_next = 0;
 #else
 __xdata __at(0x0000) static unsigned long timer_value = 0;
+__xdata __at(0x0004) static unsigned long timer_value_now = 0;
+__xdata __at(0x0008) static unsigned long timer_value_next = 0;
 #endif
 
 static volatile CC_AT_DATA clock_time_t count = 0; /* Uptime in ticks */
@@ -125,7 +129,9 @@ clock_sleep_seconds(unsigned int sec)
   timer_value = ST0;
   timer_value += ((unsigned long int)ST1) << 8;
   timer_value += ((unsigned long int)ST2) << 16;
+  timer_value_now = timer_value;
   timer_value += (TICK_VAL * sec);
+  timer_value_next = timer_value;
   count += sec;
   seconds += (sec / CLOCK_CONF_SECOND);
   ST2 = (unsigned char)(timer_value >> 16);
@@ -170,7 +176,9 @@ clock_init(void)
   timer_value = ST0;
   timer_value += ((unsigned long int)ST1) << 8;
   timer_value += ((unsigned long int)ST2) << 16;
+  timer_value_now = timer_value;
   timer_value += TICK_VAL;
+  timer_value_next = timer_value;
   ST2 = (unsigned char)(timer_value >> 16);
   ST1 = (unsigned char)(timer_value >> 8);
   ST0 = (unsigned char)timer_value;
@@ -209,7 +217,9 @@ clock_isr(void) __interrupt(ST_VECTOR)
   timer_value = ST0;
   timer_value += ((unsigned long int)ST1) << 8;
   timer_value += ((unsigned long int)ST2) << 16;
+  timer_value_now = timer_value;
   timer_value += TICK_VAL;
+  timer_value_next = timer_value;
   ST2 = (unsigned char)(timer_value >> 16);
   ST1 = (unsigned char)(timer_value >> 8);
   ST0 = (unsigned char)timer_value;

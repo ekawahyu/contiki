@@ -282,12 +282,15 @@ PROCESS_THREAD(oc_interrupt_process, ev, data)
   struct sensors_sensor *sensor;
   static uint8_t counter;
   static uint8_t button;
+  static unsigned long clock_sec = 0;
 
   PROCESS_BEGIN();
 
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
+
+    clock_sec = clock_seconds();
 
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
