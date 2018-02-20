@@ -93,8 +93,8 @@ PROCESS(oc_abc_process, "OC Sensor");
 PROCESS(oc_supervisory_process, "OC Supervisory");
 //PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
-PROCESS(sw_interrupt_process, "OC Interrupt");
-AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &sw_interrupt_process/*, &flash_log_process*/);
+PROCESS(oc_interrupt_process, "OC Interrupt");
+AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &oc_interrupt_process/*, &flash_log_process*/);
 #else
 AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process/*, &flash_log_process*/);
 #endif
@@ -167,12 +167,12 @@ PROCESS_THREAD(oc_abc_process, ev, data)
     sane = batt * 3 * 1.15 / 2047;
     dec = sane;
     frac = sane - dec;
-      
+
     sensor_data = (uint8_t*)data;
 
     if(*sensor_data == OC_EVT)
     {
-
+      /* Composing SW sensor message */
       memset(message, 0, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
       message[0] = OC_HEADER_SIZE;
       message[1] = seqno++;
@@ -238,37 +238,65 @@ PROCESS_THREAD(oc_abc_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+//#if BUTTON_SENSOR_ON
+//PROCESS_THREAD(oc_interrupt_process, ev, data)
+//{
+//  struct sensors_sensor *sensor;
+//  static struct etimer et;
+//  static uint8_t counter;
+//  static uint8_t button;
+//
+//  PROCESS_BEGIN();
+//
+//  etimer_set(&et, CLOCK_SECOND * 10);
+//
+//  while(1) {
+//
+//    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
+//
+//    if (etimer_expired(&et)) {
+//
+//      sensor = (struct sensors_sensor *)data;
+//      if(sensor == &button_1_sensor) {
+//        button = OC_EVT;
+//        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
+//      }
+//      if(sensor == &button_2_sensor) {
+//        button = OC_EVT;
+//        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
+//      }
+//      etimer_restart(&et);
+//    }
+//    else {
+//      etimer_restart(&et);
+//    }
+//  }
+//
+//  PROCESS_END();
+//}
+//#endif
+/*---------------------------------------------------------------------------*/
 #if BUTTON_SENSOR_ON
-PROCESS_THREAD(sw_interrupt_process, ev, data)
+PROCESS_THREAD(oc_interrupt_process, ev, data)
 {
   struct sensors_sensor *sensor;
-  static struct etimer et;
   static uint8_t counter;
   static uint8_t button;
 
   PROCESS_BEGIN();
 
-  etimer_set(&et, CLOCK_SECOND * 10);
-
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
 
-    if (etimer_expired(&et)) {
-
-      sensor = (struct sensors_sensor *)data;
-      if(sensor == &button_1_sensor) {
-        button = OC_EVT;
-        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
-      }
-      if(sensor == &button_2_sensor) {
-        button = OC_EVT;
-        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
-      }
-      etimer_restart(&et);
+    sensor = (struct sensors_sensor *)data;
+    if(sensor == &button_1_sensor) {
+      button = OC_EVT;
+      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
-    else {
-      etimer_restart(&et);
+    if(sensor == &button_2_sensor) {
+      button = OC_EVT;
+      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
 
@@ -281,9 +309,9 @@ PROCESS_THREAD(oc_supervisory_process, ev, data)
   static struct etimer et;
   static uint8_t event;
   static int16_t supervisory_counter;
-  
+
   PROCESS_BEGIN();
-  
+
   supervisory_counter = OC_SUP_TIMEOUT;
 
   while (1)
@@ -295,12 +323,12 @@ PROCESS_THREAD(oc_supervisory_process, ev, data)
     if (supervisory_counter > 1) {
       supervisory_counter--;
       event = OC_SUP_NOEVT;
-      process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
       supervisory_counter = OC_SUP_TIMEOUT;
       event = OC_SUP_EVT;
-      process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &event);
     }
   }
 

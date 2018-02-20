@@ -168,7 +168,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
     sane = batt * 3 * 1.15 / 2047;
     dec = sane;
     frac = sane - dec;
-     
+
     sensor_data = (uint8_t*)data;
 
     if(*sensor_data == SW_BUTTON_OPEN || *sensor_data == SW_BUTTON_CLOSED)
