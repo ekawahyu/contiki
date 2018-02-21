@@ -132,6 +132,8 @@ void clock_wait(clock_time_t t);
  */
 void clock_delay_usec(uint16_t dt);
 
+void clock_update();
+
 /**
  * Set system sleep in seconds.
  *

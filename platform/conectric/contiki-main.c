@@ -436,6 +436,8 @@ main(void) CC_NON_BANKED
 
       //fade_fast(LEDS_GREEN);
 
+      clock_update();
+
       /* TODO not supposed to be here for Anaren A2530E */
 #if MODELS_CONF_ANAREN_A2530E_MODULE
       RFC_OBS_CTRL0 = 0x68;

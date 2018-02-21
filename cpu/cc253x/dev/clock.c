@@ -112,6 +112,30 @@ clock_seconds(void)
 }
 /*---------------------------------------------------------------------------*/
 void
+clock_update()
+{
+  DISABLE_INTERRUPTS();
+
+  /*
+   * Wait for a positive transition on the 32-kHz clock
+   */
+  while((SLEEPSTA & SLEEP_CLK32K));
+  while(!(SLEEPSTA & SLEEP_CLK32K));
+
+  /*
+   * Read value of the ST0:ST1:ST2, add TICK_VAL and write it back.
+   * Next interrupt occurs after the current time + TICK_VAL * sec
+   */
+  timer_value = ST0;
+  timer_value += ((unsigned long int)ST1) << 8;
+  timer_value += ((unsigned long int)ST2) << 16;
+  count += ((timer_value - timer_value_now) >> 8);
+  seconds += (((timer_value - timer_value_now) >> 8) >> 7);
+
+  ENABLE_INTERRUPTS();
+}
+/*---------------------------------------------------------------------------*/
+void
 clock_sleep_seconds(unsigned int sec)
 {
   DISABLE_INTERRUPTS();
@@ -132,8 +156,8 @@ clock_sleep_seconds(unsigned int sec)
   timer_value_now = timer_value;
   timer_value += (TICK_VAL * sec);
   timer_value_next = timer_value;
-  count += sec;
-  seconds += (sec / CLOCK_CONF_SECOND);
+//  count += sec;
+//  seconds += (sec / CLOCK_CONF_SECOND);
   ST2 = (unsigned char)(timer_value >> 16);
   ST1 = (unsigned char)(timer_value >> 8);
   ST0 = (unsigned char)timer_value;

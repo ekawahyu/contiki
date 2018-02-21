@@ -110,6 +110,9 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   static struct etimer et;
   static uint8_t loop;
 
+  static clock_time_t clock_now;
+  static unsigned long clock_sec;
+
   PROCESS_EXITHANDLER(abc_close(&abc);)
 
   PROCESS_BEGIN();
@@ -173,6 +176,9 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     deep_sleep_requested = CLOCK_SECOND / 32;
 
     PROCESS_WAIT_EVENT();
+
+    clock_now = clock_time();
+    clock_sec = clock_seconds();
 
     NETSTACK_MAC.off(0);
     prev_humid = humid;
