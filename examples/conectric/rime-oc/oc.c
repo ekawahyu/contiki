@@ -53,6 +53,7 @@
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 #include "dev/rs485-arch.h"
+#include "dev/leds.h"
 
 /* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
@@ -191,11 +192,13 @@ PROCESS_THREAD(oc_abc_process, ev, data)
       loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
+        leds_on(LEDS_RED);
         packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
         abc_send(&abc);
 
         PROCESS_WAIT_EVENT();
+        leds_off(LEDS_RED);
 
         if (loop)
           deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
