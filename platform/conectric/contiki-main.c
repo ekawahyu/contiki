@@ -315,7 +315,8 @@ main(void) CC_NON_BANKED
   process_start(&sensors_process, NULL);
 #endif
 #if BUTTON_SENSOR_ON
-  BUTTON_SENSOR_ACTIVATE();
+  BUTTON_SENSOR_ACTIVATE(1);
+  BUTTON_SENSOR_ACTIVATE(2);
 #endif
 #if ADC_SENSOR_ON
   ADC_SENSOR_ACTIVATE();

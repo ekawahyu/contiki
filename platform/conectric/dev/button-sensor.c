@@ -61,7 +61,7 @@ configure_b1(int type, int value)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    BUTTON_IRQ_ON_RELEASE(1);
+    BUTTON_IRQ_ON_PRESS(1);
     BUTTON_FUNC_GPIO(1);
     BUTTON_DIR_INPUT(1);
 #if BUTTON_SENSOR_INPUT_3STATE
@@ -86,7 +86,7 @@ configure_b1(int type, int value)
 static int
 value_b2(int type)
 {
-  type;
+  type = type;
   return BUTTON_READ(2) || !timer_expired(&debouncetimer);
 }
 /*---------------------------------------------------------------------------*/
@@ -106,7 +106,7 @@ configure_b2(int type, int value)
 {
   switch(type) {
   case SENSORS_HW_INIT:
-    BUTTON_IRQ_ON_PRESS(2);
+    BUTTON_IRQ_ON_RELEASE(2);
     BUTTON_FUNC_GPIO(2);
     BUTTON_DIR_INPUT(2);
 #if BUTTON_SENSOR_INPUT_3STATE
@@ -138,11 +138,11 @@ configure_b2(int type, int value)
 #endif
 #endif
 #if defined __IAR_SYSTEMS_ICC__
-#pragma vector=P2INT_VECTOR
-__near_func __interrupt void port_2_isr(void)
+#pragma vector=P1INT_VECTOR
+__near_func __interrupt void port_1_isr(void)
 #else
 void
-port_2_isr(void) __interrupt(P2INT_VECTOR)
+port_1_isr(void) __interrupt(P1INT_VECTOR)
 #endif
 {
   EA = 0;
@@ -174,11 +174,11 @@ port_2_isr(void) __interrupt(P2INT_VECTOR)
 #endif
 #endif
 #if defined __IAR_SYSTEMS_ICC__
-#pragma vector=P1INT_VECTOR
-__near_func __interrupt void port_1_isr(void)
+#pragma vector=P2INT_VECTOR
+__near_func __interrupt void port_2_isr(void)
 #else
 void
-port_1_isr(void) __interrupt(P1INT_VECTOR)
+port_2_isr(void) __interrupt(P2INT_VECTOR)
 #endif
 {
   EA = 0;

@@ -254,11 +254,11 @@ PROCESS_THREAD(sw_interrupt_process, ev, data)
 
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
-      button = SW_BUTTON_CLOSED;
+      button = SW_BUTTON_OPEN;
       process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
     if(sensor == &button_2_sensor) {
-      button = SW_BUTTON_OPEN;
+      button = SW_BUTTON_CLOSED;
       process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }

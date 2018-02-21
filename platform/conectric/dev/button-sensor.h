@@ -46,10 +46,10 @@
 
 #define BUTTON_SENSOR "Button"
 
-#define BUTTON1_PORT 2
-#define BUTTON1_PIN  0
-#define BUTTON2_PORT 1
-#define BUTTON2_PIN  2
+#define BUTTON1_PORT 1
+#define BUTTON1_PIN  2
+#define BUTTON2_PORT 2
+#define BUTTON2_PIN  0
 
 #ifdef BUTTON_SENSOR_CONF_ON
 #define BUTTON_SENSOR_ON BUTTON_SENSOR_CONF_ON
@@ -72,12 +72,15 @@ __near_func __interrupt void port_1_isr(void);
 void port_2_isr(void) __interrupt(P2INT_VECTOR);
 void port_1_isr(void) __interrupt(P1INT_VECTOR);
 #endif
-#define   BUTTON_SENSOR_ACTIVATE() do { \
-    button_1_sensor.configure(SENSORS_ACTIVE, 1); \
-    button_2_sensor.configure(SENSORS_ACTIVE, 1); \
+#define   BUTTON_SENSOR_ACTIVATE(b) do { \
+    button_##b##_sensor.configure(SENSORS_ACTIVE, 1); \
+} while(0)
+#define   BUTTON_SENSOR_DEACTIVATE(b) do { \
+    button_##b##_sensor.configure(SENSORS_ACTIVE, 0); \
 } while(0)
 #else /* BUTTON_SENSOR_ON */
-#define   BUTTON_SENSOR_ACTIVATE()
+#define   BUTTON_SENSOR_ACTIVATE(b)
+#define   BUTTON_SENSOR_DEACTIVATE(b)
 #endif /* BUTTON_SENSOR_ON */
 
 /* Define macros for buttons */
