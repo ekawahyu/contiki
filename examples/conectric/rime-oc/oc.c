@@ -241,44 +241,6 @@ PROCESS_THREAD(oc_abc_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-//#if BUTTON_SENSOR_ON
-//PROCESS_THREAD(oc_interrupt_process, ev, data)
-//{
-//  struct sensors_sensor *sensor;
-//  static struct etimer et;
-//  static uint8_t counter;
-//  static uint8_t button;
-//
-//  PROCESS_BEGIN();
-//
-//  etimer_set(&et, CLOCK_SECOND * 10);
-//
-//  while(1) {
-//
-//    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
-//
-//    if (etimer_expired(&et)) {
-//
-//      sensor = (struct sensors_sensor *)data;
-//      if(sensor == &button_1_sensor) {
-//        button = OC_EVT;
-//        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
-//      }
-//      if(sensor == &button_2_sensor) {
-//        button = OC_EVT;
-//        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
-//      }
-//      etimer_restart(&et);
-//    }
-//    else {
-//      etimer_restart(&et);
-//    }
-//  }
-//
-//  PROCESS_END();
-//}
-//#endif
-/*---------------------------------------------------------------------------*/
 #if BUTTON_SENSOR_ON
 PROCESS_THREAD(oc_interrupt_process, ev, data)
 {
