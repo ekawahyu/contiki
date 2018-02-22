@@ -73,8 +73,7 @@ static uint8_t message[PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE];
 extern volatile uint16_t deep_sleep_requested;
 
 /* PLS Device Parameters */
-#define PLS_BUTTON_CLOSED        0x91
-#define PLS_BUTTON_OPEN          0x92
+#define PLS_PULSE_DETECTED       0x91
 #define PLS_SUP_EVT              0xBB
 #define PLS_SUP_NOEVT            0x00
 
@@ -168,6 +167,8 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
   }
 
+  BUTTON_SENSOR_DEACTIVATE(1);
+
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
@@ -179,14 +180,14 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
     sensor_data = (uint8_t*)data;
 
-    if(*sensor_data == PLS_BUTTON_OPEN || *sensor_data == PLS_BUTTON_CLOSED)
+    if(*sensor_data == PLS_PULSE_DETECTED)
     {
       /* Composing PLS sensor message */
       memset(message, 0, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE);
       message[0] = PLS_HEADER_SIZE;
       message[1] = seqno++;
       message[2] = PLS_PAYLOAD_SIZE;
-      message[3] = CONECTRIC_SENSOR_BROADCAST_SW;
+      message[3] = CONECTRIC_SENSOR_BROADCAST_PLS;
       message[4] = (char)(dec*10)+(char)(frac*10);
       message[5] = *sensor_data;
 
@@ -280,11 +281,11 @@ PROCESS_THREAD(pls_interrupt_process, ev, data)
 
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
-      button = PLS_BUTTON_OPEN;
+      button = PLS_PULSE_DETECTED;
       process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
     if(sensor == &button_2_sensor) {
-      button = PLS_BUTTON_CLOSED;
+      button = PLS_PULSE_DETECTED;
       process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
