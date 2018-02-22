@@ -52,6 +52,10 @@ extern "C" {
 #define CONECTRIC_DEVICE_BROADCAST_LOW_BATTERY  0x80
 
 
+/* Message buffer for incoming and outgoing sensor broadcasts */
+#define CONECTRIC_MESSAGE_LENGTH                40
+
+
 /* Conectric Message Structure */
 typedef struct {
   clock_time_t  timestamp;

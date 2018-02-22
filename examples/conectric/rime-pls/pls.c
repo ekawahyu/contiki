@@ -69,7 +69,7 @@
 #define PLS_SUP_TIMEOUT         180 /* minutes */
 #define PLS_HEADER_SIZE         2
 #define PLS_PAYLOAD_SIZE        4
-static uint8_t message[PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE];
+static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
 /* PLS Device Parameters */
@@ -131,7 +131,7 @@ PROCESS_THREAD(pls_abc_process, ev, data)
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
   /* Composing boot status message */
-  memset(message, 0, 2 + 4);
+  memset(message, 0, sizeof(message));
   message[0] = 2;
   message[1] = seqno++;
   message[2] = 4;
@@ -183,7 +183,7 @@ PROCESS_THREAD(pls_abc_process, ev, data)
     if(*sensor_data == PLS_PULSE_DETECTED)
     {
       /* Composing PLS sensor message */
-      memset(message, 0, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE);
+      memset(message, 0, sizeof(message));
       message[0] = PLS_HEADER_SIZE;
       message[1] = seqno++;
       message[2] = PLS_PAYLOAD_SIZE;
@@ -225,7 +225,7 @@ PROCESS_THREAD(pls_abc_process, ev, data)
     {
       uint16_t time = clock_seconds();
       
-      memset(message, 0, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE);
+      memset(message, 0, sizeof(message));
       message[0] = PLS_HEADER_SIZE;                      // Header Length
       message[1] = seqno++;                             // Sequence number
       message[2] = PLS_PAYLOAD_SIZE;                     // Payload Length
