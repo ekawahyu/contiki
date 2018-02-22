@@ -73,8 +73,8 @@ static uint8_t message[PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE];
 extern volatile uint16_t deep_sleep_requested;
 
 /* PLS Device Parameters */
-#define PLS_BUTTON_CLOSED        0x71
-#define PLS_BUTTON_OPEN          0x72
+#define PLS_BUTTON_CLOSED        0x91
+#define PLS_BUTTON_OPEN          0x92
 #define PLS_SUP_EVT              0xBB
 #define PLS_SUP_NOEVT            0x00
 
@@ -154,10 +154,18 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
     PROCESS_WAIT_EVENT();
 
+#if LPM_CONF_MODE
     if (loop)
       deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
     else
       deep_sleep_requested = 60 * CLOCK_SECOND;
+#else
+    if (loop) {
+      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+#endif
+
   }
 
   while(1) {
@@ -198,10 +206,18 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
         PROCESS_WAIT_EVENT();
 
+#if LPM_CONF_MODE
         if (loop)
           deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
         else
           deep_sleep_requested = 60 * CLOCK_SECOND;
+#else
+        if (loop) {
+          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        }
+#endif
+
       }
     }
     else if(*sensor_data == PLS_SUP_EVT)
@@ -225,10 +241,18 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
         PROCESS_WAIT_EVENT();
 
+#if LPM_CONF_MODE
         if (loop)
           deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
         else
           deep_sleep_requested = 60 * CLOCK_SECOND;
+#else
+        if (loop) {
+          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        }
+#endif
+
       }
     }
     else if(*sensor_data == PLS_SUP_NOEVT) {
