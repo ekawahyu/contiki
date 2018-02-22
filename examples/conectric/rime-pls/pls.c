@@ -256,7 +256,9 @@ PROCESS_THREAD(pls_abc_process, ev, data)
       }
     }
     else if(*sensor_data == PLS_SUP_NOEVT) {
+#if LPM_CONF_MODE
       deep_sleep_requested = 60 * CLOCK_SECOND;
+#endif
     }
   }
 
