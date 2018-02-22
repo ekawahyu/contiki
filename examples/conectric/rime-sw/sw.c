@@ -69,7 +69,7 @@
 #define SW_SUP_TIMEOUT         180 /* minutes */
 #define SW_HEADER_SIZE         2
 #define SW_PAYLOAD_SIZE        4
-static uint8_t message[SW_HEADER_SIZE + SW_PAYLOAD_SIZE];
+static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
 /* SW Device Parameters */
@@ -132,7 +132,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
   /* Composing boot status message */
-  memset(message, 0, 2 + 4);
+  memset(message, 0, sizeof(message));
   message[0] = 2;
   message[1] = seqno++;
   message[2] = 4;
@@ -174,7 +174,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
     if(*sensor_data == SW_BUTTON_OPEN || *sensor_data == SW_BUTTON_CLOSED)
     {
       /* Composing SW sensor message */
-      memset(message, 0, SW_HEADER_SIZE + SW_PAYLOAD_SIZE);
+      memset(message, 0, sizeof(message));
       message[0] = SW_HEADER_SIZE;
       message[1] = seqno++;
       message[2] = SW_PAYLOAD_SIZE;
@@ -208,7 +208,7 @@ PROCESS_THREAD(sw_abc_process, ev, data)
     {
       uint16_t time = clock_seconds();
       
-      memset(message, 0, SW_HEADER_SIZE + SW_PAYLOAD_SIZE);
+      memset(message, 0, sizeof(message));
       message[0] = SW_HEADER_SIZE;                      // Header Length
       message[1] = seqno++;                             // Sequence number
       message[2] = SW_PAYLOAD_SIZE;                     // Payload Length

@@ -68,7 +68,7 @@
 #define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         2
 #define RHT_PAYLOAD_SIZE        7
-static uint8_t message[RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE];
+static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
 /* Flash Logging */
@@ -122,7 +122,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
   /* Composing boot status message */
-  memset(message, 0, 2 + 4);
+  memset(message, 0, sizeof(message));
   message[0] = 2;
   message[1] = seqno++;
   message[2] = 4;
@@ -179,7 +179,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     humid = sht21_sensor.value(SHT21_SENSOR_HUMIDITY_RESULT);
 
     /* Composing RHT sensor message */
-    memset(message, 0, RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE);
+    memset(message, 0, sizeof(message));
     message[0] = RHT_HEADER_SIZE;
     message[1] = seqno++;
     message[2] = RHT_PAYLOAD_SIZE;

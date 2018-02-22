@@ -67,15 +67,21 @@
 
 /* PLS Network Parameters */
 #define PLS_SUP_TIMEOUT         180 /* minutes */
+#define PLS_PERIODIC_TIMEOUT    1   /* minutes */
 #define PLS_HEADER_SIZE         2
 #define PLS_PAYLOAD_SIZE        4
-static uint8_t message[PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE];
+static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
 /* PLS Device Parameters */
 #define PLS_PULSE_DETECTED       0x91
+#define PLS_PULSE_PERIODIC       0x92
+#define PLS_PULSE_TOTAL          0x93
+#define PLS_PULSE_NOEVT          0x00
 #define PLS_SUP_EVT              0xBB
 #define PLS_SUP_NOEVT            0x00
+
+static uint32_t pls_pulse_counter;
 
 /* Flash Logging */
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
@@ -131,7 +137,7 @@ PROCESS_THREAD(pls_abc_process, ev, data)
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
   /* Composing boot status message */
-  memset(message, 0, 2 + 4);
+  memset(message, 0, sizeof(message));
   message[0] = 2;
   message[1] = seqno++;
   message[2] = 4;
@@ -182,26 +188,31 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
     if(*sensor_data == PLS_PULSE_DETECTED)
     {
-      /* Composing PLS sensor message */
-      memset(message, 0, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE);
+      pls_pulse_counter++;
+#if LPM_CONF_MODE
+      deep_sleep_requested = 60 * CLOCK_SECOND;
+#endif
+    }
+    else if(*sensor_data == PLS_PULSE_PERIODIC)
+    {
+      memset(message, 0, sizeof(message));
       message[0] = PLS_HEADER_SIZE;
       message[1] = seqno++;
-      message[2] = PLS_PAYLOAD_SIZE;
+      message[2] = PLS_PAYLOAD_SIZE + 4;
       message[3] = CONECTRIC_SENSOR_BROADCAST_PLS;
       message[4] = (char)(dec*10)+(char)(frac*10);
-      message[5] = *sensor_data;
+      message[5] = (char)PLS_PULSE_PERIODIC;
+      message[6] = (char)(pls_pulse_counter >> 24);
+      message[7] = (char)((pls_pulse_counter & 0x00FFFFFF) >> 16);
+      message[8] = (char)((pls_pulse_counter & 0x0000FFFF) >>  8);
+      message[9] = (char) (pls_pulse_counter & 0x000000FF);
 
-//      /* Log data that will be sent out over the air */
-//      logData[0] = (char)(dec*10)+(char)(frac*10);
-//      logData[1] = *sensor_data;
-//      logData[2] = 0x00;
-//      logData[3] = 0x00;
-//      flashlogging_write4(RIME_PLS_CMP_ID, PLS_SEND, logData);
-    
+      pls_pulse_counter = 0;
+
       loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
-        packetbuf_copyfrom(message, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE);
+        packetbuf_copyfrom(message, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE + 4);
         NETSTACK_MAC.on();
         abc_send(&abc);
 
@@ -225,7 +236,7 @@ PROCESS_THREAD(pls_abc_process, ev, data)
     {
       uint16_t time = clock_seconds();
       
-      memset(message, 0, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE);
+      memset(message, 0, sizeof(message));
       message[0] = PLS_HEADER_SIZE;                      // Header Length
       message[1] = seqno++;                             // Sequence number
       message[2] = PLS_PAYLOAD_SIZE;                     // Payload Length
@@ -256,7 +267,7 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
       }
     }
-    else if(*sensor_data == PLS_SUP_NOEVT) {
+    else if(*sensor_data == PLS_PULSE_NOEVT || *sensor_data == PLS_SUP_NOEVT) {
 #if LPM_CONF_MODE
       deep_sleep_requested = 60 * CLOCK_SECOND;
 #endif
@@ -299,10 +310,12 @@ PROCESS_THREAD(pls_supervisory_process, ev, data)
   static struct etimer et;
   static uint8_t event;
   static int16_t supervisory_counter;
+  static int16_t periodic_counter;
 
   PROCESS_BEGIN();
 
   supervisory_counter = PLS_SUP_TIMEOUT;
+  periodic_counter = PLS_PERIODIC_TIMEOUT;
 
   while (1)
   {
@@ -318,6 +331,18 @@ PROCESS_THREAD(pls_supervisory_process, ev, data)
     else {
       supervisory_counter = PLS_SUP_TIMEOUT;
       event = PLS_SUP_EVT;
+      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+
+    /* Send periodic message */
+    if (periodic_counter > 1) {
+      periodic_counter--;
+      event = PLS_PULSE_NOEVT;
+      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+    else {
+      periodic_counter = PLS_PERIODIC_TIMEOUT;
+      event = PLS_PULSE_PERIODIC;
       process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &event);
     }
   }

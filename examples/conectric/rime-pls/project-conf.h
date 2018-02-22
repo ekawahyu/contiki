@@ -55,7 +55,7 @@ extern "C" {
 #define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
 #endif
 
-#define LPM_CONF_MODE                         2
+#define LPM_CONF_MODE                         0
 
 #define BUTTON_SENSOR_CONF_INPUT_3STATE       1
 
