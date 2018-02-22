@@ -100,7 +100,7 @@
 #define SPI_CS1_MASK   0x04
 #define SPI_CS2_MASK   0x10
 #define SPI_CS3_MASK   0x01
-#define SPI_CS4_MASK   0x04
+#define SPI_CS4_MASK   0x08
 #define SPI_CS5_MASK   0x10
 
 /*---------------------------------------------------------------------------*/
