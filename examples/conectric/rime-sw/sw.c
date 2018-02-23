@@ -256,10 +256,14 @@ PROCESS_THREAD(sw_interrupt_process, ev, data)
     if(sensor == &button_1_sensor) {
       button = SW_BUTTON_OPEN;
       process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      BUTTON_SENSOR_DEACTIVATE(1);
+      BUTTON_SENSOR_ACTIVATE(2);
     }
     if(sensor == &button_2_sensor) {
       button = SW_BUTTON_CLOSED;
       process_post(&sw_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      BUTTON_SENSOR_DEACTIVATE(2);
+      BUTTON_SENSOR_ACTIVATE(1);
     }
   }
 

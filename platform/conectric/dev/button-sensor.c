@@ -152,7 +152,7 @@ port_1_isr(void) __interrupt(P1INT_VECTOR)
    * button's pin. */
   if(BUTTON_IRQ_CHECK(1)) {
     if(timer_expired(&debouncetimer)) {
-      timer_set(&debouncetimer, CLOCK_SECOND / 16);
+      timer_set(&debouncetimer, CLOCK_SECOND / 32);
       sensors_changed(&button_1_sensor);
     }
   }
@@ -188,7 +188,7 @@ port_2_isr(void) __interrupt(P2INT_VECTOR)
    * button's pin. */
   if(BUTTON_IRQ_CHECK(2)) {
     if(timer_expired(&debouncetimer)) {
-      timer_set(&debouncetimer, CLOCK_SECOND / 16);
+      timer_set(&debouncetimer, CLOCK_SECOND / 32);
       sensors_changed(&button_2_sensor);
     }
   }
