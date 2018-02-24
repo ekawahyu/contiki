@@ -41,6 +41,7 @@ extern "C" {
 #define CONECTRIC_POLL_NEIGHBORS                0x3E
 #define CONECTRIC_POLL_NEIGHBORS_REPLY          0x3F
 #define CONECTRIC_SENSOR_BROADCAST_PLS          0x40
+#define CONECTRIC_SENSOR_BROADCAST_USB          0x41
 
 /*   Reporting boot status */
 #define CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS  0x60
