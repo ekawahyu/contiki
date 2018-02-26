@@ -51,7 +51,7 @@
 /* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -315,11 +315,9 @@ PROCESS_THREAD(example_conectric_process, ev, data)
 
       packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
       NETSTACK_MAC.on();
-      addr.u8[0] = 1;
-      addr.u8[1] = 0;
+      addr.u8[0] = 0x20;
+      addr.u8[1] = 0xD4;
       conectric_send(&conectric, &addr);
-
-      PROCESS_WAIT_EVENT();
     }
     else if(*sensor_data == USB_PULSE_NOEVT || *sensor_data == USB_SUP_NOEVT) {
 
@@ -360,11 +358,13 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
 
     /* Send periodic message */
     if (periodic_counter > 1) {
+      PRINTF("usb_periodic: no event\n");
       periodic_counter--;
       event = USB_PULSE_NOEVT;
       process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
+      PRINTF("usb_periodic: periodic event\n");
       periodic_counter = USB_PERIODIC_TIMEOUT;
       event = USB_PULSE_PERIODIC;
       process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);

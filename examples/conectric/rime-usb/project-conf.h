@@ -47,6 +47,10 @@ extern "C" {
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     nullrdc_driver
 
+#define ROUTE_CONF_ENTRIES 1024
+#define ROUTE_CONF_DECAY_THRESHOLD 1024
+#define ROUTE_CONF_DEFAULT_LIFETIME 600
+
 #define IEEE802154_CONF_PANID                 0x2007
 #define CC2530_RF_CONF_CHANNEL                25
 #define CC2530_RF_CONF_LEDS                   1
