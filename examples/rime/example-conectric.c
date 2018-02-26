@@ -45,15 +45,20 @@
 
 #include "dev/leds.h"
 
+#include "dev/serial-line.h"
+
 #include <stdio.h>
 #include <string.h>
 
 #define MESSAGE "Hello"
+#define REPLIED "Replied"
 
 static struct conectric_conn conectric;
+process_event_t serial_event_message;
 /*---------------------------------------------------------------------------*/
 PROCESS(example_conectric_process, "Conectric example");
-AUTOSTART_PROCESSES(&example_conectric_process);
+PROCESS(serial_in_process, "SerialIn");
+AUTOSTART_PROCESSES(&example_conectric_process, &serial_in_process);
 /*---------------------------------------------------------------------------*/
 static void
 sent(struct conectric_conn *c)
@@ -74,8 +79,10 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 	 from->u8[0], from->u8[1],
 	 packetbuf_datalen(), (char *)packetbuf_dataptr(), packetbuf_datalen());
 
-  packetbuf_copyfrom(MESSAGE, strlen(MESSAGE));
-  // conectric_send(&conectric, from);
+  if (*(char *)packetbuf_dataptr() == 'H') {
+    packetbuf_copyfrom(REPLIED, strlen(REPLIED));
+    conectric_send(&conectric, from);
+  }
 }
 
 const static struct conectric_callbacks callbacks = {recv, sent, timedout};
@@ -93,17 +100,46 @@ PROCESS_THREAD(example_conectric_process, ev, data)
     linkaddr_t addr;
 
     /* Wait for button click before sending the first message. */
-    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
+//    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
+//
+//    printf("Button clicked\n");
 
-    printf("Button clicked\n");
-
-    /* Send a message to node number 1. */
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_event_message && data != NULL);
     
     packetbuf_copyfrom(MESSAGE, strlen(MESSAGE));
-    addr.u8[0] = 1;
+    addr.u8[0] = *(uint8_t*)data;
     addr.u8[1] = 0;
     conectric_send(&conectric, &addr);
   }
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_in_process, ev, data)
+{
+//  static uint8_t * request;
+//  static uint8_t counter;
+//  static uint8_t hex_string[2];
+//  static uint8_t bytereq[128];
+
+  PROCESS_BEGIN();
+
+  serial_event_message = process_alloc_event();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    printf("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    printf("%s\n", (uint8_t *)data);
+
+    /* Broadcast event */
+    process_post(PROCESS_BROADCAST, serial_event_message, data);
+    /* Wait until all processes have handled the serial line event */
+    if(PROCESS_ERR_OK ==
+      process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
+      PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
+    }
+  }
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
