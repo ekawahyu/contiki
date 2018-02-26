@@ -34,6 +34,8 @@
  *
  */
 
+#include <stdio.h>
+
 #include "contiki.h"
 #include "debug.h"
 #include "net/rime/rime.h"
@@ -54,8 +56,6 @@
 #define CONECTRIC_PROJECT_STRING "unknown"
 #endif
 
-#define REQUEST_HEADER_LEN    4
-
 #define MESSAGE_BYTEREQ       1
 #define MESSAGE_BYTECMD       2
 
@@ -69,6 +69,71 @@
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
 
+/*---------------------------------------------------------------------------*/
+uint8_t
+command_interpreter(uint8_t * command_line)
+{
+  static uint8_t * request;
+  static uint8_t counter;
+  static uint8_t hex_string[2];
+  static uint8_t bytereq[128];
+
+  request = command_line;
+  memset(bytereq, 0, sizeof(bytereq));
+
+  if (request[0] == '<') {
+
+    bytereq[0] = '<';
+    counter = 2;
+
+    /* do conversion from hex string to hex bytes */
+    while(*++request != '\0') {
+
+      /* remove space */
+      if (*request == ' ') continue;
+
+      /* single digit hex string 0-9, A-F, a-f adjustment */
+      if (*request >= 0x30 && *request <= 0x39)
+        *request -= 0x30;
+      else if (*request >= 0x41 && *request <= 0x46)
+        *request -= 0x37;
+      else if (*request >= 0x61 && *request <= 0x66)
+                *request -= 0x57;
+      else /* skip all input other than hex number */
+        continue;
+
+      hex_string[counter % 2] = *request;
+
+      /* combinining two digits hex bytes into one and store it */
+      if (counter++ % 2)
+        bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
+    }
+
+    command_parser(bytereq, MESSAGE_BYTEREQ);
+
+  }
+  else {
+
+    counter = 0;
+
+    /* passthrough until end of line found */
+    while(*request != '\0') {
+      /* remove space */
+      if (*request == ' ') {
+        request++;
+        continue;
+      }
+      if (*request >= 0x61 && *request <= 0x7A)
+        *request -= 0x20;
+      bytereq[counter++] = *request++;
+    }
+
+    command_parser(bytereq, MESSAGE_BYTECMD);
+
+  }
+
+  return NULL;
+}
 /*---------------------------------------------------------------------------*/
 linkaddr_t *
 command_parser(void * incoming, uint8_t type)

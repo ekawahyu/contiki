@@ -48,6 +48,7 @@ extern "C" {
 #define BUFFER_ALL              1
 
 void dump_packet_buffer(uint8_t mode);
+uint8_t command_interpreter(uint8_t * command_line);
 linkaddr_t * command_parser(void * incoming, uint8_t type);
 
 #ifdef __cplusplus

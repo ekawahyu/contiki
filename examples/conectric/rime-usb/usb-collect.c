@@ -519,11 +519,6 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
-  static uint8_t * request;
-  static uint8_t counter;
-  static uint8_t hex_string[2];
-  static uint8_t bytereq[128];
-
   PROCESS_BEGIN();
 
   while(1) {
@@ -532,59 +527,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
     printf("%s\n", (uint8_t *)data);
 
-    request = (uint8_t *)data;
-    memset(bytereq, 0, sizeof(bytereq));
-
-    if (request[0] == '<') {
-
-      bytereq[0] = '<';
-      counter = 2;
-
-      /* do conversion from hex string to hex bytes */
-      while(*++request != '\0') {
-
-        /* remove space */
-        if (*request == ' ') continue;
-
-        /* single digit hex string 0-9, A-F, a-f adjustment */
-        if (*request >= 0x30 && *request <= 0x39)
-          *request -= 0x30;
-        else if (*request >= 0x41 && *request <= 0x46)
-          *request -= 0x37;
-        else if (*request >= 0x61 && *request <= 0x66)
-                  *request -= 0x57;
-        else /* skip all input other than hex number */
-          continue;
-
-        hex_string[counter % 2] = *request;
-
-        /* combinining two digits hex bytes into one and store it */
-        if (counter++ % 2)
-          bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
-      }
-
-      command_parser(bytereq, MESSAGE_BYTEREQ);
-
-    }
-    else {
-
-      counter = 0;
-
-      /* passthrough until end of line found */
-      while(*request != '\0') {
-        /* remove space */
-        if (*request == ' ') {
-          request++;
-          continue;
-        }
-        if (*request >= 0x61 && *request <= 0x7A)
-          *request -= 0x20;
-        bytereq[counter++] = *request++;
-      }
-
-      command_parser(bytereq, MESSAGE_BYTECMD);
-
-    }
+    command_interpreter((uint8_t *)data);
   }
 
   PROCESS_END();
