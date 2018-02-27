@@ -34,16 +34,17 @@
  *
  */
 
-#include <stdio.h>
-
 #include "contiki.h"
 #include "debug.h"
 #include "net/rime/rime.h"
 #include "net/rime/conectric.h"
+
 #include "command.h"
+#include "examples/conectric/conectric-messages.h"
 
 #define DEBUG 0
 #if DEBUG
+#include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -68,6 +69,8 @@
 #else
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
+
+uint8_t command_parser(void * incoming, uint8_t type);
 
 /*---------------------------------------------------------------------------*/
 uint8_t
@@ -109,7 +112,7 @@ command_interpreter(uint8_t * command_line)
         bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
     }
 
-    command_parser(bytereq, MESSAGE_BYTEREQ);
+    return command_parser(bytereq, MESSAGE_BYTEREQ);
 
   }
   else {
@@ -128,14 +131,15 @@ command_interpreter(uint8_t * command_line)
       bytereq[counter++] = *request++;
     }
 
-    command_parser(bytereq, MESSAGE_BYTECMD);
+    return command_parser(bytereq, MESSAGE_BYTECMD);
 
   }
 
+  /* will never reach to this point */
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
-linkaddr_t *
+uint8_t
 command_parser(void * incoming, uint8_t type)
 {
   static linkaddr_t forward_addr;
@@ -192,6 +196,45 @@ command_parser(void * incoming, uint8_t type)
         putstring(bytereq);
         putstring(":Bad command!\n");
       }
+    }
+
+  }
+
+  /*******************************************************/
+  /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
+  /*******************************************************/
+  /*
+   * BYTEREQ Protocol:
+   * -----------------
+   * [<][Len][Req][DestH][DestL][RLen][R1H][R1L]...[RnH][RnL][Data0][Data1]...
+   *
+   * [Len]  = request byte length including [Len], but excluding [<]
+   * [RLen] = routing table length including [RLen] itself
+   * [RnH]  = the last hop address H ---> [DestH]
+   * [RnL]  = the last hop address L ---> [DestL]
+   *
+   */
+  else if (type == MESSAGE_BYTEREQ) {
+
+    request = bytereq[2];
+
+    /* List of commands a device must respond to */
+    if (request == CONECTRIC_ROUTE_REQUEST ||
+        request == CONECTRIC_ROUTE_REQUEST_BY_SN ||
+        request == CONECTRIC_MULTIHOP_PING ||
+        request == CONECTRIC_REBOOT_REQUEST ||
+        request == CONECTRIC_POLL_RS485  ||
+        request == CONECTRIC_POLL_RS485_CHUNK  ||
+        request == CONECTRIC_POLL_SENSORS  ||
+        request == CONECTRIC_GET_LONG_MAC) {
+      return request;
+    }
+
+    /* Unknown request */
+    else {
+      putstring(": Unknown request - 0x");
+      puthex(request);
+      putstring("\n");
     }
 
   }
