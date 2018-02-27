@@ -480,19 +480,19 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
       process_post(&usb_abc_process, PROCESS_EVENT_CONTINUE, &event);
     }
 
-    /* Send periodic message */
-    if (periodic_counter > 1) {
-      PRINTF("usb_periodic: no event\n");
-      periodic_counter--;
-      event = USB_PULSE_NOEVT;
-      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
-    }
-    else {
-      PRINTF("usb_periodic: periodic event\n");
-      periodic_counter = USB_PERIODIC_TIMEOUT;
-      event = USB_PULSE_PERIODIC;
-      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
-    }
+//    /* Send periodic message */
+//    if (periodic_counter > 1) {
+//      PRINTF("usb_periodic: no event\n");
+//      periodic_counter--;
+//      event = USB_PULSE_NOEVT;
+//      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+//    }
+//    else {
+//      PRINTF("usb_periodic: periodic event\n");
+//      periodic_counter = USB_PERIODIC_TIMEOUT;
+//      event = USB_PULSE_PERIODIC;
+//      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+//    }
   }
 
   PROCESS_END();
