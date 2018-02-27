@@ -57,9 +57,6 @@
 #define CONECTRIC_PROJECT_STRING "unknown"
 #endif
 
-#define MESSAGE_BYTEREQ       1
-#define MESSAGE_BYTECMD       2
-
 #if CC2530_CONF_MAC_FROM_PRIMARY
 #if defined __IAR_SYSTEMS_ICC__
   volatile unsigned char *gmacp = &X_IEEE_ADDR;
