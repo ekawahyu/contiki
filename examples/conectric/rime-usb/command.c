@@ -67,16 +67,116 @@
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
 
-uint8_t command_parser(uint8_t * incoming, uint8_t type);
+/*---------------------------------------------------------------------------*/
+uint8_t
+command_respond(uint8_t * bytereq)
+{
+  uint8_t request;
+  int8_t i;
 
+  if (bytereq == NULL) return 0;
+
+  /*******************************************************/
+  /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
+  /*******************************************************/
+  /*
+   * [<][Len][Req][DestH][DestL][RLen][R1H][R1L]...[RnH][RnL][Data0][Data1]...[Datan]
+   *
+   * [Len]   = request byte length including [Len], but excluding [<]
+   * [Req]   = request type
+   * [DestH] = destination address H (can be one or more hops with/without routing table)
+   * [DestL] = destination address L (can be one or more hops with/without routing table)
+   * [RLen]  = routing table length including [RLen] itself
+   * [RnH]   = the last hop address H ---> [DestH]
+   * [RnL]   = the last hop address L ---> [DestL]
+   * [Data0] = data sequence starts
+   * [Datan] = the last data sequence
+   *
+   */
+  if (bytereq[0] == '<') {
+
+    request = bytereq[2];
+
+    /* List of commands a device must respond to */
+    if (request == CONECTRIC_ROUTE_REQUEST ||
+        request == CONECTRIC_ROUTE_REQUEST_BY_SN ||
+        request == CONECTRIC_MULTIHOP_PING ||
+        request == CONECTRIC_REBOOT_REQUEST ||
+        request == CONECTRIC_POLL_RS485  ||
+        request == CONECTRIC_POLL_RS485_CHUNK  ||
+        request == CONECTRIC_POLL_SENSORS  ||
+        request == CONECTRIC_GET_LONG_MAC) {
+      return request;
+    }
+
+    /* Unknown request */
+    else {
+      putstring(": Unknown request - 0x");
+      puthex(request);
+      putstring("\n");
+    }
+
+  }
+
+  /*******************************************************/
+  /***** INTERPRETING COMMAND LINES FROM SERIAL PORT *****/
+  /*******************************************************/
+  /*
+   * - It starts with any char, but '<'
+   * - It tests only capitalized letters
+   *
+   */
+  else {
+
+    if (bytereq[0] == 'M' && bytereq[1] == 'R') { /* MR = Mac address Read */
+      gmacp = &X_IEEE_ADDR;
+      putstring("MR:");
+      for(i = 7; i >= 0; i--) puthex(gmacp[i]);
+      putstring("\n");
+    }
+
+    else if (bytereq[0] == 'D' && bytereq[1] == 'P') { /* DP = Dump Payload only */
+      dump_packet_buffer(BUFFER_PAYLOAD);
+      putstring("DP:Ok\n");
+    }
+
+    else if (bytereq[0] == 'D' && bytereq[1] == 'B') { /* DB = Dump everything from Buffer */
+      dump_packet_buffer(BUFFER_ALL);
+      putstring("DB:Ok\n");
+    }
+
+    else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
+      putstring("VER:");
+      putstring(CONTIKI_VERSION_STRING "\n");
+      putstring("VER:");
+      putstring(CONECTRIC_PROJECT_STRING "\n");
+    }
+
+    else if (bytereq[0] == '@' && bytereq[1] == 'B' && bytereq[2] == 'O' && bytereq[3] == 'O' && bytereq[4] == 'T') {
+      putstring("@BOOT:Rebooting...\n");
+      while(1);
+    }
+
+    /* Unknown command */
+    else {
+      if (strlen(bytereq) != 0) {
+        putstring(bytereq);
+        putstring(":Bad command!\n");
+      }
+    }
+
+  }
+
+  return 0;
+}
 /*---------------------------------------------------------------------------*/
 uint8_t
 command_interpreter(uint8_t * command_line)
 {
   static uint8_t bytereq[128];
+  uint8_t hex_string[2];
   uint8_t * request;
   uint8_t counter;
-  uint8_t hex_string[2];
 
   request = command_line;
   memset(bytereq, 0, sizeof(bytereq));
@@ -109,135 +209,28 @@ command_interpreter(uint8_t * command_line)
         bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
     }
 
-    return command_parser(bytereq, MESSAGE_BYTEREQ);
+    return command_respond(bytereq);
 
   }
   else {
 
     counter = 0;
 
-    /* passthrough until end of line found */
+    /* pass through until end of line found */
     while(*request != '\0') {
       /* remove space */
       if (*request == ' ') {
         request++;
         continue;
       }
+      /* capitalize letter */
       if (*request >= 0x61 && *request <= 0x7A)
         *request -= 0x20;
       bytereq[counter++] = *request++;
     }
 
-    return command_parser(bytereq, MESSAGE_BYTECMD);
+    return command_respond(bytereq);
 
   }
-
-  /* will never reach to this point */
-  return NULL;
-}
-/*---------------------------------------------------------------------------*/
-uint8_t
-command_parser(uint8_t * incoming, uint8_t type)
-{
-  static linkaddr_t forward_addr;
-  uint8_t * bytereq = incoming;
-  uint8_t request;
-  uint8_t seqno, mhops, hdrlen;
-  uint8_t * header;
-  int i;
-
-  /*******************************************************/
-  /***** INTERPRETING COMMAND LINES FROM SERIAL PORT *****/
-  /*******************************************************/
-  /*
-   * BYTECMD Protocol:
-   * - It starts with any char, but '<'
-   * - Non-capital letter inputs get capitalized automatically
-   *
-   */
-  if (type == MESSAGE_BYTECMD) {
-
-    /* Command line interpreter */
-    if (bytereq[0] == 'M' && bytereq[1] == 'R') {
-      gmacp = &X_IEEE_ADDR;
-      putstring("MR:");
-      for(i = 7; i >= 0; i--) puthex(gmacp[i]);
-      putstring("\n");
-    }
-
-    else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
-      dump_packet_buffer(BUFFER_PAYLOAD);
-      putstring("DP:Ok\n");
-    }
-
-    else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
-      dump_packet_buffer(BUFFER_ALL);
-      putstring("DB:Ok\n");
-    }
-
-    else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
-      putstring("VER:");
-      putstring(CONTIKI_VERSION_STRING "\n");
-      putstring("VER:");
-      putstring(CONECTRIC_PROJECT_STRING "\n");
-    }
-
-    else if (bytereq[0] == '@' && bytereq[1] == 'B' && bytereq[2] == 'O' && bytereq[3] == 'O' && bytereq[4] == 'T') {
-      putstring("@BOOT:Rebooting...\n");
-      while(1);
-    }
-
-    /* Unknown command */
-    else {
-      if (strlen(bytereq) != 0) {
-        putstring(bytereq);
-        putstring(":Bad command!\n");
-      }
-    }
-
-  }
-
-  /*******************************************************/
-  /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
-  /*******************************************************/
-  /*
-   * BYTEREQ Protocol:
-   * -----------------
-   * [<][Len][Req][DestH][DestL][RLen][R1H][R1L]...[RnH][RnL][Data0][Data1]...
-   *
-   * [Len]  = request byte length including [Len], but excluding [<]
-   * [RLen] = routing table length including [RLen] itself
-   * [RnH]  = the last hop address H ---> [DestH]
-   * [RnL]  = the last hop address L ---> [DestL]
-   *
-   */
-  else if (type == MESSAGE_BYTEREQ) {
-
-    request = bytereq[2];
-
-    /* List of commands a device must respond to */
-    if (request == CONECTRIC_ROUTE_REQUEST ||
-        request == CONECTRIC_ROUTE_REQUEST_BY_SN ||
-        request == CONECTRIC_MULTIHOP_PING ||
-        request == CONECTRIC_REBOOT_REQUEST ||
-        request == CONECTRIC_POLL_RS485  ||
-        request == CONECTRIC_POLL_RS485_CHUNK  ||
-        request == CONECTRIC_POLL_SENSORS  ||
-        request == CONECTRIC_GET_LONG_MAC) {
-      return request;
-    }
-
-    /* Unknown request */
-    else {
-      putstring(": Unknown request - 0x");
-      puthex(request);
-      putstring("\n");
-      return NULL;
-    }
-
-  }
-
-  /* will never reach to this point */
-  return NULL;
 }
 /*---------------------------------------------------------------------------*/
