@@ -731,9 +731,9 @@ compose_request_to_packetbuf(uint8_t * request,
   /***** CONECTRIC NETWORK MESSAGE PROTOCOL *****/
   /**********************************************/
   /*
-   * [HLen+RLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][DLen][Data0][Data1]...
+   * [HdrLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][DLen][Data0][Data1]...[Datan]
    *
-   * [HLen+RLen] = header + routing table length including the length byte itself
+   * [HdrLen] = header + routing table length including the length byte itself
    * [Seq]    = sequence number
    * [HopCnt] = hop count
    * [MaxHop] = maximum hops before it gets dropped
@@ -743,6 +743,9 @@ compose_request_to_packetbuf(uint8_t * request,
    * [R1L]    = the first hop address L
    * [RnH]    = the last hop address H ---> [DestH]
    * [RnL]    = the last hop address L ---> [DestL]
+   * [DLen]   = payload length
+   * [Data0]  = data sequence starts
+   * [Datan]  = the last data sequence
    *
    */
 
@@ -1069,6 +1072,20 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* abc message received */
     /* TODO store sensors data as a ring buffer with timestamp */
+
+    /***********************************************/
+    /***** CONECTRIC SENSOR BROADCAST PROTOCOL *****/
+    /***********************************************/
+    /*
+     * [HdrLen][Seq][DLen][Data0][Data1]...[Datan]
+     *
+     * [HdrLen] = header length including the length byte itself
+     * [Seq]    = sequence number
+     * [DLen]   = payload length
+     * [Data0]  = data sequence starts
+     * [Datan]  = the last data sequence
+     *
+     */
 
     /* trickle message received */
     if (message->request == CONECTRIC_ROUTE_REQUEST)
