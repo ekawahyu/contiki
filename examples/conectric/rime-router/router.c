@@ -963,9 +963,9 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* Unknown request */
     else {
-      puthex(linkaddr_node_addr.u8[0]);
-      putstring(".");
-      puthex(linkaddr_node_addr.u8[0]);
+//      puthex(linkaddr_node_addr.u8[0]);
+//      putstring(".");
+//      puthex(linkaddr_node_addr.u8[0]);
       putstring(": Unknown request - 0x");
       puthex(request);
       putstring("\n");
