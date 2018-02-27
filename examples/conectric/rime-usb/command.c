@@ -70,16 +70,16 @@
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
 
-uint8_t command_parser(void * incoming, uint8_t type);
+uint8_t command_parser(uint8_t * incoming, uint8_t type);
 
 /*---------------------------------------------------------------------------*/
 uint8_t
 command_interpreter(uint8_t * command_line)
 {
-  static uint8_t * request;
-  static uint8_t counter;
-  static uint8_t hex_string[2];
   static uint8_t bytereq[128];
+  uint8_t * request;
+  uint8_t counter;
+  uint8_t hex_string[2];
 
   request = command_line;
   memset(bytereq, 0, sizeof(bytereq));
@@ -140,10 +140,10 @@ command_interpreter(uint8_t * command_line)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-command_parser(void * incoming, uint8_t type)
+command_parser(uint8_t * incoming, uint8_t type)
 {
   static linkaddr_t forward_addr;
-  uint8_t * bytereq = (uint8_t *)incoming;
+  uint8_t * bytereq = incoming;
   uint8_t request;
   uint8_t seqno, mhops, hdrlen;
   uint8_t * header;
@@ -235,10 +235,12 @@ command_parser(void * incoming, uint8_t type)
       putstring(": Unknown request - 0x");
       puthex(request);
       putstring("\n");
+      return NULL;
     }
 
   }
 
+  /* will never reach to this point */
   return NULL;
 }
 /*---------------------------------------------------------------------------*/

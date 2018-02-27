@@ -519,6 +519,9 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
+  static uint8_t request;
+  static uint8_t event;
+
   PROCESS_BEGIN();
 
   while(1) {
@@ -527,7 +530,12 @@ PROCESS_THREAD(serial_in_process, ev, data)
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
     printf("%s\n", (uint8_t *)data);
 
-    command_interpreter((uint8_t *)data);
+    request = command_interpreter((uint8_t *)data);
+
+    if (request) {
+      event = USB_PULSE_PERIODIC;
+      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+    }
   }
 
   PROCESS_END();
