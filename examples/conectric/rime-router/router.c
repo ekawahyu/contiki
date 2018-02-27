@@ -727,6 +727,25 @@ compose_request_to_packetbuf(uint8_t * request,
   uint8_t routelen;
   uint8_t i;
 
+  /**********************************************/
+  /***** CONECTRIC NETWORK MESSAGE PROTOCOL *****/
+  /**********************************************/
+  /*
+   * [HLen+RLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][DLen][Data0][Data1]...
+   *
+   * [HLen+RLen] = header + routing table length including the length byte itself
+   * [Seq]    = sequence number
+   * [HopCnt] = hop count
+   * [MaxHop] = maximum hops before it gets dropped
+   * [DestH]  = destination address H
+   * [DestL]  = destination address L
+   * [R1H]    = the first hop address H
+   * [R1L]    = the first hop address L
+   * [RnH]    = the last hop address H ---> [DestH]
+   * [RnL]    = the last hop address L ---> [DestL]
+   *
+   */
+
   /* Request from serial port, skip the '<' */
   request++;
 
