@@ -261,14 +261,19 @@ PROCESS_THREAD(usb_abc_process, ev, data)
   message[3] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
 #if RUN_ON_COOJA_SIMULATION
   batt = 0;
+  sane = batt * 3 * 1.15 / 2047;
+  dec = sane;
+  frac = sane - dec;
+  message[4] = (char)(dec*10)+(char)(frac*10);
+  message[5] = 0;
 #else
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-#endif
   sane = batt * 3 * 1.15 / 2047;
   dec = sane;
   frac = sane - dec;
   message[4] = (char)(dec*10)+(char)(frac*10);
   message[5] = clock_reset_cause();
+#endif
 
   loop = CONECTRIC_BURST_NUMBER;
 
