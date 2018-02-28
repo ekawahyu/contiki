@@ -87,13 +87,14 @@ enum
   USB_SEND     = 0x01,    // send data event
 };
 
-#define MESSAGE "Hello"
 static message_recv abc_message_recv;
+static message_recv conectric_message_recv;
 
 #define MESSAGE_ABC_RECV      3
 #define MESSAGE_TRICKLE_RECV  4
 #define MESSAGE_MHOP_RECV     5 /* uses mhop_message_recv to store message */
 #define MESSAGE_MHOP_FWD      6 /* uses mhop_message_recv to store message */
+#define MESSAGE_CONECTRIC_RECV      7
 
 static uint8_t dump_buffer = 0;
 
@@ -390,11 +391,21 @@ timedout(struct conectric_conn *c)
 static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
+  packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
+
+  /* TODO only the sink should dump packetbuf,
+   * but routers have to store sensors data
+   */
+  if (dump_buffer)
+    dump_packetbuf();
+  else
+    dump_payload();
+
   PRINTF("Data received from %d.%d: %.*s (%d)\n",
    from->u8[0], from->u8[1],
    packetbuf_datalen(), (char *)packetbuf_dataptr(), packetbuf_datalen());
 
-  packetbuf_copyfrom(MESSAGE, strlen(MESSAGE));
+  // call_decision_maker(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 }
 
 const static struct conectric_callbacks callbacks = {recv, sent, timedout};
