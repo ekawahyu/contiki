@@ -46,8 +46,11 @@
 #include "random.h"
 
 /* Conectric Device */
+#if RUN_ON_COOJA_SIMULATION
+#else
 #include "flash-logging.h"
 #include "dev/adc-sensor.h"
+#endif
 #include "dev/serial-line.h"
 #include "command.h"
 
@@ -256,7 +259,11 @@ PROCESS_THREAD(usb_abc_process, ev, data)
   message[1] = seqno++;
   message[2] = 4;
   message[3] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+#if RUN_ON_COOJA_SIMULATION
+  batt = 0;
+#else
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+#endif
   sane = batt * 3 * 1.15 / 2047;
   dec = sane;
   frac = sane - dec;
@@ -291,7 +298,11 @@ PROCESS_THREAD(usb_abc_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
+#if RUN_ON_COOJA_SIMULATION
+    batt = 0;
+#else
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+#endif
     sane = batt * 3 * 1.15 / 2047;
     dec = sane;
     frac = sane - dec;

@@ -41,6 +41,8 @@
 extern "C" {
 #endif
 
+#define RUN_ON_COOJA_SIMULATION               1
+
 #define STARTUP_CONF_VERBOSE                  1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
 

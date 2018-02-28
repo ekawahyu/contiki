@@ -3,6 +3,11 @@
 #ifndef CONTIKI_CONF_H
 #define CONTIKI_CONF_H
 
+/* Include Project Specific conf */
+#ifdef PROJECT_CONF_H
+#include "project-conf.h"
+#endif /* PROJECT_CONF_H */
+
 #ifdef PLATFORM_CONF_H
 #include PLATFORM_CONF_H
 #else
@@ -111,7 +116,9 @@
 
 #define CONTIKIMAC_CONF_BROADCAST_RATE_LIMIT 0
 
+#ifndef IEEE802154_CONF_PANID
 #define IEEE802154_CONF_PANID       0xABCD
+#endif
 
 #define SHELL_VARS_CONF_RAM_BEGIN 0x1100
 #define SHELL_VARS_CONF_RAM_END 0x2000

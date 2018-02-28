@@ -57,6 +57,10 @@
 #define CONECTRIC_PROJECT_STRING "unknown"
 #endif
 
+#if RUN_ON_COOJA_SIMULATION
+volatile unsigned char gmacp_sim[8] = {0};
+volatile unsigned char *gmacp = gmacp_sim;
+#else
 #if CC2530_CONF_MAC_FROM_PRIMARY
 #if defined __IAR_SYSTEMS_ICC__
   volatile unsigned char *gmacp = &X_IEEE_ADDR;
@@ -65,6 +69,7 @@
 #endif
 #else
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
+#endif
 #endif
 
 /* definition of command line request */
@@ -137,7 +142,11 @@ command_respond(uint8_t * bytereq)
   else {
 
     if (bytereq[0] == 'M' && bytereq[1] == 'R') { /* MR = Mac address Read */
+#if RUN_ON_COOJA_SIMULATION
+      gmacp = gmacp_sim;
+#else
       gmacp = &X_IEEE_ADDR;
+#endif
       putstring("MR:");
       for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       putstring("\n");
