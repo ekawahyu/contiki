@@ -401,14 +401,9 @@ const static struct conectric_callbacks callbacks = {recv, sent, timedout};
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_conectric_process, ev, data)
 {
-  static unsigned int batt;
   static uint8_t seqno = 0;
-  static float sane;
-  static int dec;
-  static float frac;
-  static uint8_t *sensor_data;
-  static struct etimer et;
-  linkaddr_t addr;
+  static uint8_t * request;
+  static linkaddr_t to;
 
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
@@ -420,32 +415,13 @@ PROCESS_THREAD(example_conectric_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-    sane = batt * 3 * 1.15 / 2047;
-    dec = sane;
-    frac = sane - dec;
+    request = (uint8_t*)data;
+    compose_request_to_packetbuf(request, seqno++, &to);
+    conectric_send(&conectric, &to);
 
-    sensor_data = (uint8_t*)data;
-
-    if(*sensor_data == USB_PULSE_PERIODIC)
-    {
-      memset(message, 0, sizeof(message));
-      message[0] = USB_HEADER_SIZE;
-      message[1] = seqno++;
-      message[2] = USB_PAYLOAD_SIZE;
-      message[3] = CONECTRIC_SENSOR_BROADCAST_USB;
-      message[4] = (char)(dec*10)+(char)(frac*10);
-      message[5] = (char)USB_PULSE_PERIODIC;
-
-      packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
-      NETSTACK_MAC.on();
-      addr.u8[0] = 0x20;
-      addr.u8[1] = 0xD4;
-      conectric_send(&conectric, &addr);
-    }
-    else if(*sensor_data == USB_PULSE_NOEVT || *sensor_data == USB_SUP_NOEVT) {
-
-    }
+    PRINTF("%d.%d: conectric sent to %d.%d - %lu\n",
+        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+        to.u8[0], to.u8[1], clock_seconds());
   }
 
   PROCESS_END();
@@ -519,8 +495,7 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_in_process, ev, data)
 {
-  static uint8_t request;
-  static uint8_t event;
+  static uint8_t * event;
 
   PROCESS_BEGIN();
 
@@ -530,11 +505,10 @@ PROCESS_THREAD(serial_in_process, ev, data)
     PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
     printf("%s\n", (uint8_t *)data);
 
-    request = command_interpreter((uint8_t *)data);
+    event = command_interpreter((uint8_t *)data);
 
-    if (request) {
-      event = USB_PULSE_PERIODIC;
-      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+    if (event) {
+      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, event);
     }
   }
 

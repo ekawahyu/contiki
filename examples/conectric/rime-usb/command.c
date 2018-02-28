@@ -67,8 +67,15 @@
   __code unsigned char *gmacp = (__code unsigned char *)0xFFE8;
 #endif
 
+/* definition of command line request */
+#define CONECTRIC_REQUEST_HEADER_LEN    4
+
+/* definition of network message request */
+#define CONECTRIC_MESSAGE_HEADER_LEN    6
+#define CONECTRIC_MESSAGE_LEN           2
+
 /*---------------------------------------------------------------------------*/
-uint8_t
+uint8_t *
 command_respond(uint8_t * bytereq)
 {
   uint8_t request;
@@ -106,7 +113,8 @@ command_respond(uint8_t * bytereq)
         request == CONECTRIC_POLL_RS485_CHUNK  ||
         request == CONECTRIC_POLL_SENSORS  ||
         request == CONECTRIC_GET_LONG_MAC) {
-      return request;
+      /* return the pointer of the request bytes */
+      return bytereq;
     }
 
     /* Unknown request */
@@ -167,10 +175,10 @@ command_respond(uint8_t * bytereq)
 
   }
 
-  return 0;
+  return NULL;
 }
 /*---------------------------------------------------------------------------*/
-uint8_t
+uint8_t *
 command_interpreter(uint8_t * command_line)
 {
   static uint8_t bytereq[128];
@@ -232,5 +240,83 @@ command_interpreter(uint8_t * command_line)
     return command_respond(bytereq);
 
   }
+}
+/*---------------------------------------------------------------------------*/
+void
+compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver)
+{
+  static uint8_t packet_buffer[128];
+  uint8_t * packet = packet_buffer;
+  uint8_t * header = NULL;
+  uint8_t * route = NULL;
+  linkaddr_t dest;
+  uint8_t req;
+  uint8_t reqlen;
+  uint8_t datalen;
+  uint8_t routelen;
+  uint8_t i;
+
+  /*****************************************************/
+  /***** NETWORK MESSAGE REQUEST/RESPONSE PROTOCOL *****/
+  /*****************************************************/
+  /*
+   * [HdrLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][DLen][Data0][Data1]...[Datan]
+   *
+   * [HdrLen] = header + routing table length including the length byte itself
+   * [Seq]    = sequence number
+   * [HopCnt] = hop count
+   * [MaxHop] = maximum hops before it gets dropped
+   * [DestH]  = destination address H
+   * [DestL]  = destination address L
+   * [R1H]    = the first hop address H
+   * [R1L]    = the first hop address L
+   * [RnH]    = the last hop address H ---> [DestH]
+   * [RnL]    = the last hop address L ---> [DestL]
+   * [DLen]   = payload length
+   * [Data0]  = data sequence starts
+   * [Datan]  = the last data sequence
+   *
+   */
+
+  request++; /* skip the '<' */
+
+  reqlen     = *request++;
+  req        = *request++;
+  dest.u8[0] = *request++;
+  dest.u8[1] = *request++;
+  routelen   = *request++;
+
+  if (ereceiver) linkaddr_copy(ereceiver, &dest);
+
+  /* Filling in packetbuf with request byte and data.
+   * Minimum length of data = 2 ---> [DLen][Req], the rest of data will
+   * follow if there is any.
+   */
+  memset(packet_buffer, 0, sizeof(packet_buffer));
+  datalen = reqlen - routelen - CONECTRIC_REQUEST_HEADER_LEN;
+  *packet++ = datalen + CONECTRIC_MESSAGE_LEN;
+  *packet++ = req;
+  route = request;
+  request += (routelen - 1);
+  i = datalen;
+  while (i--) *packet++ = *request++;
+
+  packetbuf_copyfrom(packet_buffer, datalen + CONECTRIC_MESSAGE_LEN);
+
+  routelen--; /* get rid of the length byte */
+
+  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN + routelen); /* allocate some space for header */
+
+  header = (uint8_t *)packetbuf_hdrptr();
+  *header++ = CONECTRIC_MESSAGE_HEADER_LEN + routelen;   /* header length */
+  *header++ = seqno;          /* seqno */
+  *header++ = 0;              /* hop count */
+  *header++ = 0;              /* number of hops */
+  *header++ = dest.u8[0];     /* destination addr H */
+  *header++ = dest.u8[1];     /* destination addr L */
+  while(routelen--)
+        *header++ = *route++; /* routing table */
+
+  /* The packetbuf is filled and ready to be sent */
 }
 /*---------------------------------------------------------------------------*/
