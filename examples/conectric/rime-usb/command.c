@@ -80,6 +80,39 @@ volatile unsigned char *gmacp = gmacp_sim;
 #define CONECTRIC_MESSAGE_LEN           2
 
 /*---------------------------------------------------------------------------*/
+void
+hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq)
+{
+  uint8_t counter;
+  uint8_t hex_string[2];
+
+  counter = 0;
+  hexstring--;
+
+  /* do conversion from hex string to hex bytes */
+  while(*++hexstring != '\0') {
+
+    /* remove space */
+    if (*hexstring == ' ') continue;
+
+    /* single digit hex string 0-9, A-F, a-f adjustment */
+    if (*hexstring >= 0x30 && *hexstring <= 0x39)
+      *hexstring -= 0x30;
+    else if (*hexstring >= 0x41 && *hexstring <= 0x46)
+      *hexstring -= 0x37;
+    else if (*hexstring >= 0x61 && *hexstring <= 0x66)
+              *hexstring -= 0x57;
+    else /* skip all input other than hex number */
+      continue;
+
+    hex_string[counter % 2] = *hexstring;
+
+    /* combinining two digits hex bytes into one and store it */
+    if (counter++ % 2)
+      bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
+  }
+}
+/*---------------------------------------------------------------------------*/
 uint8_t *
 command_respond(uint8_t * bytereq)
 {
@@ -193,7 +226,6 @@ uint8_t *
 command_interpreter(uint8_t * command_line)
 {
   static uint8_t bytereq[128];
-  uint8_t hex_string[2];
   uint8_t * request;
   uint8_t counter;
 
@@ -203,31 +235,7 @@ command_interpreter(uint8_t * command_line)
   if (request[0] == '<') {
 
     bytereq[0] = '<';
-    counter = 2;
-
-    /* do conversion from hex string to hex bytes */
-    while(*++request != '\0') {
-
-      /* remove space */
-      if (*request == ' ') continue;
-
-      /* single digit hex string 0-9, A-F, a-f adjustment */
-      if (*request >= 0x30 && *request <= 0x39)
-        *request -= 0x30;
-      else if (*request >= 0x41 && *request <= 0x46)
-        *request -= 0x37;
-      else if (*request >= 0x61 && *request <= 0x66)
-                *request -= 0x57;
-      else /* skip all input other than hex number */
-        continue;
-
-      hex_string[counter % 2] = *request;
-
-      /* combinining two digits hex bytes into one and store it */
-      if (counter++ % 2)
-        bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
-    }
-
+    hexstring_to_bytereq(&request[1], &bytereq[1]);
     return command_respond(bytereq);
 
   }
