@@ -41,9 +41,6 @@
 extern "C" {
 #endif
 
-#define MESSAGE_BYTEREQ       1
-#define MESSAGE_BYTECMD       2
-
 #define BUFFER_PAYLOAD        0
 #define BUFFER_ALL            1
 

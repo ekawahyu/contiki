@@ -143,6 +143,8 @@ command_respond(uint8_t * bytereq)
 
     if (bytereq[0] == 'M' && bytereq[1] == 'R') { /* MR = Mac address Read */
 #if RUN_ON_COOJA_SIMULATION
+      gmacp[0] = linkaddr_node_addr.u8[0];
+      gmacp[1] = linkaddr_node_addr.u8[1];
       gmacp = gmacp_sim;
 #else
       gmacp = &X_IEEE_ADDR;
@@ -176,8 +178,8 @@ command_respond(uint8_t * bytereq)
 
     /* Unknown command */
     else {
-      if (strlen(bytereq) != 0) {
-        putstring(bytereq);
+      if (strlen((const char*)bytereq) != 0) {
+        putstring((char*)bytereq);
         putstring(":Bad command!\n");
       }
     }

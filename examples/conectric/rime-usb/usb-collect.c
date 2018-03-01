@@ -59,7 +59,6 @@
 
 #define DEBUG 1
 #if DEBUG
-#include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -93,11 +92,11 @@ enum
 static message_recv abc_message_recv;
 static message_recv conectric_message_recv;
 
-#define MESSAGE_ABC_RECV      3
-#define MESSAGE_TRICKLE_RECV  4
-#define MESSAGE_MHOP_RECV     5 /* uses mhop_message_recv to store message */
-#define MESSAGE_MHOP_FWD      6 /* uses mhop_message_recv to store message */
-#define MESSAGE_CONECTRIC_RECV      7
+#define MESSAGE_ABC_RECV          3
+#define MESSAGE_TRICKLE_RECV      4
+#define MESSAGE_MHOP_RECV         5 /* uses mhop_message_recv to store message */
+#define MESSAGE_MHOP_FWD          6 /* uses mhop_message_recv to store message */
+#define MESSAGE_CONECTRIC_RECV    7
 
 static uint8_t dump_buffer = 0;
 
@@ -145,6 +144,7 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 
   return packetlen;
 }
+/*---------------------------------------------------------------------------*/
 void
 dump_packet_buffer(uint8_t mode)
 {
@@ -417,8 +417,9 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   else
     dump_payload();
 
-  PRINTF("Data received from %d.%d: %.*s (%d)\n",
-   from->u8[0], from->u8[1],
+  PRINTF("%d.%d: data received from %d.%d: %.*s (%d)\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      from->u8[0], from->u8[1],
    packetbuf_datalen(), (char *)packetbuf_dataptr(), packetbuf_datalen());
 
   // call_decision_maker(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
