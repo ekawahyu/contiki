@@ -175,7 +175,7 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
   trickle_open(&c->trickle, CLOCK_SECOND, channels + 1, &trickle_call);
   multihop_open(&c->multihop, channels + 2, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
-		       CLOCK_SECOND/8,
+		       CLOCK_SECOND/4,
 		       channels + 3,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
