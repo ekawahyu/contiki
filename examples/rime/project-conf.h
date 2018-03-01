@@ -51,8 +51,8 @@ extern "C" {
 #endif
 #define NETSTACK_CONF_RDC               nullrdc_driver
 
-#define ROUTE_CONF_ENTRIES 32
-#define ROUTE_CONF_DECAY_THRESHOLD 32
+#define ROUTE_CONF_ENTRIES 64
+#define ROUTE_CONF_DECAY_THRESHOLD 8
 #define ROUTE_CONF_DEFAULT_LIFETIME 250 /* default life time max = 255 seconds */
 
 #ifdef __cplusplus
