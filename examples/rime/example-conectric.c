@@ -337,7 +337,21 @@ command_respond(uint8_t * bytereq)
       while(1);
     }
 
-
+    /***** SEND PACKET *****/
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == '0') {
+      putstring("RT:");
+      putdec(route_num());
+      putstring("\n");
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'S') {
+      memset(hexstring, 0, sizeof(hexstring));
+      strcpy(hexstring, "07140100030100");
+      bytereq[0] = '<';
+      hexstring_to_bytereq(hexstring, &bytereq[1]);
+      return bytereq;
+    }
     /* temporary command to test routing table reliability */
     else if (bytereq[0] == '1') {
       memset(hexstring, 0, sizeof(hexstring));
@@ -361,6 +375,172 @@ command_respond(uint8_t * bytereq)
       bytereq[0] = '<';
       hexstring_to_bytereq(hexstring, &bytereq[1]);
       return bytereq;
+    }
+
+    /***** SHOW ROUTING TABLE ****/
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'D' && bytereq[1] == '0') {
+      putstring("RT:");
+      putdec(route_get(0)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" (");
+      putdec(route_get(0)->cost);
+      putstring(")\n");
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'D' && bytereq[1] == '1') {
+      putstring("RT:");
+      putdec(route_get(1)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(1)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" (");
+      putdec(route_get(0)->cost);
+      putstring(")\n");
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'D' && bytereq[1] == '2') {
+      putstring("RT:");
+      putdec(route_get(2)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(2)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" (");
+      putdec(route_get(0)->cost);
+      putstring(")\n");
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'D' && bytereq[1] == '3') {
+      putstring("RT:");
+      putdec(route_get(3)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(3)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" (");
+      putdec(route_get(0)->cost);
+      putstring(")\n");
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'D' && bytereq[1] == '4') {
+      putstring("RT:");
+      putdec(route_get(4)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(4)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" (");
+      putdec(route_get(0)->cost);
+      putstring(")\n");
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'D' && bytereq[1] == '5') {
+      putstring("RT:");
+      putdec(route_get(5)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(5)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" (");
+      putdec(route_get(0)->cost);
+      putstring(")\n");
+    }
+
+    /***** REMOVE ROUTING TABLE ****/
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'R' && bytereq[1] == '0') {
+      putstring("RT:");
+      putdec(route_get(0)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" removed\n");
+      route_remove(route_get(0));
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'R' && bytereq[1] == '1') {
+      putstring("RT:");
+      putdec(route_get(1)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(1)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" removed\n");
+      route_remove(route_get(1));
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'R' && bytereq[1] == '2') {
+      putstring("RT:");
+      putdec(route_get(2)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(2)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" removed\n");
+      route_remove(route_get(2));
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'R' && bytereq[1] == '3') {
+      putstring("RT:");
+      putdec(route_get(3)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(3)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" removed\n");
+      route_remove(route_get(3));
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'R' && bytereq[1] == '4') {
+      putstring("RT:");
+      putdec(route_get(4)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(4)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" removed\n");
+      route_remove(route_get(4));
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == 'R' && bytereq[1] == '5') {
+      putstring("RT:");
+      putdec(route_get(5)->dest.u8[0]);
+      putstring(".");
+      putdec(route_get(5)->dest.u8[1]);
+      putstring(" ---> ");
+      putdec(route_get(0)->nexthop.u8[0]);
+      putstring(".");
+      putdec(route_get(0)->nexthop.u8[1]);
+      putstring(" removed\n");
+      route_remove(route_get(5));
     }
 
 
