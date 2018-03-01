@@ -53,7 +53,7 @@ extern "C" {
 
 #define ROUTE_CONF_ENTRIES 32
 #define ROUTE_CONF_DECAY_THRESHOLD 32
-#define ROUTE_CONF_DEFAULT_LIFETIME 300
+#define ROUTE_CONF_DEFAULT_LIFETIME 250 /* default life time max = 255 seconds */
 
 #ifdef __cplusplus
 }

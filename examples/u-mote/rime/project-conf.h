@@ -48,7 +48,7 @@ extern "C" {
 #define CC2530_RF_CONF_LOW_POWER_RX     0    /* set to 1 to conserve power during reception */
 #define CC2530_RF_CONF_TX_POWER         0xF5 /* tx power range: 0x05 - 0xD5(the highest) */
 
-#define ROUTE_CONF_DEFAULT_LIFETIME     600
+#define ROUTE_CONF_DEFAULT_LIFETIME     250 /* default life time max = 255 seconds */
 
 #define MODELS_CONF_U_MOTE_SENSOR       0
 #define MODELS_CONF_U_MOTE_ROUTER       1
