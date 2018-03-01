@@ -46,7 +46,7 @@
 
 #include <string.h>
 
-#define HOPS_MAX 32
+#define HOPS_MAX 64
 
 struct netflood_hdr {
   uint16_t originator_seqno;
