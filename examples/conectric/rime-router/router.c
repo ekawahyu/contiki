@@ -175,7 +175,7 @@ static uint8_t rs485_data_request;
 static linkaddr_t rs485_data_recv;
 static uint8_t rs485_data_payload[RS485_DATA_MAX_SIZE];
 
-static uint8_t dump_buffer = 0;
+static uint8_t dump_header = 0;
 /*---------------------------------------------------------------------------*/
 /*
  * TODO add pre-built command line to collect git information on IAR
@@ -225,6 +225,13 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   message->payload = &message->message[0] + hdrlen;
   message->length = message->message[hdrlen];
 
+  /* Update hop count */
+  message->message[2] = message->hops;
+
+  /* Replace destination with originator address */
+  message->message[4] = message->esender.u8[1];
+  message->message[5] = message->esender.u8[0];
+
   /* Decoding request byte */
   dataptr = message->payload;
   message->request = *++dataptr;
@@ -233,34 +240,21 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 }
 /*---------------------------------------------------------------------------*/
 static void
-dump_packetbuf(void)
+dump_packetbuf(message_recv * message)
 {
   static uint16_t len;
   static char * packetbuf;
 
   putstring(">");
 
-  len = packetbuf_hdrlen();
-  packetbuf = (char *)packetbuf_hdrptr();
-  while(len--) puthex(*packetbuf++);
+  if (dump_header) {
+    len = packetbuf_hdrlen();
+    packetbuf = (char *)packetbuf_hdrptr();
+    while(len--) puthex(*packetbuf++);
+  }
 
-  len = packetbuf_datalen();
-  packetbuf = (char *)packetbuf_dataptr();
-  while(len--) puthex(*packetbuf++);
-
-  putstring("\n");
-}
-/*---------------------------------------------------------------------------*/
-static void
-dump_payload(void)
-{
-  static uint16_t len;
-  static char * packetbuf;
-
-  putstring(">");
-
-  len = packetbuf_datalen();
-  packetbuf = (char *)packetbuf_dataptr();
+  len = message->message[0] + message->length;
+  packetbuf = message->message;
   while(len--) puthex(*packetbuf++);
 
   putstring("\n");
@@ -310,10 +304,7 @@ abc_recv(struct abc_conn *c)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  if (dump_buffer)
-    dump_packetbuf();
-  else
-    dump_payload();
+  dump_packetbuf(&abc_message_recv);
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -363,10 +354,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
   packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
 
   /* TODO only the sink should dump packetbuf */
-  if (dump_buffer)
-    dump_packetbuf();
-  else
-    dump_payload();
+  dump_packetbuf(&mhop_message_recv);
 
   PRINTF("%d.%d: multihop message from %d.%d - (%d hops) - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -918,12 +906,12 @@ call_decision_maker(void * incoming, uint8_t type)
     }
 
     else if (bytereq[0] == 'D' && bytereq[1] == 'P') {
-      dump_buffer = 0;
+      dump_header = 0;
       putstring("DP:Ok\n");
     }
 
     else if (bytereq[0] == 'D' && bytereq[1] == 'B') {
-      dump_buffer = 1;
+      dump_header = 1;
       putstring("DB:Ok\n");
     }
 

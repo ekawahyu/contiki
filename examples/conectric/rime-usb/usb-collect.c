@@ -138,6 +138,13 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   message->payload = &message->message[0] + hdrlen;
   message->length = message->message[hdrlen];
 
+  /* Update hop count */
+  message->message[2] = message->hops;
+
+  /* Replace destination with originator address */
+  message->message[4] = message->esender.u8[1];
+  message->message[5] = message->esender.u8[0];
+
   /* Decoding request byte */
   dataptr = message->payload;
   message->request = *++dataptr;
@@ -152,9 +159,9 @@ dump_packet_buffer(uint8_t mode)
 }
 /*---------------------------------------------------------------------------*/
 static void
-dump_packetbuf(void)
+dump_packetbuf(message_recv * message)
 {
-  static uint16_t len;
+  uint8_t len;
   static char * packetbuf;
 
   putstring(">");
@@ -165,8 +172,8 @@ dump_packetbuf(void)
     while(len--) puthex(*packetbuf++);
   }
 
-  len = packetbuf_datalen();
-  packetbuf = (char *)packetbuf_dataptr();
+  len = message->message[0] + message->length;
+  packetbuf = message->message;
   while(len--) puthex(*packetbuf++);
 
   putstring("\n");
@@ -204,7 +211,7 @@ abc_recv(struct abc_conn *c)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  dump_packetbuf();
+  dump_packetbuf(&abc_message_recv);
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -397,14 +404,14 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  dump_packetbuf();
+  dump_packetbuf(&conectric_message_recv);
 
   if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
-//    memset(hexstring, 0, sizeof(hexstring));
-//    memset(bytereq, 0, sizeof(bytereq));
-//    strcpy(hexstring, "0715A01703A017");
-//    hexstring_to_bytereq(hexstring, &bytereq[1]);
-//    bytereq[0] = '<';
+    memset(hexstring, 0, sizeof(hexstring));
+    memset(bytereq, 0, sizeof(bytereq));
+    strcpy(hexstring, "0515A01701");
+    hexstring_to_bytereq(hexstring, &bytereq[1]);
+    bytereq[0] = '<';
     process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
   }
 
@@ -432,8 +439,8 @@ PROCESS_THREAD(example_conectric_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-//    request = (uint8_t*)data;
-//    compose_request_to_packetbuf(request, seqno++, &to);
+    request = (uint8_t*)data;
+    compose_request_to_packetbuf(request, seqno++, &to);
 
     request = (uint8_t *)data;
     if (*request == '<')

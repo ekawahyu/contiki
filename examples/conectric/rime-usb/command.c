@@ -304,7 +304,7 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * erec
   /***** NETWORK MESSAGE REQUEST/RESPONSE PROTOCOL *****/
   /*****************************************************/
   /*
-   * [HdrLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][DLen][Data0][Data1]...[Datan]
+   * [HdrLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][PLen][Req][Data0][Data1]...[Datan]
    *
    * [HdrLen] = header + routing table length including the length byte itself
    * [Seq]    = sequence number
@@ -316,13 +316,14 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * erec
    * [R1L]    = the first hop address L
    * [RnH]    = the last hop address H ---> [DestH]
    * [RnL]    = the last hop address L ---> [DestL]
-   * [DLen]   = payload length
+   * [PLen]   = payload length is the total of PLEN + Req + data
+   * [Req]    = request byte
    * [Data0]  = data sequence starts
    * [Datan]  = the last data sequence
    *
    */
 
-  request++; /* skip the '<' */
+  if (*request == '<') request++; /* skip the '<' */
 
   reqlen     = *request++;
   req        = *request++;
@@ -364,7 +365,7 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * erec
   /* The packetbuf is filled and ready to be sent */
 }
 /*---------------------------------------------------------------------------*/
-static void
+void
 compose_response_to_packetbuf(uint8_t * radio_request,
     uint8_t seqno, linkaddr_t * ereceiver)
 {
@@ -378,6 +379,8 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t chunk_number = 0;
   uint8_t chunk_size = 0;
   uint8_t i;
+
+  if (*radio_request == '>') radio_request++; /* skip the '>' prefix */
 
   reqlen = *radio_request++;
   req    = *radio_request++;
