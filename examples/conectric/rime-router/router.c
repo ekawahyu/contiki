@@ -75,7 +75,7 @@
 
 enum {
   CONECTRIC_ATTR_NONE,              // 0x00
-  /* abc messages */
+  /* broadcast messages */
   CONECTRIC_SENSOR_BROADCAST,       // 0x01
   /* trickle messages */
   CONECTRIC_ROUTE_REQUEST,          // 0x02
@@ -134,12 +134,12 @@ static linkaddr_t * call_decision_maker(void * incoming, uint8_t type);
 
 #define MESSAGE_BYTEREQ       1
 #define MESSAGE_BYTECMD       2
-#define MESSAGE_ABC_RECV      3
+#define MESSAGE_BROADCAST_RECV      3
 #define MESSAGE_TRICKLE_RECV  4
 #define MESSAGE_MHOP_RECV     5 /* uses mhop_message_recv to store message */
 #define MESSAGE_MHOP_FWD      6 /* uses mhop_message_recv to store message */
 
-static message_recv abc_message_recv;
+static message_recv broadcast_message_recv;
 static message_recv trickle_message_recv;
 static message_recv mhop_message_recv;
 
@@ -189,7 +189,7 @@ static uint8_t dump_header = 0;
 #endif
 /*---------------------------------------------------------------------------*/
 static uint8_t
-packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
+packetbuf_and_attr_copyto(message_recv * message, uint8_t with_esender, uint8_t message_type)
 {
   uint8_t packetlen, hdrlen;
   uint8_t *dataptr;
@@ -229,8 +229,14 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   message->message[2] = message->hops;
 
   /* Replace destination with originator address */
-  message->message[4] = message->esender.u8[1];
-  message->message[5] = message->esender.u8[0];
+  if (with_esender) {
+    message->message[4] = message->esender.u8[1];
+    message->message[5] = message->esender.u8[0];
+  }
+  else {
+    message->message[4] = message->sender.u8[1];
+    message->message[5] = message->sender.u8[0];
+  }
 
   /* Decoding request byte */
   dataptr = message->payload;
@@ -266,7 +272,7 @@ shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
   return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
 }
 /*---------------------------------------------------------------------------*/
-PROCESS(example_abc_process, "ConBurst");
+PROCESS(example_broadcast_process, "ConBurst");
 PROCESS(example_trickle_process, "ConTB");
 PROCESS(example_multihop_process, "ConMHop");
 PROCESS(serial_in_process, "SerialIn");
@@ -276,7 +282,7 @@ PROCESS(flash_log_process, "FlashLog");
 #if BUTTON_SENSOR_ON
 PROCESS(buttons_test_process, "ButtonTest");
 AUTOSTART_PROCESSES(
-    &example_abc_process,
+    &example_broadcast_process,
     &example_trickle_process,
     &example_multihop_process,
     &serial_in_process,
@@ -286,7 +292,7 @@ AUTOSTART_PROCESSES(
     &buttons_test_process);
 #else
 AUTOSTART_PROCESSES(
-    &example_abc_process,
+    &example_broadcast_process,
     &example_trickle_process,
     &example_multihop_process,
     &serial_in_process,
@@ -297,31 +303,31 @@ AUTOSTART_PROCESSES(
 
 /*---------------------------------------------------------------------------*/
 static void
-abc_recv(struct abc_conn *c)
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  packetbuf_and_attr_copyto(&abc_message_recv, MESSAGE_ABC_RECV);
+  packetbuf_and_attr_copyto(&broadcast_message_recv, 0, MESSAGE_BROADCAST_RECV);
 
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  dump_packetbuf(&abc_message_recv);
+  dump_packetbuf(&broadcast_message_recv);
 
-  PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
+  PRINTF("%d.%d: broadcast received from %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      abc_message_recv.sender.u8[0], abc_message_recv.sender.u8[1],
-      abc_message_recv.rssi, abc_message_recv.timestamp);
+      from->u8[0], from->u8[1],
+      broadcast_message_recv.rssi, broadcast_message_recv.timestamp);
 
-  call_decision_maker(&abc_message_recv, MESSAGE_ABC_RECV);
+  call_decision_maker(&broadcast_message_recv, MESSAGE_BROADCAST_RECV);
 }
-static const struct abc_callbacks abc_call = {abc_recv};
-static struct abc_conn abc;
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
 /*---------------------------------------------------------------------------*/
 static void
 trickle_recv(struct trickle_conn *c)
 {
   uint8_t * dataptr;
 
-  packetbuf_and_attr_copyto(&trickle_message_recv, MESSAGE_TRICKLE_RECV);
+  packetbuf_and_attr_copyto(&trickle_message_recv, 0, MESSAGE_TRICKLE_RECV);
 
   /* Decoding ereceiver address from message, no built-in trickle attribute */
   dataptr = trickle_message_recv.payload;
@@ -351,7 +357,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
      const linkaddr_t *prevhop,
      uint8_t hops)
 {
-  packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
+  packetbuf_and_attr_copyto(&mhop_message_recv, 1, MESSAGE_MHOP_RECV);
 
   /* TODO only the sink should dump packetbuf */
   dump_packetbuf(&mhop_message_recv);
@@ -376,7 +382,7 @@ multihop_forward(struct multihop_conn *c,
 {
   static linkaddr_t * forward_addr;
 
-  packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
+  packetbuf_and_attr_copyto(&mhop_message_recv, 1, MESSAGE_MHOP_RECV);
 
   forward_addr = call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_FWD);
 
@@ -389,13 +395,13 @@ multihop_forward(struct multihop_conn *c,
 static const struct multihop_callbacks multihop_call = {multihop_recv, multihop_forward};
 static struct multihop_conn multihop;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_abc_process, ev, data)
+PROCESS_THREAD(example_broadcast_process, ev, data)
 {
-  PROCESS_EXITHANDLER(abc_close(&abc);)
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
 
   PROCESS_BEGIN();
 
-  abc_open(&abc, 128, &abc_call);
+  broadcast_open(&broadcast, 129, &broadcast_call);
 
   while(1) {
     PROCESS_YIELD();
@@ -929,9 +935,12 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* Unknown command */
     else {
-//      puthex(linkaddr_node_addr.u8[0]);
-//      putstring(".");
-//      puthex(linkaddr_node_addr.u8[1]);
+#if DEBUG
+      puthex(linkaddr_node_addr.u8[0]);
+      putstring(".");
+      puthex(linkaddr_node_addr.u8[1]);
+      putstring(": ");
+#endif
       putstring(bytereq);
       putstring(":Bad command!\n");
     }
@@ -973,9 +982,12 @@ call_decision_maker(void * incoming, uint8_t type)
 
     /* Unknown request */
     else {
-//      puthex(linkaddr_node_addr.u8[0]);
-//      putstring(".");
-//      puthex(linkaddr_node_addr.u8[0]);
+#if DEBUG
+      puthex(linkaddr_node_addr.u8[0]);
+      putstring(".");
+      puthex(linkaddr_node_addr.u8[0]);
+      putstring(": ");
+#endif
       putstring(": Unknown request - 0x");
       puthex(request);
       putstring("\n");
@@ -1058,7 +1070,7 @@ call_decision_maker(void * incoming, uint8_t type)
   /*******************************************************/
   else {
 
-    /* abc message received */
+    /* broadcast message received */
     /* TODO store sensors data as a ring buffer with timestamp */
 
     /***********************************************/

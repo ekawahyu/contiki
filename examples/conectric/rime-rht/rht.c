@@ -32,7 +32,7 @@
 
 /**
  * \file
- *         Conectric SHT21/20 Sensor Node (initially taken from abc example)
+ *         Conectric SHT21/20 Sensor Node (initially taken from broadcast example)
  * \author
  *         Adam Dunkels <adam@sics.se>
  *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
@@ -83,21 +83,20 @@ enum
 };
 
 /*---------------------------------------------------------------------------*/
-PROCESS(rht_abc_process, "RHT Sensor");
+PROCESS(rht_broadcast_process, "RHT Sensor");
 //PROCESS(flash_log_process, "Flash Log");
-AUTOSTART_PROCESSES(&rht_abc_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(&rht_broadcast_process/*, &flash_log_process*/);
 /*---------------------------------------------------------------------------*/
 static void
-abc_recv(struct abc_conn *c)
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  memset(message, 0, sizeof(message));
-  memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  PRINTF("abc message received (%d) '%s'\n", strlen(message), message);
+  PRINTF("broadcast received from %d.%d (%d) '%s'\n",
+      from->u8[0], from->u8[1], strlen(message), message);
 }
-static const struct abc_callbacks abc_call = {abc_recv};
-static struct abc_conn abc;
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(rht_abc_process, ev, data)
+PROCESS_THREAD(rht_broadcast_process, ev, data)
 {
   static uint8_t * header = NULL;
   static uint8_t seqno = 0;
@@ -110,12 +109,12 @@ PROCESS_THREAD(rht_abc_process, ev, data)
   static struct etimer et;
   static uint8_t loop;
 
-  PROCESS_EXITHANDLER(abc_close(&abc);)
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
 
   PROCESS_BEGIN();
   SENSORS_ACTIVATE(sht21_sensor);
 
-  abc_open(&abc, 128, &abc_call);
+  broadcast_open(&broadcast, 129, &broadcast_call);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
@@ -144,7 +143,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
     packetbuf_copyfrom(message, RHT_HEADER_SIZE + 4);
     NETSTACK_MAC.on();
-    abc_send(&abc);
+    broadcast_send(&broadcast);
 
     PROCESS_WAIT_EVENT();
 
@@ -212,7 +211,7 @@ PROCESS_THREAD(rht_abc_process, ev, data)
       packetbuf_copyfrom(message, RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE);
               
       NETSTACK_MAC.on();
-      abc_send(&abc);
+      broadcast_send(&broadcast);
 
       PROCESS_WAIT_EVENT();
 
@@ -251,6 +250,6 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 void
 invoke_process_before_sleep(void)
 {
-  process_post_synch(&rht_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+  process_post_synch(&rht_broadcast_process, PROCESS_EVENT_CONTINUE, NULL);
 }
 /*---------------------------------------------------------------------------*/
