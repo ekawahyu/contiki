@@ -407,6 +407,9 @@ timedout(struct conectric_conn *c)
 static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
+  static uint8_t hexstring[20];
+  static uint8_t bytereq[20];
+
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   /* TODO only the sink should dump packetbuf,
@@ -417,12 +420,19 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   else
     dump_payload();
 
+  if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
+    memset(hexstring, 0, sizeof(hexstring));
+    memset(bytereq, 0, sizeof(bytereq));
+    strcpy(hexstring, "0715A01703A017");
+    hexstring_to_bytereq(hexstring, &bytereq[1]);
+    bytereq[0] = '<';
+    process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
+  }
+
   PRINTF("%d.%d: data received from %d.%d: %.*s (%d)\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1],
    packetbuf_datalen(), (char *)packetbuf_dataptr(), packetbuf_datalen());
-
-  // call_decision_maker(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 }
 
 const static struct conectric_callbacks callbacks = {recv, sent, timedout};

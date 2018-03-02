@@ -229,6 +229,11 @@ command_respond(uint8_t * bytereq)
       }
     }
 
+    else if (bytereq[0] == 'R' && bytereq[1] == 'F') {
+        putstring("RF:routing table flushed\n");
+        route_flush_all();
+    }
+
     /* Unknown command */
     else {
       if (strlen((const char*)bytereq) != 0) {
