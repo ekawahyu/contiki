@@ -382,12 +382,14 @@ command_respond(uint8_t * bytereq)
         putdec(route_get(i)->dest.u8[0]);
         putstring(".");
         putdec(route_get(i)->dest.u8[1]);
-        putstring(" ---> ");
+        putstring("->");
         putdec(route_get(i)->nexthop.u8[0]);
         putstring(".");
         putdec(route_get(i)->nexthop.u8[1]);
-        putstring(" (");
+        putstring("(C:");
         putdec(route_get(i)->cost);
+        putstring(":LT:");
+        putdec(route_get(i)->time);
         putstring(")\n");
       }
     }
