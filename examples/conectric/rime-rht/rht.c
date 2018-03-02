@@ -66,7 +66,7 @@
 
 /* RHT Network Parameters */
 #define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
-#define RHT_HEADER_SIZE         2
+#define RHT_HEADER_SIZE         6
 #define RHT_PAYLOAD_SIZE        7
 static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
@@ -123,22 +123,26 @@ PROCESS_THREAD(rht_abc_process, ev, data)
 
   /* Composing boot status message */
   memset(message, 0, sizeof(message));
-  message[0] = 2;
+  message[0] = RHT_HEADER_SIZE;
   message[1] = seqno++;
-  message[2] = 4;
-  message[3] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+  message[2] = 0;
+  message[3] = 0;
+  message[4] = 0xFF;
+  message[5] = 0xFF;
+  message[6] = 4;
+  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
   sane = batt * 3 * 1.15 / 2047;
   dec = sane;
   frac = sane - dec;
-  message[4] = (char)(dec*10)+(char)(frac*10);
-  message[5] = clock_reset_cause();
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = clock_reset_cause();
 
   loop = CONECTRIC_BURST_NUMBER;
 
   while(loop--) {
 
-    packetbuf_copyfrom(message, 2 + 4);
+    packetbuf_copyfrom(message, RHT_HEADER_SIZE + 4);
     NETSTACK_MAC.on();
     abc_send(&abc);
 
@@ -182,13 +186,17 @@ PROCESS_THREAD(rht_abc_process, ev, data)
     memset(message, 0, sizeof(message));
     message[0] = RHT_HEADER_SIZE;
     message[1] = seqno++;
-    message[2] = RHT_PAYLOAD_SIZE;
-    message[3] = CONECTRIC_SENSOR_BROADCAST_RHT;
-    message[4] = (char)(dec*10)+(char)(frac*10);
-    message[5] = (char)(temp >> 8);
-    message[6] = (char)(temp & 0xFC);
-    message[7] = (char)(humid >> 8);
-    message[8] = (char)(humid & 0xFC);
+    message[2] = 0;
+    message[3] = 0;
+    message[4] = 0xFF;
+    message[5] = 0xFF;
+    message[6] = RHT_PAYLOAD_SIZE;
+    message[7] = CONECTRIC_SENSOR_BROADCAST_RHT;
+    message[8] = (char)(dec*10)+(char)(frac*10);
+    message[9] = (char)(temp >> 8);
+    message[10] = (char)(temp & 0xFC);
+    message[11] = (char)(humid >> 8);
+    message[12] = (char)(humid & 0xFC);
 
     loop = CONECTRIC_BURST_NUMBER;
 
