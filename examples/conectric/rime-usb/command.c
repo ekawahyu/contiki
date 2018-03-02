@@ -209,6 +209,26 @@ command_respond(uint8_t * bytereq)
       while(1);
     }
 
+    else if (bytereq[0] == 'R' && bytereq[1] == 'T') {
+      for (i=0; i < route_num(); i++) {
+        putstring("RT:");
+        putdec(i);
+        putstring(":");
+        puthex(route_get(i)->dest.u8[0]);
+        putstring(".");
+        puthex(route_get(i)->dest.u8[1]);
+        putstring("->");
+        puthex(route_get(i)->nexthop.u8[0]);
+        putstring(".");
+        puthex(route_get(i)->nexthop.u8[1]);
+        putstring("(C:");
+        putdec(route_get(i)->cost);
+        putstring(":LT:");
+        putdec(route_get(i)->time);
+        putstring(")\n");
+      }
+    }
+
     /* Unknown command */
     else {
       if (strlen((const char*)bytereq) != 0) {
