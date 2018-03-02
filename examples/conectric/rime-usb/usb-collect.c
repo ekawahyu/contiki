@@ -98,7 +98,7 @@ static message_recv conectric_message_recv;
 #define MESSAGE_MHOP_FWD          6 /* uses mhop_message_recv to store message */
 #define MESSAGE_CONECTRIC_RECV    7
 
-static uint8_t dump_buffer = 0;
+static uint8_t dump_header = 0;
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -148,7 +148,7 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 void
 dump_packet_buffer(uint8_t mode)
 {
-  dump_buffer = mode;
+  dump_header = mode;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -159,24 +159,11 @@ dump_packetbuf(void)
 
   putstring(">");
 
-  len = packetbuf_hdrlen();
-  packetbuf = (char *)packetbuf_hdrptr();
-  while(len--) puthex(*packetbuf++);
-
-  len = packetbuf_datalen();
-  packetbuf = (char *)packetbuf_dataptr();
-  while(len--) puthex(*packetbuf++);
-
-  putstring("\n");
-}
-/*---------------------------------------------------------------------------*/
-static void
-dump_payload(void)
-{
-  static uint16_t len;
-  static char * packetbuf;
-
-  putstring(">");
+  if (dump_header) {
+    len = packetbuf_hdrlen();
+    packetbuf = (char *)packetbuf_hdrptr();
+    while(len--) puthex(*packetbuf++);
+  }
 
   len = packetbuf_datalen();
   packetbuf = (char *)packetbuf_dataptr();
@@ -217,10 +204,7 @@ abc_recv(struct abc_conn *c)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  if (dump_buffer)
-    dump_packetbuf();
-  else
-    dump_payload();
+  dump_packetbuf();
 
   PRINTF("%d.%d: found sensor %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -413,10 +397,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  if (dump_buffer)
-    dump_packetbuf();
-  else
-    dump_payload();
+  dump_packetbuf();
 
   if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
 //    memset(hexstring, 0, sizeof(hexstring));
@@ -451,8 +432,15 @@ PROCESS_THREAD(example_conectric_process, ev, data)
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
-    request = (uint8_t*)data;
-    compose_request_to_packetbuf(request, seqno++, &to);
+//    request = (uint8_t*)data;
+//    compose_request_to_packetbuf(request, seqno++, &to);
+
+    request = (uint8_t *)data;
+    if (*request == '<')
+      compose_request_to_packetbuf(request, seqno++, &to);
+    else
+      compose_response_to_packetbuf(request, seqno++, &to);
+
     conectric_send(&conectric, &to);
 
     PRINTF("%d.%d: conectric sent to %d.%d - %lu\n",
