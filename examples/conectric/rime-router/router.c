@@ -727,9 +727,9 @@ compose_request_to_packetbuf(uint8_t * request,
   uint8_t routelen;
   uint8_t i;
 
-  /**********************************************/
-  /***** CONECTRIC NETWORK MESSAGE PROTOCOL *****/
-  /**********************************************/
+  /*****************************************************/
+  /***** NETWORK MESSAGE REQUEST/RESPONSE PROTOCOL *****/
+  /*****************************************************/
   /*
    * [HdrLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][DLen][Data0][Data1]...[Datan]
    *

@@ -226,8 +226,6 @@ abc_recv(struct abc_conn *c)
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       abc_message_recv.sender.u8[0], abc_message_recv.sender.u8[1],
       abc_message_recv.rssi, abc_message_recv.timestamp);
-
-  // call_decision_maker(&abc_message_recv, MESSAGE_ABC_RECV);
 }
 static const struct abc_callbacks abc_call = {abc_recv};
 static struct abc_conn abc;
@@ -421,11 +419,11 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     dump_payload();
 
   if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
-    memset(hexstring, 0, sizeof(hexstring));
-    memset(bytereq, 0, sizeof(bytereq));
-    strcpy(hexstring, "0715A01703A017");
-    hexstring_to_bytereq(hexstring, &bytereq[1]);
-    bytereq[0] = '<';
+//    memset(hexstring, 0, sizeof(hexstring));
+//    memset(bytereq, 0, sizeof(bytereq));
+//    strcpy(hexstring, "0715A01703A017");
+//    hexstring_to_bytereq(hexstring, &bytereq[1]);
+//    bytereq[0] = '<';
     process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
   }
 
