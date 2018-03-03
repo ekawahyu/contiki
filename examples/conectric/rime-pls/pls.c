@@ -32,7 +32,7 @@
 
 /**
  * \file
- *         Conectric Pulse Sensor (initially taken from abc example)
+ *         Conectric Pulse Sensor (initially taken from broadcast example)
  * \author
  *         Adam Dunkels <adam@sics.se>
  *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
@@ -59,7 +59,6 @@
 
 #define DEBUG 0
 #if DEBUG
-#include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -68,7 +67,8 @@
 /* PLS Network Parameters */
 #define PLS_SUP_TIMEOUT         180 /* minutes */
 #define PLS_PERIODIC_TIMEOUT    1   /* minutes */
-#define PLS_HEADER_SIZE         2
+#define PLS_HEADER_SIZE         6
+#define PLS_BOOT_PAYLOAD_SIZE   4
 #define PLS_PAYLOAD_SIZE        4
 static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
@@ -95,27 +95,26 @@ enum
 };
 
 /*---------------------------------------------------------------------------*/
-PROCESS(pls_abc_process, "PLS Sensor");
+PROCESS(pls_broadcast_process, "PLS Sensor");
 PROCESS(pls_supervisory_process, "PLS Supervisory");
 //PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
 PROCESS(pls_interrupt_process, "PLS Interrupt");
-AUTOSTART_PROCESSES(&pls_abc_process, &pls_supervisory_process, &pls_interrupt_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(&pls_broadcast_process, &pls_supervisory_process, &pls_interrupt_process/*, &flash_log_process*/);
 #else
-AUTOSTART_PROCESSES(&pls_abc_process, &pls_supervisory_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(&pls_broadcast_process, &pls_supervisory_process/*, &flash_log_process*/);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
-abc_recv(struct abc_conn *c)
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  memset(message, 0, sizeof(message));
-  memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  PRINTF("abc message received (%d) '%s'\n", strlen(message), message);
+  PRINTF("broadcast received from %d.%d (%d) '%s'\n",
+      from->u8[0], from->u8[1], strlen(message), message);
 }
-static const struct abc_callbacks abc_call = {abc_recv};
-static struct abc_conn abc;
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(pls_abc_process, ev, data)
+PROCESS_THREAD(pls_broadcast_process, ev, data)
 {
   static unsigned int batt;
   static uint8_t seqno = 0;
@@ -126,11 +125,11 @@ PROCESS_THREAD(pls_abc_process, ev, data)
   static struct etimer et;
   static uint8_t loop;
 
-  PROCESS_EXITHANDLER(abc_close(&abc);)
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
 
   PROCESS_BEGIN();
 
-  abc_open(&abc, 128, &abc_call);
+  broadcast_open(&broadcast, 128, &broadcast_call);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
@@ -138,24 +137,28 @@ PROCESS_THREAD(pls_abc_process, ev, data)
 
   /* Composing boot status message */
   memset(message, 0, sizeof(message));
-  message[0] = 2;
+  message[0] = PLS_HEADER_SIZE;
   message[1] = seqno++;
-  message[2] = 4;
-  message[3] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+  message[2] = 0;
+  message[3] = 0;
+  message[4] = 0xFF;
+  message[5] = 0xFF;
+  message[6] = PLS_BOOT_PAYLOAD_SIZE;
+  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
   sane = batt * 3 * 1.15 / 2047;
   dec = sane;
   frac = sane - dec;
-  message[4] = (char)(dec*10)+(char)(frac*10);
-  message[5] = clock_reset_cause();
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = clock_reset_cause();
 
   loop = CONECTRIC_BURST_NUMBER;
 
   while(loop--) {
 
-    packetbuf_copyfrom(message, 2 + 4);
+    packetbuf_copyfrom(message, PLS_HEADER_SIZE + PLS_BOOT_PAYLOAD_SIZE);
     NETSTACK_MAC.on();
-    abc_send(&abc);
+    broadcast_send(&broadcast);
 
     PROCESS_WAIT_EVENT();
 
@@ -196,16 +199,20 @@ PROCESS_THREAD(pls_abc_process, ev, data)
     else if(*sensor_data == PLS_PULSE_PERIODIC)
     {
       memset(message, 0, sizeof(message));
-      message[0] = PLS_HEADER_SIZE;
-      message[1] = seqno++;
-      message[2] = PLS_PAYLOAD_SIZE + 4;
-      message[3] = CONECTRIC_SENSOR_BROADCAST_PLS;
-      message[4] = (char)(dec*10)+(char)(frac*10);
-      message[5] = (char)PLS_PULSE_PERIODIC;
-      message[6] = (char)(pls_pulse_counter >> 24);
-      message[7] = (char)((pls_pulse_counter & 0x00FFFFFF) >> 16);
-      message[8] = (char)((pls_pulse_counter & 0x0000FFFF) >>  8);
-      message[9] = (char) (pls_pulse_counter & 0x000000FF);
+      message[0]  = PLS_HEADER_SIZE;
+      message[1]  = seqno++;
+      message[2]  = 0;
+      message[3]  = 0;
+      message[4]  = 0xFF;
+      message[5]  = 0xFF;
+      message[6]  = PLS_PAYLOAD_SIZE + 4;
+      message[7]  = CONECTRIC_SENSOR_BROADCAST_PLS;
+      message[8]  = (char)(dec*10)+(char)(frac*10);
+      message[9]  = (char)PLS_PULSE_PERIODIC;
+      message[10] = (char)(pls_pulse_counter >> 24);
+      message[11] = (char)((pls_pulse_counter & 0x00FFFFFF) >> 16);
+      message[12] = (char)((pls_pulse_counter & 0x0000FFFF) >>  8);
+      message[13] = (char) (pls_pulse_counter & 0x000000FF);
 
       pls_pulse_counter = 0;
 
@@ -214,7 +221,7 @@ PROCESS_THREAD(pls_abc_process, ev, data)
       while(loop--) {
         packetbuf_copyfrom(message, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE + 4);
         NETSTACK_MAC.on();
-        abc_send(&abc);
+        broadcast_send(&broadcast);
 
         PROCESS_WAIT_EVENT();
 
@@ -237,19 +244,23 @@ PROCESS_THREAD(pls_abc_process, ev, data)
       uint16_t time = clock_seconds();
       
       memset(message, 0, sizeof(message));
-      message[0] = PLS_HEADER_SIZE;                      // Header Length
-      message[1] = seqno++;                             // Sequence number
-      message[2] = PLS_PAYLOAD_SIZE;                     // Payload Length
-      message[3] = CONECTRIC_SUPERVISORY_REPORT;        // Payload Type                    
-      message[4] = (char)(dec*10)+(char)(frac*10);      // battery
-      message[5] = (char)(time >> 6);                   // time (rough min)
+      message[0] = PLS_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0xFF;
+      message[5] = 0xFF;
+      message[6] = PLS_PAYLOAD_SIZE;
+      message[7] = CONECTRIC_SUPERVISORY_REPORT;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = (char)(time >> 6);
     
       loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
         packetbuf_copyfrom(message, PLS_HEADER_SIZE + PLS_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
-        abc_send(&abc);
+        broadcast_send(&broadcast);
 
         PROCESS_WAIT_EVENT();
 
@@ -293,11 +304,11 @@ PROCESS_THREAD(pls_interrupt_process, ev, data)
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
       button = PLS_PULSE_DETECTED;
-      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &button);
     }
     if(sensor == &button_2_sensor) {
       button = PLS_PULSE_DETECTED;
-      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
 
@@ -326,24 +337,24 @@ PROCESS_THREAD(pls_supervisory_process, ev, data)
     if (supervisory_counter > 1) {
       supervisory_counter--;
       event = PLS_SUP_NOEVT;
-      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
       supervisory_counter = PLS_SUP_TIMEOUT;
       event = PLS_SUP_EVT;
-      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
 
     /* Send periodic message */
     if (periodic_counter > 1) {
       periodic_counter--;
       event = PLS_PULSE_NOEVT;
-      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
       periodic_counter = PLS_PERIODIC_TIMEOUT;
       event = PLS_PULSE_PERIODIC;
-      process_post(&pls_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
   }
 
@@ -372,6 +383,6 @@ PROCESS_THREAD(pls_supervisory_process, ev, data)
 void
 invoke_process_before_sleep(void)
 {
-  process_post_synch(&pls_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+  process_post_synch(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, NULL);
 }
 /*---------------------------------------------------------------------------*/
