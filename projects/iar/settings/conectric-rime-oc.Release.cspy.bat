@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "E:\projects\iar\settings\conectric-rime-oc.Release.general.xcl" --backend -f "E:\projects\iar\settings\conectric-rime-oc.Release.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\projects\iar\settings\conectric-rime-oc.Release.general.xcl" --backend -f "F:\projects\iar\settings\conectric-rime-oc.Release.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "E:\projects\iar\settings\conectric-rime-oc.Release.general.xcl" "--debug_file=%~1" --backend -f "E:\projects\iar\settings\conectric-rime-oc.Release.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "F:\projects\iar\settings\conectric-rime-oc.Release.general.xcl" "--debug_file=%~1" --backend -f "F:\projects\iar\settings\conectric-rime-oc.Release.driver.xcl" 
 
 @echo off 
 :end

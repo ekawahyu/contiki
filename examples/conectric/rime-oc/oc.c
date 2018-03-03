@@ -32,7 +32,7 @@
 
 /**
  * \file
- *         Conectric Switch Sensor (initially taken from abc example)
+ *         Conectric Switch Sensor (initially taken from broadcast example)
  * \author
  *         Adam Dunkels <adam@sics.se>
  *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
@@ -60,7 +60,6 @@
 
 #define DEBUG 0
 #if DEBUG
-#include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -68,7 +67,8 @@
 
 /* OC Network Parameters */
 #define OC_SUP_TIMEOUT         180 /* minutes */
-#define OC_HEADER_SIZE         2
+#define OC_HEADER_SIZE         6
+#define OC_BOOT_PAYLOAD_SIZE   4
 #define OC_PAYLOAD_SIZE        4
 static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
@@ -90,27 +90,26 @@ enum
 };
 
 /*---------------------------------------------------------------------------*/
-PROCESS(oc_abc_process, "OC Sensor");
+PROCESS(oc_broadcast_process, "OC Sensor");
 PROCESS(oc_supervisory_process, "OC Supervisory");
 //PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
 PROCESS(oc_interrupt_process, "OC Interrupt");
-AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &oc_interrupt_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(&oc_broadcast_process, &oc_supervisory_process, &oc_interrupt_process/*, &flash_log_process*/);
 #else
-AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(&oc_broadcast_process, &oc_supervisory_process/*, &flash_log_process*/);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
-abc_recv(struct abc_conn *c)
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  memset(message, 0, sizeof(message));
-  memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  PRINTF("abc message received (%d) '%s'\n", strlen(message), message);
+  PRINTF("broadcast received from %d.%d (%d) '%s'\n",
+      from->u8[0], from->u8[1], strlen(message), message);
 }
-static const struct abc_callbacks abc_call = {abc_recv};
-static struct abc_conn abc;
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(oc_abc_process, ev, data)
+PROCESS_THREAD(oc_broadcast_process, ev, data)
 {
   static unsigned int batt;
   static uint8_t seqno = 0;
@@ -121,11 +120,11 @@ PROCESS_THREAD(oc_abc_process, ev, data)
   static struct etimer et;
   static uint8_t loop;
 
-  PROCESS_EXITHANDLER(abc_close(&abc);)
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
 
   PROCESS_BEGIN();
 
-  abc_open(&abc, 128, &abc_call);
+  broadcast_open(&broadcast, 129, &broadcast_call);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
@@ -133,24 +132,28 @@ PROCESS_THREAD(oc_abc_process, ev, data)
 
   /* Composing boot status message */
   memset(message, 0, sizeof(message));
-  message[0] = 2;
+  message[0] = OC_HEADER_SIZE;
   message[1] = seqno++;
-  message[2] = 4;
-  message[3] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+  message[2] = 0;
+  message[3] = 0;
+  message[4] = 0xFF;
+  message[5] = 0xFF;
+  message[6] = OC_BOOT_PAYLOAD_SIZE;
+  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
   sane = batt * 3 * 1.15 / 2047;
   dec = sane;
   frac = sane - dec;
-  message[4] = (char)(dec*10)+(char)(frac*10);
-  message[5] = clock_reset_cause();
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = clock_reset_cause();
 
   loop = CONECTRIC_BURST_NUMBER;
 
   while(loop--) {
 
-    packetbuf_copyfrom(message, 2 + 4);
+    packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_BOOT_PAYLOAD_SIZE);
     NETSTACK_MAC.on();
-    abc_send(&abc);
+    broadcast_send(&broadcast);
 
     PROCESS_WAIT_EVENT();
 
@@ -177,10 +180,14 @@ PROCESS_THREAD(oc_abc_process, ev, data)
       memset(message, 0, sizeof(message));
       message[0] = OC_HEADER_SIZE;
       message[1] = seqno++;
-      message[2] = OC_PAYLOAD_SIZE;
-      message[3] = CONECTRIC_SENSOR_BROADCAST_OC;
-      message[4] = (char)(dec*10)+(char)(frac*10);
-      message[5] = *sensor_data;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0xFF;
+      message[5] = 0xFF;
+      message[6] = OC_PAYLOAD_SIZE;
+      message[7] = CONECTRIC_SENSOR_BROADCAST_OC;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = *sensor_data;
 
 //      /* Log data that will be sent out over the air */
 //      logData[0] = (char)(dec*10)+(char)(frac*10);
@@ -193,11 +200,14 @@ PROCESS_THREAD(oc_abc_process, ev, data)
 
       while(loop--) {
         leds_on(LEDS_RED);
+
         packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
+
         NETSTACK_MAC.on();
-        abc_send(&abc);
+        broadcast_send(&broadcast);
 
         PROCESS_WAIT_EVENT();
+
         leds_off(LEDS_RED);
 
         if (loop)
@@ -211,19 +221,23 @@ PROCESS_THREAD(oc_abc_process, ev, data)
       uint16_t time = clock_seconds();
       
       memset(message, 0, sizeof(message));
-      message[0] = OC_HEADER_SIZE;                      // Header Length
-      message[1] = seqno++;                             // Sequence number
-      message[2] = OC_PAYLOAD_SIZE;                     // Payload Length
-      message[3] = CONECTRIC_SUPERVISORY_REPORT;        // Payload Type                    
-      message[4] = (char)(dec*10)+(char)(frac*10);      // battery
-      message[5] = (char)(time >> 6);                   // time (rough min)
+      message[0] = OC_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0xFF;
+      message[5] = 0xFF;
+      message[6] = OC_PAYLOAD_SIZE;
+      message[7] = CONECTRIC_SUPERVISORY_REPORT;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = (char)(time >> 6);
     
       loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
         packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
-        abc_send(&abc);
+        broadcast_send(&broadcast);
 
         PROCESS_WAIT_EVENT();
 
@@ -257,11 +271,11 @@ PROCESS_THREAD(oc_interrupt_process, ev, data)
     sensor = (struct sensors_sensor *)data;
     if(sensor == &button_1_sensor) {
       button = OC_EVT;
-      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &button);
     }
     if(sensor == &button_2_sensor) {
       button = OC_EVT;
-      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
 
@@ -288,12 +302,12 @@ PROCESS_THREAD(oc_supervisory_process, ev, data)
     if (supervisory_counter > 1) {
       supervisory_counter--;
       event = OC_SUP_NOEVT;
-      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
       supervisory_counter = OC_SUP_TIMEOUT;
       event = OC_SUP_EVT;
-      process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &event);
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
   }
 
@@ -322,6 +336,6 @@ PROCESS_THREAD(oc_supervisory_process, ev, data)
 void
 invoke_process_before_sleep(void)
 {
-  process_post_synch(&oc_abc_process, PROCESS_EVENT_CONTINUE, NULL);
+  process_post_synch(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, NULL);
 }
 /*---------------------------------------------------------------------------*/
