@@ -129,7 +129,7 @@ PROCESS_THREAD(pls_broadcast_process, ev, data)
 
   PROCESS_BEGIN();
 
-  broadcast_open(&broadcast, 128, &broadcast_call);
+  broadcast_open(&broadcast, 129, &broadcast_call);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
