@@ -67,6 +67,7 @@
 /* RHT Network Parameters */
 #define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         6
+#define RHT_BOOT_PAYLOAD_SIZE   4
 #define RHT_PAYLOAD_SIZE        7
 static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
@@ -128,7 +129,7 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
   message[3] = 0;
   message[4] = 0xFF;
   message[5] = 0xFF;
-  message[6] = 4;
+  message[6] = RHT_BOOT_PAYLOAD_SIZE;
   message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
   sane = batt * 3 * 1.15 / 2047;
@@ -141,7 +142,7 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
 
   while(loop--) {
 
-    packetbuf_copyfrom(message, RHT_HEADER_SIZE + 4);
+    packetbuf_copyfrom(message, RHT_HEADER_SIZE + RHT_BOOT_PAYLOAD_SIZE);
     NETSTACK_MAC.on();
     broadcast_send(&broadcast);
 
