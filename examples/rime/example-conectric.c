@@ -164,44 +164,31 @@ volatile unsigned char *gmacp = gmacp_sim;
 
 static message_recv conectric_message_recv;
 
-static uint8_t dump_buffer = 0;
+static uint8_t dump_header = 0;
 
 /*---------------------------------------------------------------------------*/
 void
 dump_packet_buffer(uint8_t mode)
 {
-  dump_buffer = mode;
+  dump_header = mode;
 }
 /*---------------------------------------------------------------------------*/
 static void
-dump_packetbuf(void)
+dump_packetbuf(message_recv * message)
 {
-  static uint16_t len;
+  uint8_t len;
   static char * packetbuf;
 
   putstring(">");
 
-  len = packetbuf_hdrlen();
-  packetbuf = (char *)packetbuf_hdrptr();
-  while(len--) puthex(*packetbuf++);
+  if (dump_header) {
+    len = packetbuf_hdrlen();
+    packetbuf = (char *)packetbuf_hdrptr();
+    while(len--) puthex(*packetbuf++);
+  }
 
-  len = packetbuf_datalen();
-  packetbuf = (char *)packetbuf_dataptr();
-  while(len--) puthex(*packetbuf++);
-
-  putstring("\n");
-}
-/*---------------------------------------------------------------------------*/
-static void
-dump_payload(void)
-{
-  static uint16_t len;
-  static char * packetbuf;
-
-  putstring(">");
-
-  len = packetbuf_datalen();
-  packetbuf = (char *)packetbuf_dataptr();
+  len = message->message[0] + message->length;
+  packetbuf = message->message;
   while(len--) puthex(*packetbuf++);
 
   putstring("\n");
@@ -342,7 +329,15 @@ command_respond(uint8_t * bytereq)
     /* temporary command to test routing table reliability */
     else if (bytereq[0] == 'S') {
       memset(hexstring, 0, sizeof(hexstring));
-      strcpy(hexstring, "07140100030100");
+      strcpy(hexstring, "0714010001");
+      bytereq[0] = '<';
+      hexstring_to_bytereq(hexstring, &bytereq[1]);
+      return bytereq;
+    }
+    /* temporary command to test routing table reliability */
+    else if (bytereq[0] == '0') {
+      memset(hexstring, 0, sizeof(hexstring));
+      strcpy(hexstring, "0714FFFF01");
       bytereq[0] = '<';
       hexstring_to_bytereq(hexstring, &bytereq[1]);
       return bytereq;
@@ -350,7 +345,7 @@ command_respond(uint8_t * bytereq)
     /* temporary command to test routing table reliability */
     else if (bytereq[0] == '1') {
       memset(hexstring, 0, sizeof(hexstring));
-      strcpy(hexstring, "07142800032800");
+      strcpy(hexstring, "0714280001");
       bytereq[0] = '<';
       hexstring_to_bytereq(hexstring, &bytereq[1]);
       return bytereq;
@@ -358,7 +353,7 @@ command_respond(uint8_t * bytereq)
     /* temporary command to test routing table reliability */
     else if (bytereq[0] == '2') {
       memset(hexstring, 0, sizeof(hexstring));
-      strcpy(hexstring, "07141800031800");
+      strcpy(hexstring, "0714180001");
       bytereq[0] = '<';
       hexstring_to_bytereq(hexstring, &bytereq[1]);
       return bytereq;
@@ -366,7 +361,7 @@ command_respond(uint8_t * bytereq)
     /* temporary command to test routing table reliability */
     else if (bytereq[0] == '3') {
       memset(hexstring, 0, sizeof(hexstring));
-      strcpy(hexstring, "07140C00030C00");
+      strcpy(hexstring, "07140C0001");
       bytereq[0] = '<';
       hexstring_to_bytereq(hexstring, &bytereq[1]);
       return bytereq;
@@ -401,7 +396,7 @@ command_respond(uint8_t * bytereq)
       putdec(route_get(0)->dest.u8[0]);
       putstring(".");
       putdec(route_get(0)->dest.u8[1]);
-      putstring(" ---> ");
+      putstring("->");
       putdec(route_get(0)->nexthop.u8[0]);
       putstring(".");
       putdec(route_get(0)->nexthop.u8[1]);
@@ -414,7 +409,7 @@ command_respond(uint8_t * bytereq)
       putdec(route_get(1)->dest.u8[0]);
       putstring(".");
       putdec(route_get(1)->dest.u8[1]);
-      putstring(" ---> ");
+      putstring("->");
       putdec(route_get(0)->nexthop.u8[0]);
       putstring(".");
       putdec(route_get(0)->nexthop.u8[1]);
@@ -427,7 +422,7 @@ command_respond(uint8_t * bytereq)
       putdec(route_get(2)->dest.u8[0]);
       putstring(".");
       putdec(route_get(2)->dest.u8[1]);
-      putstring(" ---> ");
+      putstring("->");
       putdec(route_get(0)->nexthop.u8[0]);
       putstring(".");
       putdec(route_get(0)->nexthop.u8[1]);
@@ -440,7 +435,7 @@ command_respond(uint8_t * bytereq)
       putdec(route_get(3)->dest.u8[0]);
       putstring(".");
       putdec(route_get(3)->dest.u8[1]);
-      putstring(" ---> ");
+      putstring("->");
       putdec(route_get(0)->nexthop.u8[0]);
       putstring(".");
       putdec(route_get(0)->nexthop.u8[1]);
@@ -453,7 +448,7 @@ command_respond(uint8_t * bytereq)
       putdec(route_get(4)->dest.u8[0]);
       putstring(".");
       putdec(route_get(4)->dest.u8[1]);
-      putstring(" ---> ");
+      putstring("->");
       putdec(route_get(0)->nexthop.u8[0]);
       putstring(".");
       putdec(route_get(0)->nexthop.u8[1]);
@@ -466,7 +461,7 @@ command_respond(uint8_t * bytereq)
       putdec(route_get(5)->dest.u8[0]);
       putstring(".");
       putdec(route_get(5)->dest.u8[1]);
-      putstring(" ---> ");
+      putstring("->");
       putdec(route_get(0)->nexthop.u8[0]);
       putstring(".");
       putdec(route_get(0)->nexthop.u8[1]);
@@ -563,7 +558,7 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * erec
    *
    */
 
-  request++; /* skip the '<' */
+  if (*request == '<') request++; /* skip the '<' */
 
   reqlen     = *request++;
   req        = *request++;
@@ -675,10 +670,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
    */
-  if (dump_buffer)
-    dump_packetbuf();
-  else
-    dump_payload();
+  dump_packetbuf(&conectric_message_recv);
 
   PRINTF("%d.%d: data received from %d.%d: %.*s (%d)\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
