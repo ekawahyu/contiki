@@ -56,10 +56,7 @@ struct conectric_callbacks {
 };
 
 struct conectric_conn {
-  struct abc_conn abc;
-  struct trickle_conn trickle;
   struct multihop_conn multihop;
-  struct netflood_conn netflood;
   struct route_discovery_conn route_discovery_conn;
   struct queuebuf *queued_data;
   linkaddr_t queued_data_dest;
