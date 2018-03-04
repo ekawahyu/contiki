@@ -55,18 +55,6 @@ static int conectric_status;
 
 /*---------------------------------------------------------------------------*/
 static void
-abc_recv(struct abc_conn *c)
-{
-
-}
-/*---------------------------------------------------------------------------*/
-static void
-trickle_recv(struct trickle_conn *c)
-{
-
-}
-/*---------------------------------------------------------------------------*/
-static void
 multihop_received(struct multihop_conn *multihop,
 		     const linkaddr_t *from,
 		     const linkaddr_t *prevhop, uint8_t hops)
@@ -161,8 +149,6 @@ route_timed_out(struct route_discovery_conn *rdc)
   }
 }
 /*---------------------------------------------------------------------------*/
-static const struct abc_callbacks abc_call = { abc_recv };
-static struct trickle_callbacks trickle_call = { trickle_recv };
 static const struct multihop_callbacks multihop_call = { multihop_received, multihop_forward };
 static const struct route_discovery_callbacks route_discovery_callbacks = { found_route, route_timed_out };
 /*---------------------------------------------------------------------------*/
@@ -171,8 +157,6 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 	  const struct conectric_callbacks *callbacks)
 {
   route_init();
-  abc_open(&c->abc, channels, &abc_call);
-  trickle_open(&c->trickle, CLOCK_SECOND, channels + 1, &trickle_call);
   multihop_open(&c->multihop, channels + 2, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
 		       CLOCK_SECOND/4,
@@ -184,8 +168,6 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 void
 conectric_close(struct conectric_conn *c)
 {
-  abc_close(&c->abc);
-  trickle_close(&c->trickle);
   multihop_close(&c->multihop);
   route_discovery_close(&c->route_discovery_conn);
 }
