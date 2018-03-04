@@ -54,6 +54,23 @@
 static int conectric_status;
 
 /*---------------------------------------------------------------------------*/
+static int
+netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
+         const linkaddr_t *originator, uint8_t seqno, uint8_t hops)
+{
+//  struct route_msg *msg = packetbuf_dataptr();
+
+  struct route_discovery_conn *c = (struct route_discovery_conn *)
+    ((char *)nf - offsetof(struct route_discovery_conn, rreqconn));
+
+  PRINTF("%d.%d: broadcast received from %d.%d hops %d seqno %d\n",
+   linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+   from->u8[0], from->u8[1],
+   hops, seqno++);
+
+  return 1; /* Continue flooding the network */
+}
+/*---------------------------------------------------------------------------*/
 static void
 multihop_received(struct multihop_conn *multihop,
 		     const linkaddr_t *from,
@@ -149,6 +166,7 @@ route_timed_out(struct route_discovery_conn *rdc)
   }
 }
 /*---------------------------------------------------------------------------*/
+static const struct netflood_callbacks netflood_call = {netflood_received, NULL, NULL};
 static const struct multihop_callbacks multihop_call = { multihop_received, multihop_forward };
 static const struct route_discovery_callbacks route_discovery_callbacks = { found_route, route_timed_out };
 /*---------------------------------------------------------------------------*/
@@ -157,7 +175,8 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 	  const struct conectric_callbacks *callbacks)
 {
   route_init();
-  multihop_open(&c->multihop, channels + 2, &multihop_call);
+  netflood_open(&c->netflood, CLOCK_SECOND/4, channels, &netflood_call);
+  multihop_open(&c->multihop, channels + 1, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
 		       CLOCK_SECOND/4,
 		       channels + 3,
@@ -169,19 +188,25 @@ void
 conectric_close(struct conectric_conn *c)
 {
   multihop_close(&c->multihop);
+  netflood_close(&c->netflood);
   route_discovery_close(&c->route_discovery_conn);
 }
 /*---------------------------------------------------------------------------*/
 int
 conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 {
+  static uint8_t seqno;
   int could_send;
 
-  PRINTF("%d.%d: conectric_send to %d.%d\n",
+  PRINTF("%d.%d: conectric_send to %d.%d seqno %d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-	 to->u8[0], to->u8[1]);
-  
-  could_send = multihop_send(&c->multihop, to);
+	 to->u8[0], to->u8[1], seqno);
+  if (to->u8[0] == 255 && to->u8[1] == 255) {
+    could_send = netflood_send(&c->netflood, seqno--);
+  }
+  else {
+    could_send = multihop_send(&c->multihop, to);
+  }
 
   if(!could_send) {
     PRINTF("conectric_send: could not send\n");
