@@ -48,6 +48,8 @@
 
 #define HOPS_MAX 64
 
+#define SEQNO_LT(a, b) ((int16_t)((a) - (b)) <= 0 && (((a) != (0)) || ((b) != (255))))
+
 struct netflood_hdr {
   uint16_t originator_seqno;
   linkaddr_t originator;
@@ -88,7 +90,7 @@ recv_from_ipolite(struct ipolite_conn *ipolite, const linkaddr_t *from)
   packetbuf_hdrreduce(sizeof(struct netflood_hdr));
   if(c->u->recv != NULL) {
     if(!(linkaddr_cmp(&hdr.originator, &c->last_originator) &&
-	 hdr.originator_seqno <= c->last_originator_seqno)) {
+        SEQNO_LT(hdr.originator_seqno, c->last_originator_seqno))) {
 
       if(c->u->recv(c, from, &hdr.originator, hdr.originator_seqno,
 		    hops)) {
