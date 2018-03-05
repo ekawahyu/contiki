@@ -43,7 +43,7 @@
 
 #define PACKET_TIMEOUT (CLOCK_SECOND * 5)
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -63,11 +63,11 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
 
   PRINTF("%d.%d: broadcast received from %d.%d hops %d seqno %d\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-   from->u8[0], from->u8[1],
+   originator->u8[0], originator->u8[1],
    hops, seqno);
 
   if(c->cb->incoming_netbroadcast) {
-    c->cb->incoming_netbroadcast(c, from, hops);
+    c->cb->incoming_netbroadcast(c, originator, hops);
   }
 
   return 1; /* Continue flooding the network */
