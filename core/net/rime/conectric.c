@@ -58,15 +58,17 @@ static int
 netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
          const linkaddr_t *originator, uint8_t seqno, uint8_t hops)
 {
-//  struct route_msg *msg = packetbuf_dataptr();
-
-  struct route_discovery_conn *c = (struct route_discovery_conn *)
-    ((char *)nf - offsetof(struct route_discovery_conn, rreqconn));
+  struct conectric_conn *c = (struct conectric_conn *)
+    ((char *)nf - offsetof(struct conectric_conn, netflood));
 
   PRINTF("%d.%d: broadcast received from %d.%d hops %d seqno %d\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
    from->u8[0], from->u8[1],
    hops, seqno);
+
+  if(c->cb->incoming_netbroadcast) {
+    c->cb->incoming_netbroadcast(c, from, hops);
+  }
 
   return 1; /* Continue flooding the network */
 }
@@ -197,14 +199,14 @@ conectric_close(struct conectric_conn *c)
 int
 conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 {
-  static uint8_t seqno = 253;
+  static uint8_t netflood_seqno;
   int could_send;
 
-  PRINTF("%d.%d: conectric_send to %d.%d seqno %d\n",
+  PRINTF("%d.%d: conectric_send to %d.%d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-	 to->u8[0], to->u8[1], seqno);
+	 to->u8[0], to->u8[1]);
   if (to->u8[0] == 255 && to->u8[1] == 255) {
-    could_send = netflood_send(&c->netflood, seqno++);
+    could_send = netflood_send(&c->netflood, netflood_seqno++);
   }
   else {
     could_send = multihop_send(&c->multihop, to);

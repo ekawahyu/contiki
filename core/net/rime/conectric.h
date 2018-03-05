@@ -53,6 +53,8 @@ struct conectric_callbacks {
   void (* sent)(struct conectric_conn *c);
   /** Called when a packet, sent with conectric_send(), times out and is dropped. */
   void (* timedout)(struct conectric_conn *c);
+  /** Called when a network-wide broadcast is received. */
+  void (* incoming_netbroadcast)(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops);
 };
 
 struct conectric_conn {
