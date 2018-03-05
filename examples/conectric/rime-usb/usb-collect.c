@@ -433,8 +433,24 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
       from->u8[0], from->u8[1],
    packetbuf_datalen(), (char *)packetbuf_dataptr(), packetbuf_datalen());
 }
+static void
+netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
+{
+  packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
-const static struct conectric_callbacks callbacks = {recv, sent, timedout};
+  /* TODO only the sink should dump packetbuf,
+   * but routers have to store sensors data
+   */
+  dump_packetbuf(&conectric_message_recv);
+
+  PRINTF("%d.%d: broadcast received from %d.%d: %.*s (%d) - %d hops\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      from->u8[0], from->u8[1],
+      packetbuf_datalen(), (char *)packetbuf_dataptr(),
+      packetbuf_datalen(), hops);
+}
+
+const static struct conectric_callbacks callbacks = {recv, sent, timedout, netbroadcast};
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(example_conectric_process, ev, data)
 {
@@ -451,9 +467,6 @@ PROCESS_THREAD(example_conectric_process, ev, data)
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
-
-    request = (uint8_t*)data;
-    compose_request_to_packetbuf(request, seqno++, &to);
 
     request = (uint8_t *)data;
     if (*request == '<')
