@@ -64,7 +64,10 @@
 #define PRINTF(...)
 #endif
 
-/* PLS Network Parameters */
+#define WITH_SENDER           0
+#define WITH_ESENDER          1
+
+/* USB Network Parameters */
 #define USB_SUP_TIMEOUT         180 /* minutes */
 #define USB_PERIODIC_TIMEOUT    1   /* minutes */
 #define USB_HEADER_SIZE         6
@@ -73,7 +76,7 @@
 static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
-/* PLS Device Parameters */
+/* USB Device Parameters */
 #define USB_PULSE_PERIODIC       0x92
 #define USB_PULSE_NOEVT          0x00
 #define USB_SUP_EVT              0xBB
@@ -100,10 +103,11 @@ static message_recv conectric_message_recv;
 #define MESSAGE_CONECTRIC_RECV    7
 
 static uint8_t dump_header = 0;
+static uint8_t usb_collect_is_a_sink = 0;
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
-packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
+packetbuf_and_attr_copyto(message_recv * message, uint8_t with_esender, uint8_t message_type)
 {
   uint8_t packetlen, hdrlen;
   uint8_t *dataptr;
@@ -143,8 +147,14 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   message->message[2] = message->hops;
 
   /* Replace destination with originator address */
-  message->message[4] = message->esender.u8[1];
-  message->message[5] = message->esender.u8[0];
+  if (with_esender) {
+    message->message[4] = message->esender.u8[1];
+    message->message[5] = message->esender.u8[0];
+  }
+  else {
+    message->message[4] = message->sender.u8[1];
+    message->message[5] = message->sender.u8[0];
+  }
 
   /* Decoding request byte */
   dataptr = message->payload;
@@ -207,14 +217,11 @@ AUTOSTART_PROCESSES(
 static void
 broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  packetbuf_and_attr_copyto(&broadcast_message_recv, MESSAGE_BROADCAST_RECV);
+  packetbuf_and_attr_copyto(&broadcast_message_recv, WITH_SENDER, MESSAGE_BROADCAST_RECV);
 
-  /* TODO only the sink should dump packetbuf,
-   * but routers have to store sensors data
-   */
   dump_packetbuf(&broadcast_message_recv);
 
-  PRINTF("%d.%d: broadcast received from %d.%d (%d) - %lu\n",
+  PRINTF("%d.%d: local broadcast received from %d.%d (%d) - %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1],
       broadcast_message_recv.rssi, broadcast_message_recv.timestamp);
@@ -412,11 +419,8 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   static uint8_t hexstring[20];
   static uint8_t bytereq[20];
 
-  packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
+  packetbuf_and_attr_copyto(&conectric_message_recv, WITH_ESENDER, MESSAGE_CONECTRIC_RECV);
 
-  /* TODO only the sink should dump packetbuf,
-   * but routers have to store sensors data
-   */
   dump_packetbuf(&conectric_message_recv);
 
   if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
@@ -436,11 +440,8 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 static void
 netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
-  packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
+  packetbuf_and_attr_copyto(&conectric_message_recv, WITH_SENDER, MESSAGE_CONECTRIC_RECV);
 
-  /* TODO only the sink should dump packetbuf,
-   * but routers have to store sensors data
-   */
   dump_packetbuf(&conectric_message_recv);
 
   PRINTF("%d.%d: broadcast received from %d.%d: %.*s (%d) - %d hops\n",
