@@ -94,9 +94,6 @@ static message_recv broadcast_message_recv;
 static message_recv conectric_message_recv;
 
 #define MESSAGE_BROADCAST_RECV    3
-#define MESSAGE_TRICKLE_RECV      4
-#define MESSAGE_MHOP_RECV         5 /* uses mhop_message_recv to store message */
-#define MESSAGE_MHOP_FWD          6 /* uses mhop_message_recv to store message */
 #define MESSAGE_CONECTRIC_RECV    7
 
 static uint8_t dump_header = 0;
@@ -187,15 +184,6 @@ dump_packetbuf(message_recv * message)
   putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
-static uint8_t
-shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
-{
-  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
-}
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-
 static struct conectric_conn conectric;
 /*---------------------------------------------------------------------------*/
 PROCESS(usb_broadcast_process, "USB Collect");

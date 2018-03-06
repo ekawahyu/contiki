@@ -1,10 +1,10 @@
 /*
- * project-conf.h
+ * command.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Feb 26, 2018
  *     Author: Ekawahyu Susilo
  *
- * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
+ * Copyright (c) 2018, Conectric Network, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,31 +34,25 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef COMMAND_H_
+#define COMMAND_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define RUN_ON_COOJA_SIMULATION         1
+#define BUFFER_PAYLOAD        0
+#define BUFFER_ALL            1
 
-#define STARTUP_CONF_VERBOSE            1
-#ifdef NETSTACK_CONF_MAC
-#undef NETSTACK_CONF_MAC
-#endif
-#define NETSTACK_CONF_MAC               csma_driver
-#ifdef NETSTACK_CONF_RDC
-#undef NETSTACK_CONF_RDC
-#endif
-#define NETSTACK_CONF_RDC               nullrdc_driver
+void hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq);
+void dump_packet_buffer(uint8_t mode);
+uint8_t * command_interpreter(uint8_t * command_line);
 
-#define ROUTE_CONF_ENTRIES 64
-#define ROUTE_CONF_DECAY_THRESHOLD 8
-#define ROUTE_CONF_DEFAULT_LIFETIME 250 /* default life time max = 255 seconds */
+void compose_request_to_packetbuf(uint8_t * request,uint8_t seqno, linkaddr_t * ereceiver);
+void compose_response_to_packetbuf(uint8_t * radio_request, uint8_t seqno, linkaddr_t * ereceiver);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* COMMAND_H_ */

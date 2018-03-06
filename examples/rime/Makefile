@@ -1,6 +1,8 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 CONTIKI = ../..
 
+PROJECT_SOURCEFILES+=command.c
+
 HAVE_BANKING=1
 
 all: example-abc example-mesh example-collect example-trickle example-polite \
