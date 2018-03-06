@@ -429,10 +429,10 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
   }
 
-  PRINTF("%d.%d: data received from %d.%d: %.*s (%d)\n",
+  PRINTF("%d.%d: data received from %d.%d: %.*s (%d) - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1],
-   packetbuf_datalen(), (char *)packetbuf_dataptr(), packetbuf_datalen());
+      (char *)packetbuf_dataptr(), packetbuf_datalen(), hops);
 }
 static void
 netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
