@@ -205,6 +205,7 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
   PRINTF("%d.%d: conectric_send to %d.%d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	 to->u8[0], to->u8[1]);
+
   if (to->u8[0] == 255 && to->u8[1] == 255) {
     could_send = netflood_send(&c->netflood, netflood_seqno++);
   }

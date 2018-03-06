@@ -104,7 +104,7 @@ static uint8_t usb_collect_is_a_sink = 0;
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
-packetbuf_and_attr_copyto(message_recv * message, linkaddr_t * originator, uint8_t message_type)
+packetbuf_and_attr_copyto(message_recv * message, const linkaddr_t * originator, uint8_t message_type)
 {
   uint8_t packetlen, hdrlen;
   uint8_t *dataptr;
