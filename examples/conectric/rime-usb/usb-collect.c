@@ -104,7 +104,7 @@ static uint8_t usb_collect_is_a_sink = 0;
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
-packetbuf_and_attr_copyto(message_recv * message, const linkaddr_t * originator, uint8_t message_type)
+packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
   uint8_t packetlen, hdrlen;
   uint8_t *dataptr;
@@ -144,19 +144,9 @@ packetbuf_and_attr_copyto(message_recv * message, const linkaddr_t * originator,
   message->message[2] = message->hops;
 
   /* Replace destination with originator address */
-  if (originator) {
-
-    /* If esender packet attribute is available */
-    if (message->esender.u8[1] || message->esender.u8[0]) {
-      message->message[4] = message->esender.u8[1];
-      message->message[5] = message->esender.u8[0];
-    }
-
-    /* otherwise, assign the given originator */
-    else {
-      message->message[4] = originator->u8[1];
-      message->message[5] = originator->u8[0];
-    }
+  if (message->esender.u8[1] || message->esender.u8[0]) {
+    message->message[4] = message->esender.u8[1];
+    message->message[5] = message->esender.u8[0];
   }
   else {
     message->message[4] = message->sender.u8[1];
@@ -224,7 +214,7 @@ AUTOSTART_PROCESSES(
 static void
 broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  packetbuf_and_attr_copyto(&broadcast_message_recv, NULL, MESSAGE_BROADCAST_RECV);
+  packetbuf_and_attr_copyto(&broadcast_message_recv, MESSAGE_BROADCAST_RECV);
 
   dump_packetbuf(&broadcast_message_recv);
 
@@ -426,7 +416,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   static uint8_t hexstring[20];
   static uint8_t bytereq[20];
 
-  packetbuf_and_attr_copyto(&conectric_message_recv, from, MESSAGE_CONECTRIC_RECV);
+  packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   dump_packetbuf(&conectric_message_recv);
 
@@ -447,7 +437,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 static void
 netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
-  packetbuf_and_attr_copyto(&conectric_message_recv, from, MESSAGE_CONECTRIC_RECV);
+  packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   dump_packetbuf(&conectric_message_recv);
 

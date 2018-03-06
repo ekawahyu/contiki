@@ -130,9 +130,6 @@ static void compose_response_to_packetbuf(
     uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver);
 static linkaddr_t * call_decision_maker(void * incoming, uint8_t type);
 
-#define WITH_SENDER           0
-#define WITH_ESENDER          1
-
 #define REQUEST_HEADER_LEN    4
 
 #define MESSAGE_BYTEREQ       1
@@ -192,7 +189,7 @@ static uint8_t dump_header = 0;
 #endif
 /*---------------------------------------------------------------------------*/
 static uint8_t
-packetbuf_and_attr_copyto(message_recv * message, uint8_t with_esender, uint8_t message_type)
+packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
   uint8_t packetlen, hdrlen;
   uint8_t *dataptr;
@@ -232,7 +229,7 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t with_esender, uint8_t 
   message->message[2] = message->hops;
 
   /* Replace destination with originator address */
-  if (with_esender) {
+  if (message->esender.u8[1] || message->esender.u8[0]) {
     message->message[4] = message->esender.u8[1];
     message->message[5] = message->esender.u8[0];
   }
@@ -308,7 +305,7 @@ AUTOSTART_PROCESSES(
 static void
 broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  packetbuf_and_attr_copyto(&broadcast_message_recv, WITH_SENDER, MESSAGE_BROADCAST_RECV);
+  packetbuf_and_attr_copyto(&broadcast_message_recv, MESSAGE_BROADCAST_RECV);
 
   /* TODO only the sink should dump packetbuf,
    * but routers have to store sensors data
@@ -330,7 +327,7 @@ trickle_recv(struct trickle_conn *c)
 {
   uint8_t * dataptr;
 
-  packetbuf_and_attr_copyto(&trickle_message_recv, WITH_SENDER, MESSAGE_TRICKLE_RECV);
+  packetbuf_and_attr_copyto(&trickle_message_recv, MESSAGE_TRICKLE_RECV);
 
   /* Decoding ereceiver address from message, no built-in trickle attribute */
   dataptr = trickle_message_recv.payload;
@@ -360,7 +357,7 @@ multihop_recv(struct multihop_conn *c, const linkaddr_t *sender,
      const linkaddr_t *prevhop,
      uint8_t hops)
 {
-  packetbuf_and_attr_copyto(&mhop_message_recv, WITH_ESENDER, MESSAGE_MHOP_RECV);
+  packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
 
   /* TODO only the sink should dump packetbuf */
   dump_packetbuf(&mhop_message_recv);
@@ -385,7 +382,7 @@ multihop_forward(struct multihop_conn *c,
 {
   static linkaddr_t * forward_addr;
 
-  packetbuf_and_attr_copyto(&mhop_message_recv, WITH_ESENDER, MESSAGE_MHOP_RECV);
+  packetbuf_and_attr_copyto(&mhop_message_recv, MESSAGE_MHOP_RECV);
 
   forward_addr = call_decision_maker(&mhop_message_recv, MESSAGE_MHOP_FWD);
 
