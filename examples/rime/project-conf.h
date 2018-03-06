@@ -41,8 +41,6 @@
 extern "C" {
 #endif
 
-#define RUN_ON_COOJA_SIMULATION         1
-
 #define STARTUP_CONF_VERBOSE            1
 #ifdef NETSTACK_CONF_MAC
 #undef NETSTACK_CONF_MAC
@@ -56,6 +54,10 @@ extern "C" {
 #define ROUTE_CONF_ENTRIES 64
 #define ROUTE_CONF_DECAY_THRESHOLD 8
 #define ROUTE_CONF_DEFAULT_LIFETIME 250 /* default life time max = 255 seconds */
+
+#define RUN_ON_COOJA_SIMULATION         1
+#define LPM_CONF_MODE                   0
+#define CONECTRIC_BURST_NUMBER          5
 
 #ifdef __cplusplus
 }

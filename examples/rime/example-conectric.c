@@ -41,6 +41,7 @@
 #include "debug.h"
 #include "net/rime/rime.h"
 #include "net/rime/conectric.h"
+#include "net/netstack.h"
 #include "dev/serial-line.h"
 
 #include <stdio.h>
@@ -54,8 +55,25 @@
 #define PRINTF(...)
 #endif
 
-#define MESSAGE_CONECTRIC_RECV      7
+/* USB Network Parameters */
+#define USB_SUP_TIMEOUT         180 /* minutes */
+#define USB_PERIODIC_TIMEOUT    1   /* minutes */
+#define USB_HEADER_SIZE         6
+#define USB_BOOT_PAYLOAD_SIZE   4
+#define USB_PAYLOAD_SIZE        4
+static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
+extern volatile uint16_t deep_sleep_requested;
 
+/* USB Device Parameters */
+#define USB_PULSE_PERIODIC       0x92
+#define USB_PULSE_NOEVT          0x00
+#define USB_SUP_EVT              0xBB
+#define USB_SUP_NOEVT            0x00
+
+#define MESSAGE_BROADCAST_RECV    3
+#define MESSAGE_CONECTRIC_RECV    7
+
+static message_recv broadcast_message_recv;
 static message_recv conectric_message_recv;
 
 static uint8_t dump_header = 0;
@@ -148,9 +166,212 @@ dump_packetbuf(message_recv * message)
 /*---------------------------------------------------------------------------*/
 static struct conectric_conn conectric;
 /*---------------------------------------------------------------------------*/
+PROCESS(usb_broadcast_process, "USB Collect");
+PROCESS(usb_supervisory_process, "USB Supervisory");
 PROCESS(example_conectric_process, "Conectric example");
 PROCESS(serial_in_process, "SerialIn");
-AUTOSTART_PROCESSES(&example_conectric_process, &serial_in_process);
+AUTOSTART_PROCESSES(
+    &usb_broadcast_process,
+    &usb_supervisory_process,
+    &example_conectric_process,
+    &serial_in_process
+);
+/*---------------------------------------------------------------------------*/
+static void
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
+{
+  packetbuf_and_attr_copyto(&broadcast_message_recv, MESSAGE_BROADCAST_RECV);
+
+  dump_packetbuf(&broadcast_message_recv);
+
+  PRINTF("%d.%d: local broadcast received from %d.%d (%d) - %lu\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      from->u8[0], from->u8[1],
+      broadcast_message_recv.rssi, broadcast_message_recv.timestamp);
+}
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(usb_broadcast_process, ev, data)
+{
+  static unsigned int batt;
+  static uint8_t seqno = 0;
+  static float sane;
+  static int dec;
+  static float frac;
+  static uint8_t *sensor_data;
+  static struct etimer et;
+  static uint8_t loop;
+
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
+
+  PROCESS_BEGIN();
+
+  broadcast_open(&broadcast, 129, &broadcast_call);
+
+  /* Wait until system is completely booted up and ready */
+  etimer_set(&et, CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  /* Composing boot status message */
+  memset(message, 0, sizeof(message));
+  message[0] = USB_HEADER_SIZE;
+  message[1] = seqno++;
+  message[2] = 0;
+  message[3] = 0;
+  message[4] = 0xFF;
+  message[5] = 0xFF;
+  message[6] = USB_BOOT_PAYLOAD_SIZE;
+  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+#if RUN_ON_COOJA_SIMULATION
+  batt = 0;
+  sane = batt * 3 * 1.15 / 2047;
+  dec = sane;
+  frac = sane - dec;
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = 0;
+#else
+  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+  sane = batt * 3 * 1.15 / 2047;
+  dec = sane;
+  frac = sane - dec;
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = clock_reset_cause();
+#endif
+
+  loop = CONECTRIC_BURST_NUMBER;
+
+  while(loop--) {
+
+    packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_BOOT_PAYLOAD_SIZE);
+    NETSTACK_MAC.on();
+    broadcast_send(&broadcast);
+
+#if RUN_ON_COOJA_SIMULATION
+#else
+        PROCESS_WAIT_EVENT();
+#endif
+
+#if LPM_CONF_MODE
+    if (loop)
+      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+    else
+      deep_sleep_requested = 60 * CLOCK_SECOND;
+#else
+    if (loop) {
+      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+#endif
+
+  }
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
+
+#if RUN_ON_COOJA_SIMULATION
+    batt = 0;
+#else
+    batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+#endif
+    sane = batt * 3 * 1.15 / 2047;
+    dec = sane;
+    frac = sane - dec;
+
+    sensor_data = (uint8_t*)data;
+
+    if(*sensor_data == USB_PULSE_PERIODIC)
+    {
+      memset(message, 0, sizeof(message));
+      message[0] = USB_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0xFF;
+      message[5] = 0xFF;
+      message[6] = USB_PAYLOAD_SIZE;
+      message[7] = CONECTRIC_SENSOR_BROADCAST_USB;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = (char)USB_PULSE_PERIODIC;
+
+      loop = CONECTRIC_BURST_NUMBER;
+
+      while(loop--) {
+        packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
+        NETSTACK_MAC.on();
+        broadcast_send(&broadcast);
+
+#if RUN_ON_COOJA_SIMULATION
+#else
+        PROCESS_WAIT_EVENT();
+#endif
+
+#if LPM_CONF_MODE
+        if (loop)
+          deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+        else
+          deep_sleep_requested = 60 * CLOCK_SECOND;
+#else
+        if (loop) {
+          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        }
+#endif
+
+      }
+    }
+    else if(*sensor_data == USB_SUP_EVT)
+    {
+      uint16_t time = clock_seconds();
+
+      memset(message, 0, sizeof(message));
+      message[0] = USB_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0xFF;
+      message[5] = 0xFF;
+      message[6] = USB_PAYLOAD_SIZE;
+      message[7] = CONECTRIC_SUPERVISORY_REPORT;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = (char)(time >> 6);
+
+      loop = CONECTRIC_BURST_NUMBER;
+
+      while(loop--) {
+        packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
+        NETSTACK_MAC.on();
+        broadcast_send(&broadcast);
+
+#if RUN_ON_COOJA_SIMULATION
+#else
+        PROCESS_WAIT_EVENT();
+#endif
+
+#if LPM_CONF_MODE
+        if (loop)
+          deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+        else
+          deep_sleep_requested = 60 * CLOCK_SECOND;
+#else
+        if (loop) {
+          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        }
+#endif
+
+      }
+    }
+    else if(*sensor_data == USB_PULSE_NOEVT || *sensor_data == USB_SUP_NOEVT) {
+#if LPM_CONF_MODE
+      deep_sleep_requested = 60 * CLOCK_SECOND;
+#endif
+    }
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
 static void
 sent(struct conectric_conn *c)
@@ -215,6 +436,53 @@ PROCESS_THREAD(example_conectric_process, ev, data)
     PRINTF("%d.%d: conectric sent to %d.%d - %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         to.u8[0], to.u8[1], clock_seconds());
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(usb_supervisory_process, ev, data)
+{
+  static struct etimer et;
+  static uint8_t event;
+  static int16_t supervisory_counter;
+  static int16_t periodic_counter;
+
+  PROCESS_BEGIN();
+
+  supervisory_counter = USB_SUP_TIMEOUT;
+  periodic_counter = USB_PERIODIC_TIMEOUT;
+
+  while (1)
+  {
+    etimer_set(&et, 60 * CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+    /* Send supervisory message */
+    if (supervisory_counter > 1) {
+      supervisory_counter--;
+      event = USB_SUP_NOEVT;
+      process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+    else {
+      supervisory_counter = USB_SUP_TIMEOUT;
+      event = USB_SUP_EVT;
+      process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+
+//    /* Send periodic message */
+//    if (periodic_counter > 1) {
+//      PRINTF("usb_periodic: no event\n");
+//      periodic_counter--;
+//      event = USB_PULSE_NOEVT;
+//      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+//    }
+//    else {
+//      PRINTF("usb_periodic: periodic event\n");
+//      periodic_counter = USB_PERIODIC_TIMEOUT;
+//      event = USB_PULSE_PERIODIC;
+//      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+//    }
   }
 
   PROCESS_END();

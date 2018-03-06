@@ -90,11 +90,11 @@ enum
   USB_SEND     = 0x01,    // send data event
 };
 
-static message_recv broadcast_message_recv;
-static message_recv conectric_message_recv;
-
 #define MESSAGE_BROADCAST_RECV    3
 #define MESSAGE_CONECTRIC_RECV    7
+
+static message_recv broadcast_message_recv;
+static message_recv conectric_message_recv;
 
 static uint8_t dump_header = 0;
 static uint8_t usb_collect_is_a_sink = 0;
@@ -269,7 +269,10 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
     NETSTACK_MAC.on();
     broadcast_send(&broadcast);
 
+#if RUN_ON_COOJA_SIMULATION
+#else
     PROCESS_WAIT_EVENT();
+#endif
 
 #if LPM_CONF_MODE
     if (loop)
@@ -321,7 +324,10 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
         NETSTACK_MAC.on();
         broadcast_send(&broadcast);
 
+#if RUN_ON_COOJA_SIMULATION
+#else
         PROCESS_WAIT_EVENT();
+#endif
 
 #if LPM_CONF_MODE
         if (loop)
@@ -360,7 +366,10 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
         NETSTACK_MAC.on();
         broadcast_send(&broadcast);
 
+#if RUN_ON_COOJA_SIMULATION
+#else
         PROCESS_WAIT_EVENT();
+#endif
 
 #if LPM_CONF_MODE
         if (loop)
