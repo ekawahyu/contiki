@@ -35,6 +35,7 @@
  *         An example of how the Conectric primitive can be used.
  * \author
  *         Adam Dunkels <adam@sics.se>
+ *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
  */
 
 #include <stdio.h>
@@ -67,8 +68,8 @@ static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
 /* USB Device Parameters */
-#define USB_PULSE_PERIODIC       0x92
-#define USB_PULSE_NOEVT          0x00
+#define USB_COLLECT_PERIODIC     0x92
+#define USB_COLLECT_NOEVT        0x00
 #define USB_SUP_EVT              0xBB
 #define USB_SUP_NOEVT            0x00
 
@@ -170,12 +171,12 @@ static struct conectric_conn conectric;
 /*---------------------------------------------------------------------------*/
 PROCESS(usb_broadcast_process, "USB Collect");
 PROCESS(usb_supervisory_process, "USB Supervisory");
-PROCESS(example_conectric_process, "Conectric Example");
+PROCESS(usb_conectric_process, "USB Conectric");
 PROCESS(serial_in_process, "SerialIn");
 AUTOSTART_PROCESSES(
     &usb_broadcast_process,
     &usb_supervisory_process,
-    &example_conectric_process,
+    &usb_conectric_process,
     &serial_in_process
 );
 /*---------------------------------------------------------------------------*/
@@ -283,7 +284,7 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
 
     sensor_data = (uint8_t*)data;
 
-    if(*sensor_data == USB_PULSE_PERIODIC)
+    if(*sensor_data == USB_COLLECT_PERIODIC)
     {
       memset(message, 0, sizeof(message));
       message[0] = USB_HEADER_SIZE;
@@ -295,7 +296,7 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
       message[6] = USB_PAYLOAD_SIZE;
       message[7] = CONECTRIC_SENSOR_BROADCAST_USB;
       message[8] = (char)(dec*10)+(char)(frac*10);
-      message[9] = (char)USB_PULSE_PERIODIC;
+      message[9] = (char)USB_COLLECT_PERIODIC;
 
       loop = CONECTRIC_BURST_NUMBER;
 
@@ -365,7 +366,7 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
 
       }
     }
-    else if(*sensor_data == USB_PULSE_NOEVT || *sensor_data == USB_SUP_NOEVT) {
+    else if(*sensor_data == USB_COLLECT_NOEVT || *sensor_data == USB_SUP_NOEVT) {
 #if LPM_CONF_MODE
       deep_sleep_requested = 60 * CLOCK_SECOND;
 #endif
@@ -415,7 +416,7 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
 const static struct conectric_callbacks callbacks = {recv, sent, timedout, netbroadcast};
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(example_conectric_process, ev, data)
+PROCESS_THREAD(usb_conectric_process, ev, data)
 {
   static uint8_t seqno = 0;
   static uint8_t * request;
@@ -480,13 +481,13 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
     if (periodic_counter > 1) {
       PRINTF("usb_periodic: no event\n");
       periodic_counter--;
-      event = USB_PULSE_NOEVT;
+      event = USB_COLLECT_NOEVT;
       process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
       PRINTF("usb_periodic: periodic event\n");
       periodic_counter = USB_PERIODIC_TIMEOUT;
-      event = USB_PULSE_PERIODIC;
+      event = USB_COLLECT_PERIODIC;
       process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
   }
@@ -509,7 +510,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
     event = command_interpreter((uint8_t *)data);
 
     if (event) {
-      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, event);
+      process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, event);
     }
   }
 
