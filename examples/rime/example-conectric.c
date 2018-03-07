@@ -83,6 +83,12 @@ static uint8_t dump_header = 0;
 static uint8_t usb_collect_is_a_sink = 0;
 
 /*---------------------------------------------------------------------------*/
+void
+config_sink(uint8_t mode)
+{
+  usb_collect_is_a_sink = mode;
+}
+/*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
@@ -478,17 +484,19 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
     }
 
     /* Send periodic message */
-    if (periodic_counter > 1) {
-      PRINTF("usb_periodic: no event\n");
-      periodic_counter--;
-      event = USB_COLLECT_NOEVT;
-      process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
-    }
-    else {
-      PRINTF("usb_periodic: periodic event\n");
-      periodic_counter = USB_PERIODIC_TIMEOUT;
-      event = USB_COLLECT_PERIODIC;
-      process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+    if (usb_collect_is_a_sink) {
+      if (periodic_counter > 1) {
+        PRINTF("usb_periodic: no event\n");
+        periodic_counter--;
+        event = USB_COLLECT_NOEVT;
+        process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+      }
+      else {
+        PRINTF("usb_periodic: periodic event\n");
+        periodic_counter = USB_PERIODIC_TIMEOUT;
+        event = USB_COLLECT_PERIODIC;
+        process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+      }
     }
   }
 

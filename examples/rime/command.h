@@ -46,6 +46,7 @@ extern "C" {
 
 void hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq);
 void dump_packet_buffer(uint8_t mode);
+void config_sink(uint8_t mode);
 uint8_t * command_interpreter(uint8_t * command_line);
 
 void compose_request_to_packetbuf(uint8_t * request,uint8_t seqno, linkaddr_t * ereceiver);

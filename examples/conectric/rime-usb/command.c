@@ -197,6 +197,16 @@ command_respond(uint8_t * bytereq)
       putstring("DB:Ok\n");
     }
 
+    else if (bytereq[0] == 'S' && bytereq[1] == 'S') {
+      config_sink(1);
+      putstring("SS:Ok\n");
+    }
+
+    else if (bytereq[0] == 'S' && bytereq[1] == 'R') {
+      config_sink(0);
+      putstring("SS:Ok\n");
+    }
+
     else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
       putstring("VER:");
       putstring(CONTIKI_VERSION_STRING "\n");
