@@ -66,13 +66,15 @@ struct conectric_conn {
   struct queuebuf *queued_data;
   linkaddr_t queued_data_dest;
   const struct conectric_callbacks *cb;
+  struct ctimer interval_timer;
+  clock_time_t interval;
   uint8_t is_sink;
   uint8_t netbc_id;
 };
 
 void conectric_open(struct conectric_conn *c, uint16_t channels, const struct conectric_callbacks *callbacks);
 void conectric_close(struct conectric_conn *c);
-void conectric_set_sink(struct conectric_conn *c, uint8_t is_sink);
+void conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t is_sink);
 int conectric_send(struct conectric_conn *c, const linkaddr_t *dest);
 int conectric_ready(struct conectric_conn *c);
 

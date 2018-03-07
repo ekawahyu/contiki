@@ -200,13 +200,13 @@ command_respond(uint8_t * bytereq)
     }
 
     else if (bytereq[0] == 'S' && bytereq[1] == 'S') {
-      conectric_set_sink(&conectric, 1);
+      conectric_set_sink(&conectric, 60 * CLOCK_SECOND, 1);
       putstring("SS:Ok\n");
     }
 
     else if (bytereq[0] == 'S' && bytereq[1] == 'R') {
-      conectric_set_sink(&conectric, 0);
-      putstring("SS:Ok\n");
+      conectric_set_sink(&conectric, 60 * CLOCK_SECOND, 0);
+      putstring("SR:Ok\n");
     }
 
     else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {

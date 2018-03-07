@@ -184,6 +184,15 @@ route_timed_out(struct route_discovery_conn *rdc)
   }
 }
 /*---------------------------------------------------------------------------*/
+static void send_sink_netbc(struct netflood_conn *nf);
+/*---------------------------------------------------------------------------*/
+static void
+timer_callback(void *ptr)
+{
+  struct netflood_conn *c = ptr;
+  send_sink_netbc(c);
+}
+/*---------------------------------------------------------------------------*/
 static void
 send_sink_netbc(struct netflood_conn *nf)
 {
@@ -200,6 +209,8 @@ send_sink_netbc(struct netflood_conn *nf)
 
   PRINTF("%d.%d: sending sink broadcast\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+
+  ctimer_set(&c->interval_timer, c->interval, timer_callback, nf);
 }
 /*---------------------------------------------------------------------------*/
 static const struct netflood_callbacks netflood_call = {netflood_received, NULL, NULL};
@@ -227,6 +238,7 @@ conectric_close(struct conectric_conn *c)
   multihop_close(&c->multihop);
   netflood_close(&c->netflood);
   route_discovery_close(&c->route_discovery_conn);
+  ctimer_stop(&c->interval_timer);
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -259,9 +271,16 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 }
 /*---------------------------------------------------------------------------*/
 void
-conectric_set_sink(struct conectric_conn *c, uint8_t is_sink)
+conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t is_sink)
 {
   c->is_sink = is_sink;
+  c->interval;
+  if (is_sink) {
+    send_sink_netbc(&c->netflood);
+  }
+  else {
+    ctimer_stop(&c->interval_timer);
+  }
 }
 
 int
