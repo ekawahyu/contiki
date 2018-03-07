@@ -44,6 +44,18 @@
 #include "net/rime/multihop.h"
 #include "net/rime/route-discovery.h"
 
+struct sink_entry {
+  struct sink_entry *next;
+  linkaddr_t addr;
+  uint8_t time;
+  uint8_t cost;
+};
+
+struct sink_entry * sink_lookup(const linkaddr_t *addr);
+int sink_add(const linkaddr_t *addr, uint8_t cost);
+int sink_num(void);
+struct sink_entry * sink_get(int num);
+
 struct conectric_conn;
 
 struct conectric_callbacks {

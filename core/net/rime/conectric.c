@@ -35,6 +35,8 @@
  */
 
 #include "contiki.h"
+#include "lib/list.h"
+#include "lib/memb.h"
 #include "net/rime/rime.h"
 #include "net/rime/route.h"
 #include "net/rime/conectric.h"
@@ -51,7 +53,26 @@
 #define PRINTF(...)
 #endif
 
+#ifdef SINK_CONF_ENTRIES
+#define NUM_SINK_ENTRIES SINK_CONF_ENTRIES
+#else /* SINK_CONF_ENTRIES */
+#define NUM_SINK_ENTRIES 8
+#endif /* SINK_CONF_ENTRIES */
+
+#ifdef SINK_CONF_DEFAULT_LIFETIME
+#define DEFAULT_LIFETIME SINK_CONF_DEFAULT_LIFETIME
+#else /* SINK_CONF_DEFAULT_LIFETIME */
+#define DEFAULT_LIFETIME 60
+#endif /* SINK_CONF_DEFAULT_LIFETIME */
+
 #define SINK_NETBC  0xBCBC
+
+LIST(sink_table);
+MEMB(sink_mem, struct sink_entry, NUM_SINK_ENTRIES);
+
+static struct ctimer t;
+
+static int max_time = DEFAULT_LIFETIME;
 
 struct sink_msg {
   uint16_t netbc;
@@ -59,6 +80,123 @@ struct sink_msg {
 
 static int conectric_status;
 
+/*---------------------------------------------------------------------------*/
+static void
+periodic(void *ptr)
+{
+  struct sink_entry *e;
+
+  for(e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
+    e->time++;
+    if(e->time >= max_time) {
+      PRINTF("sink periodic: removing entry to %d.%d with cost %d\n",
+       e->addr.u8[0], e->addr.u8[1],
+       e->cost);
+      list_remove(sink_table, e);
+      memb_free(&sink_mem, e);
+    }
+  }
+
+  ctimer_set(&t, CLOCK_SECOND, periodic, NULL);
+}
+/*---------------------------------------------------------------------------*/
+void
+sink_init(void)
+{
+  list_init(sink_table);
+  memb_init(&sink_mem);
+
+  ctimer_set(&t, CLOCK_SECOND, periodic, NULL);
+}
+/*---------------------------------------------------------------------------*/
+struct sink_entry *
+sink_lookup(const linkaddr_t *addr)
+{
+  struct sink_entry *e;
+  uint8_t lowest_cost;
+  struct sink_entry *best_entry;
+
+  lowest_cost = -1;
+  best_entry = NULL;
+
+  /* Find the route with the lowest cost. */
+  for (e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
+    if(linkaddr_cmp(addr, &e->addr)) {
+      if(e->cost < lowest_cost) {
+        best_entry = e;
+        lowest_cost = e->cost;
+      }
+    }
+  }
+  return best_entry;
+}
+/*---------------------------------------------------------------------------*/
+int
+sink_add(const linkaddr_t *addr, uint8_t cost)
+{
+  struct sink_entry *e, *oldest = NULL;
+
+  /* Avoid inserting duplicate entries. */
+  e = sink_lookup(addr);
+  if(e != NULL && linkaddr_cmp(&e->addr, addr)) {
+    list_remove(sink_table, e);
+  } else {
+    /* Allocate a new entry or reuse the oldest entry with highest cost. */
+    e = memb_alloc(&sink_mem);
+    if(e == NULL) {
+      /* Remove oldest entry. */
+      for(e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
+        if(oldest == NULL || e->time >= oldest->time) {
+          oldest = e;
+        }
+      }
+      e = oldest;
+      list_remove(sink_table, e);
+
+      PRINTF("sink_add: removing entry to %d.%d with cost %d\n",
+          e->addr.u8[0], e->addr.u8[1], e->cost);
+    }
+  }
+
+  linkaddr_copy(&e->addr, addr);
+  e->cost = cost;
+  e->time = 0;
+
+  /* New entry goes first. */
+  list_push(sink_table, e);
+
+  PRINTF("sink_add: new entry to %d.%d with cost %d\n",
+      e->addr.u8[0], e->addr.u8[1], e->cost);
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+int
+sink_num(void)
+{
+  struct sink_entry *e;
+  int i = 0;
+
+  for(e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
+    i++;
+  }
+  return i;
+}
+/*---------------------------------------------------------------------------*/
+struct sink_entry *
+sink_get(int num)
+{
+  struct sink_entry *e;
+  int i = 0;
+
+  for(e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
+    if(i == num) {
+      return e;
+    }
+    i++;
+  }
+  return NULL;
+}
 /*---------------------------------------------------------------------------*/
 static int
 netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
@@ -75,6 +213,7 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
 
   if (msg->netbc == SINK_NETBC) {
     if(c->cb->sink_recv) {
+      sink_add(originator, hops);
       c->cb->sink_recv(c, originator, hops);
     }
   }
@@ -213,15 +352,19 @@ send_sink_netbc(struct netflood_conn *nf)
   ctimer_set(&c->interval_timer, c->interval, timer_callback, nf);
 }
 /*---------------------------------------------------------------------------*/
-static const struct netflood_callbacks netflood_call = {netflood_received, NULL, NULL};
-static const struct multihop_callbacks multihop_call = { multihop_received, multihop_forward };
-static const struct route_discovery_callbacks route_discovery_callbacks = { found_route, route_timed_out };
+static const struct netflood_callbacks netflood_call = {
+    netflood_received, NULL, NULL};
+static const struct multihop_callbacks multihop_call = {
+    multihop_received, multihop_forward};
+static const struct route_discovery_callbacks route_discovery_callbacks = {
+    found_route, route_timed_out};
 /*---------------------------------------------------------------------------*/
 void
 conectric_open(struct conectric_conn *c, uint16_t channels,
 	  const struct conectric_callbacks *callbacks)
 {
   route_init();
+  sink_init();
   netflood_open(&c->netflood, CLOCK_SECOND/8, channels, &netflood_call);
   multihop_open(&c->multihop, channels + 1, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
@@ -271,7 +414,8 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 }
 /*---------------------------------------------------------------------------*/
 void
-conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t is_sink)
+conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
+    uint8_t is_sink)
 {
   c->is_sink = is_sink;
   c->interval = interval;

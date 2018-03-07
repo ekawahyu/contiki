@@ -241,6 +241,22 @@ command_respond(uint8_t * bytereq)
       }
     }
 
+    else if (bytereq[0] == 'S' && bytereq[1] == 'T') {
+      for (i=0; i < sink_num(); i++) {
+        putstring("ST:");
+        putdec(i);
+        putstring(":");
+        puthex(sink_get(i)->addr.u8[0]);
+        putstring(".");
+        puthex(sink_get(i)->addr.u8[1]);
+        putstring("(C:");
+        putdec(sink_get(i)->cost);
+        putstring(":LT:");
+        putdec(sink_get(i)->time);
+        putstring(")\n");
+      }
+    }
+
     else if (bytereq[0] == 'R' && bytereq[1] == 'F') {
         putstring("RF:routing table flushed\n");
         route_flush_all();

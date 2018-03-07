@@ -177,7 +177,7 @@ dump_packetbuf(message_recv * message)
   }
 
   len = message->message[0] + message->length;
-  packetbuf = message->message;
+  packetbuf = (char *)message->message;
   while(len--) puthex(*packetbuf++);
 
   putstring("\n");
@@ -425,7 +425,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 //    process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
 //  }
 
-  PRINTF("%d.%d: data received from %d.%d: %.*s (%d) - %d hops\n",
+  PRINTF("%d.%d: data received from %d.%d: %s (%d) - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1],
       (char *)packetbuf_dataptr(), packetbuf_datalen(), hops);
@@ -438,24 +438,18 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   dump_packetbuf(&conectric_message_recv);
 
-  PRINTF("%d.%d: broadcast received from %d.%d: %.*s (%d) - %d hops\n",
+  PRINTF("%d.%d: broadcast received from %d.%d: %s (%d) - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      from->u8[0], from->u8[1],
-      packetbuf_datalen(), (char *)packetbuf_dataptr(),
+      from->u8[0], from->u8[1], (char *)packetbuf_dataptr(),
       packetbuf_datalen(), hops);
 }
 
 static void
 sink(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
-//  packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
-//
-//  dump_packetbuf(&conectric_message_recv);
-
-  PRINTF("%d.%d: sink received from %d.%d: %.*s (%d) - %d hops\n",
+  PRINTF("%d.%d: sink received from %d.%d: %s (%d) - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      from->u8[0], from->u8[1],
-      packetbuf_datalen(), (char *)packetbuf_dataptr(),
+      from->u8[0], from->u8[1], (char *)packetbuf_dataptr(),
       packetbuf_datalen(), hops);
 }
 

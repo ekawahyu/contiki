@@ -53,6 +53,9 @@ extern "C" {
 #define ROUTE_CONF_DECAY_THRESHOLD 8
 #define ROUTE_CONF_DEFAULT_LIFETIME 250 /* default life time max = 255 seconds */
 
+#define SINK_CONF_ENTRIES 16
+#define SINK_CONF_DEFAULT_LIFETIME 180 /* default life time max = 255 seconds */
+
 #define IEEE802154_CONF_PANID                 0x2007
 #define CC2530_RF_CONF_CHANNEL                25
 #define CC2530_RF_CONF_LEDS                   1
