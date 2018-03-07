@@ -410,21 +410,21 @@ timedout(struct conectric_conn *c)
 static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
-  static uint8_t hexstring[20];
-  static uint8_t bytereq[20];
+//  static uint8_t hexstring[20];
+//  static uint8_t bytereq[20];
 
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   dump_packetbuf(&conectric_message_recv);
 
-  if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
-    memset(hexstring, 0, sizeof(hexstring));
-    memset(bytereq, 0, sizeof(bytereq));
-    strcpy(hexstring, "0515A01701");
-    hexstring_to_bytereq(hexstring, &bytereq[1]);
-    bytereq[0] = '<';
-    process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
-  }
+//  if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
+//    memset(hexstring, 0, sizeof(hexstring));
+//    memset(bytereq, 0, sizeof(bytereq));
+//    strcpy(hexstring, "0515A01701");
+//    hexstring_to_bytereq(hexstring, &bytereq[1]);
+//    bytereq[0] = '<';
+//    process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
+//  }
 
   PRINTF("%d.%d: data received from %d.%d: %.*s (%d) - %d hops\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -508,19 +508,19 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
       process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
 
-//    /* Send periodic message */
-//    if (periodic_counter > 1) {
-//      PRINTF("usb_periodic: no event\n");
-//      periodic_counter--;
-//      event = USB_PULSE_NOEVT;
-//      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
-//    }
-//    else {
-//      PRINTF("usb_periodic: periodic event\n");
-//      periodic_counter = USB_PERIODIC_TIMEOUT;
-//      event = USB_PULSE_PERIODIC;
-//      process_post(&example_conectric_process, PROCESS_EVENT_CONTINUE, &event);
-//    }
+    /* Send periodic message */
+    if (periodic_counter > 1) {
+      PRINTF("usb_periodic: no event\n");
+      periodic_counter--;
+      event = USB_PULSE_NOEVT;
+      process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+    else {
+      PRINTF("usb_periodic: periodic event\n");
+      periodic_counter = USB_PERIODIC_TIMEOUT;
+      event = USB_PULSE_PERIODIC;
+      process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+    }
   }
 
   PROCESS_END();
