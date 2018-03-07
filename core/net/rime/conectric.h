@@ -54,7 +54,9 @@ struct conectric_callbacks {
   /** Called when a packet, sent with conectric_send(), times out and is dropped. */
   void (* timedout)(struct conectric_conn *c);
   /** Called when a network-wide broadcast is received. */
-  void (* incoming_netbroadcast)(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops);
+  void (* netbroadcast_recv)(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops);
+  /** Called when a network-wide sink broadcast is received. */
+  void (* sink_recv)(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops);
 };
 
 struct conectric_conn {
@@ -65,6 +67,7 @@ struct conectric_conn {
   linkaddr_t queued_data_dest;
   const struct conectric_callbacks *cb;
   uint8_t is_sink;
+  uint8_t netbc_id;
 };
 
 void conectric_open(struct conectric_conn *c, uint16_t channels, const struct conectric_callbacks *callbacks);

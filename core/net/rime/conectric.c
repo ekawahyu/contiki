@@ -51,6 +51,12 @@
 #define PRINTF(...)
 #endif
 
+#define SINK_NETBC  0xBCBC
+
+struct sink_msg {
+  uint16_t netbc;
+};
+
 static int conectric_status;
 
 /*---------------------------------------------------------------------------*/
@@ -58,6 +64,7 @@ static int
 netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
          const linkaddr_t *originator, uint8_t seqno, uint8_t hops)
 {
+  struct sink_msg *msg = packetbuf_dataptr();
   struct conectric_conn *c = (struct conectric_conn *)
     ((char *)nf - offsetof(struct conectric_conn, netflood));
 
@@ -66,8 +73,15 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
    originator->u8[0], originator->u8[1],
    hops, seqno);
 
-  if(c->cb->incoming_netbroadcast) {
-    c->cb->incoming_netbroadcast(c, originator, hops);
+  if (msg->netbc == SINK_NETBC) {
+    if(c->cb->sink_recv) {
+      c->cb->sink_recv(c, originator, hops);
+    }
+  }
+  else {
+    if(c->cb->netbroadcast_recv) {
+      c->cb->netbroadcast_recv(c, originator, hops);
+    }
   }
 
   return 1; /* Continue flooding the network */
@@ -170,6 +184,24 @@ route_timed_out(struct route_discovery_conn *rdc)
   }
 }
 /*---------------------------------------------------------------------------*/
+static void
+send_sink_netbc(struct netflood_conn *nf)
+{
+  struct sink_msg * msg;
+  struct conectric_conn *c = (struct conectric_conn *)
+    ((char *)nf - offsetof(struct conectric_conn, netflood));
+
+  packetbuf_clear();
+  msg = packetbuf_dataptr();
+  packetbuf_set_datalen(sizeof(struct sink_msg));
+
+  msg->netbc = SINK_NETBC;
+  netflood_send(&c->netflood, c->netbc_id++);
+
+  PRINTF("%d.%d: sending sink broadcast\n",
+   linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+}
+/*---------------------------------------------------------------------------*/
 static const struct netflood_callbacks netflood_call = {netflood_received, NULL, NULL};
 static const struct multihop_callbacks multihop_call = { multihop_received, multihop_forward };
 static const struct route_discovery_callbacks route_discovery_callbacks = { found_route, route_timed_out };
@@ -200,7 +232,6 @@ conectric_close(struct conectric_conn *c)
 int
 conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 {
-  static uint8_t netflood_seqno;
   int could_send;
 
   PRINTF("%d.%d: conectric_send to %d.%d\n",
@@ -208,7 +239,7 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 	 to->u8[0], to->u8[1]);
 
   if (to->u8[0] == 255 && to->u8[1] == 255) {
-    could_send = netflood_send(&c->netflood, netflood_seqno++);
+    could_send = netflood_send(&c->netflood, c->netbc_id++);
   }
   else {
     could_send = multihop_send(&c->multihop, to);
