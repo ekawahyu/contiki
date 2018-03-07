@@ -186,6 +186,7 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 		       channels + 3,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
+  c->is_sink = 0;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -226,6 +227,12 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+void
+conectric_set_sink(struct conectric_conn *c, uint8_t is_sink)
+{
+  c->is_sink = is_sink;
+}
+
 int
 conectric_ready(struct conectric_conn *c)
 {

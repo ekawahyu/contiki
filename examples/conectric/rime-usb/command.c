@@ -79,6 +79,8 @@ volatile unsigned char *gmacp = gmacp_sim;
 #define CONECTRIC_MESSAGE_HEADER_LEN    6
 #define CONECTRIC_MESSAGE_LEN           2
 
+extern struct conectric_conn conectric;
+
 /*---------------------------------------------------------------------------*/
 void
 hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq)
@@ -198,12 +200,12 @@ command_respond(uint8_t * bytereq)
     }
 
     else if (bytereq[0] == 'S' && bytereq[1] == 'S') {
-      config_sink(1);
+      conectric_set_sink(&conectric, 1);
       putstring("SS:Ok\n");
     }
 
     else if (bytereq[0] == 'S' && bytereq[1] == 'R') {
-      config_sink(0);
+      conectric_set_sink(&conectric, 0);
       putstring("SS:Ok\n");
     }
 
