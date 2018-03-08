@@ -385,8 +385,8 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * erec
   *header++ = seqno;          /* seqno */
   *header++ = 0;              /* hop count */
   *header++ = 0;              /* number of hops */
-  *header++ = dest.u8[0];     /* destination addr H */
-  *header++ = dest.u8[1];     /* destination addr L */
+  *header++ = dest.u8[1];     /* destination addr H */
+  *header++ = dest.u8[0];     /* destination addr L */
   while(routelen--)
         *header++ = *route++; /* routing table */
 
@@ -491,7 +491,7 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   *header++ = seqno;            /* seqno */
   *header++ = 0;                /* hop count */
   *header++ = 0;                /* number of hops */
-  *header++ = ereceiver->u8[0]; /* destination addr H */
-  *header++ = ereceiver->u8[1]; /* destination addr L */
+  *header++ = ereceiver->u8[1]; /* destination addr H */
+  *header++ = ereceiver->u8[0]; /* destination addr L */
 }
 /*---------------------------------------------------------------------------*/
