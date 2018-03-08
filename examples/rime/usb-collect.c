@@ -235,59 +235,6 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  /* Composing boot status message */
-  memset(message, 0, sizeof(message));
-  message[0] = USB_HEADER_SIZE;
-  message[1] = seqno++;
-  message[2] = 0;
-  message[3] = 0;
-  message[4] = 0xFF;
-  message[5] = 0xFF;
-  message[6] = USB_BOOT_PAYLOAD_SIZE;
-  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
-#if RUN_ON_COOJA_SIMULATION
-  batt = 0;
-  sane = batt * 3 * 1.15 / 2047;
-  dec = sane;
-  frac = sane - dec;
-  message[8] = (char)(dec*10)+(char)(frac*10);
-  message[9] = 0;
-#else
-  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-  sane = batt * 3 * 1.15 / 2047;
-  dec = sane;
-  frac = sane - dec;
-  message[8] = (char)(dec*10)+(char)(frac*10);
-  message[9] = clock_reset_cause();
-#endif
-
-  loop = CONECTRIC_BURST_NUMBER;
-
-  while(loop--) {
-
-    packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_BOOT_PAYLOAD_SIZE);
-    NETSTACK_MAC.on();
-    broadcast_send(&broadcast);
-
-#if RUN_ON_COOJA_SIMULATION
-#else
-    PROCESS_WAIT_EVENT();
-#endif
-
-#if LPM_CONF_MODE
-    if (loop)
-      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
-    else
-      deep_sleep_requested = 60 * CLOCK_SECOND;
-#else
-    if (loop) {
-      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
-#endif
-
-  }
-
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
@@ -460,7 +407,15 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 {
   static uint8_t hexstring[20];
   static uint8_t bytereq[20];
+
+  static unsigned int batt;
   static uint8_t seqno = 0;
+  static float sane;
+  static int dec;
+  static float frac;
+  static struct etimer et;
+  static uint8_t loop;
+
   static uint8_t * request;
   static linkaddr_t to;
 
@@ -470,9 +425,66 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
   conectric_open(&conectric, 132, &callbacks);
 
+  /* Wait until system is completely booted up and ready */
+  etimer_set(&et, CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
 #if RUN_ON_COOJA_SIMULATION
   SENSORS_ACTIVATE(button_sensor);
 #endif
+
+  /* Composing boot status message */
+  memset(message, 0, sizeof(message));
+  message[0] = USB_HEADER_SIZE;
+  message[1] = seqno++;
+  message[2] = 0;
+  message[3] = 0;
+  message[4] = 0xFF;
+  message[5] = 0xFF;
+  message[6] = USB_BOOT_PAYLOAD_SIZE;
+  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+#if RUN_ON_COOJA_SIMULATION
+  batt = 0;
+  sane = batt * 3 * 1.15 / 2047;
+  dec = sane;
+  frac = sane - dec;
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = 0;
+#else
+  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+  sane = batt * 3 * 1.15 / 2047;
+  dec = sane;
+  frac = sane - dec;
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = clock_reset_cause();
+#endif
+
+  loop = CONECTRIC_BURST_NUMBER;
+
+  while(loop--) {
+
+    packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_BOOT_PAYLOAD_SIZE);
+    NETSTACK_MAC.on();
+    conectric_send_to_sink(&conectric);
+
+#if RUN_ON_COOJA_SIMULATION
+#else
+    PROCESS_WAIT_EVENT();
+#endif
+
+#if LPM_CONF_MODE
+    if (loop)
+      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+    else
+      deep_sleep_requested = 60 * CLOCK_SECOND;
+#else
+    if (loop) {
+      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+    }
+#endif
+
+  }
 
   while(1) {
 
@@ -609,9 +621,11 @@ PROCESS_THREAD(serial_in_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+#if RUN_ON_COOJA_SIMULATION
 void
 invoke_process_before_sleep(void)
 {
   process_post_synch(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, NULL);
 }
+#endif
 /*---------------------------------------------------------------------------*/
