@@ -360,21 +360,9 @@ timedout(struct conectric_conn *c)
 static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
-//  static uint8_t hexstring[20];
-//  static uint8_t bytereq[20];
-
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   dump_packetbuf(&conectric_message_recv);
-
-//  if (conectric_message_recv.request == CONECTRIC_MULTIHOP_PING) {
-//    memset(hexstring, 0, sizeof(hexstring));
-//    memset(bytereq, 0, sizeof(bytereq));
-//    strcpy(hexstring, "0515A01701");
-//    hexstring_to_bytereq(hexstring, &bytereq[1]);
-//    bytereq[0] = '<';
-//    process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
-//  }
 
   PRINTF("%d.%d: data from %d.%d len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
