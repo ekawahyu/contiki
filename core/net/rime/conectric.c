@@ -78,8 +78,6 @@ struct sink_msg {
   uint16_t netbc;
 };
 
-static int conectric_status;
-
 /*---------------------------------------------------------------------------*/
 static void
 periodic(void *ptr)
@@ -120,11 +118,23 @@ sink_lookup(const linkaddr_t *addr)
   best_entry = NULL;
 
   /* Find the route with the lowest cost. */
-  for (e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
-    if(linkaddr_cmp(addr, &e->addr)) {
-      if(e->cost < lowest_cost) {
-        best_entry = e;
-        lowest_cost = e->cost;
+  if (addr == NULL) {
+    if (list_length(sink_table) != 0) {
+      for (e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
+        if(e->cost < lowest_cost) {
+          best_entry = e;
+          lowest_cost = e->cost;
+        }
+      }
+    }
+  }
+  else {
+    for (e = list_head(sink_table); e != NULL; e = list_item_next(e)) {
+      if(linkaddr_cmp(addr, &e->addr)) {
+        if(e->cost < lowest_cost) {
+          best_entry = e;
+          lowest_cost = e->cost;
+        }
       }
     }
   }
@@ -403,13 +413,46 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
   if(!could_send) {
     PRINTF("%d.%d: conectric_send: could not send\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    conectric_status = 0;
     return 0;
   }
   if(c->cb->sent != NULL) {
     c->cb->sent(c);
   }
-  conectric_status = 1;
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+int
+conectric_send_to_sink(struct conectric_conn *c)
+{
+  static struct sink_entry * sink_available;
+  int could_send;
+
+  if (c->is_sink) return 0;
+
+  sink_available = sink_lookup(NULL);
+
+  if (sink_available) {
+    PRINTF("%d.%d: conectric_send_to_sink to %d.%d\n",
+        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+        sink_available->addr.u8[0], sink_available->addr.u8[1]);
+    could_send = multihop_send(&c->multihop, &sink_available->addr);
+  }
+  else {
+    PRINTF("%d.%d: conectric_send_to_sink will broadcast it\n",
+        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+    could_send = netflood_send(&c->netflood, c->netbc_id++);
+  }
+
+  if(!could_send) {
+    PRINTF("%d.%d: conectric_send: could not send\n",
+        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+    return 0;
+  }
+  if(c->cb->sent != NULL) {
+    c->cb->sent(c);
+  }
+
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -426,15 +469,4 @@ conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
     ctimer_stop(&c->interval_timer);
   }
 }
-
-int
-conectric_ready(struct conectric_conn *c)
-{
-  return (c->queued_data == NULL);
-}
-
-int
-conectric_is_connected(void)
-{
-  return conectric_status;
-}
+/*---------------------------------------------------------------------------*/

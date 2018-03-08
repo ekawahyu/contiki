@@ -57,7 +57,7 @@
 /* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -205,7 +205,7 @@ broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 
   dump_packetbuf(&broadcast_message_recv);
 
-  PRINTF("%d.%d: local broadcast received from %d.%d (%d) - %lu\n",
+  PRINTF("%d.%d: local broadcast from %d.%d rssi %d ts %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1],
       broadcast_message_recv.rssi, broadcast_message_recv.timestamp);
@@ -321,7 +321,10 @@ PROCESS_THREAD(usb_broadcast_process, ev, data)
       while(loop--) {
         packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
-        broadcast_send(&broadcast);
+        /* commented out because it execute on event that is not sent to it
+         * need an immediate fix
+         */
+        // broadcast_send(&broadcast);
 
 #if RUN_ON_COOJA_SIMULATION
 #else
@@ -425,10 +428,9 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 //    process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, bytereq);
 //  }
 
-  PRINTF("%d.%d: data received from %d.%d: %s (%d) - %d hops\n",
+  PRINTF("%d.%d: data from %d.%d len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      from->u8[0], from->u8[1],
-      (char *)packetbuf_dataptr(), packetbuf_datalen(), hops);
+      from->u8[0], from->u8[1], packetbuf_datalen(), hops);
 }
 
 static void
@@ -438,25 +440,25 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   dump_packetbuf(&conectric_message_recv);
 
-  PRINTF("%d.%d: broadcast received from %d.%d: %s (%d) - %d hops\n",
+  PRINTF("%d.%d: broadcast from %d.%d: len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      from->u8[0], from->u8[1], (char *)packetbuf_dataptr(),
-      packetbuf_datalen(), hops);
+      from->u8[0], from->u8[1], packetbuf_datalen(), hops);
 }
 
 static void
 sink(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
-  PRINTF("%d.%d: sink received from %d.%d: %s (%d) - %d hops\n",
+  PRINTF("%d.%d: sink from %d.%d len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-      from->u8[0], from->u8[1], (char *)packetbuf_dataptr(),
-      packetbuf_datalen(), hops);
+      from->u8[0], from->u8[1], packetbuf_datalen(), hops);
 }
 
 const static struct conectric_callbacks callbacks = {recv, sent, timedout, netbroadcast, sink};
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(usb_conectric_process, ev, data)
 {
+  static uint8_t hexstring[20];
+  static uint8_t bytereq[20];
   static uint8_t seqno = 0;
   static uint8_t * request;
   static linkaddr_t to;
@@ -472,6 +474,25 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
 
     request = (uint8_t *)data;
+
+    /* temporary workaround to test sending to sink */
+    /*                                              */
+
+    if (*request == USB_COLLECT_PERIODIC) {
+
+      memset(hexstring, 0, sizeof(hexstring));
+      strcpy(hexstring, "051A000001");
+      bytereq[0] = '<';
+      hexstring_to_bytereq(hexstring, &bytereq[1]);
+
+      compose_request_to_packetbuf(bytereq, seqno++, &to);
+      conectric_send_to_sink(&conectric);
+
+      /*                                              */
+      /* temporary workaround to test sending to sink */
+    }
+    else {
+
     if (*request == '<')
       compose_request_to_packetbuf(request, seqno++, &to);
     else
@@ -479,7 +500,9 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
     conectric_send(&conectric, &to);
 
-    PRINTF("%d.%d: conectric sent to %d.%d - %lu\n",
+    }
+
+    PRINTF("%d.%d: conectric sent to %d.%d ts %lu\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         to.u8[0], to.u8[1], clock_seconds());
   }
@@ -517,20 +540,16 @@ PROCESS_THREAD(usb_supervisory_process, ev, data)
     }
 
     /* Send periodic message */
-//    if (conectric.is_sink) {
-//      if (periodic_counter > 1) {
-//        PRINTF("usb_periodic: no event\n");
-//        periodic_counter--;
-//        event = USB_COLLECT_NOEVT;
-//        process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
-//      }
-//      else {
-//        PRINTF("usb_periodic: periodic event\n");
-//        periodic_counter = USB_PERIODIC_TIMEOUT;
-//        event = USB_COLLECT_PERIODIC;
-//        process_post(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
-//      }
-//    }
+    if (periodic_counter > 1) {
+      periodic_counter--;
+      event = USB_COLLECT_NOEVT;
+      process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+    else {
+      periodic_counter = USB_PERIODIC_TIMEOUT;
+      event = USB_COLLECT_PERIODIC;
+      process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+    }
   }
 
   PROCESS_END();
