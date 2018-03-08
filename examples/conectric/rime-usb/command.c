@@ -355,8 +355,8 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * erec
 
   reqlen     = *request++;
   req        = *request++;
-  dest.u8[0] = *request++;
   dest.u8[1] = *request++;
+  dest.u8[0] = *request++;
   routelen   = *request++;
 
   if (ereceiver) linkaddr_copy(ereceiver, &dest);
