@@ -96,13 +96,13 @@ enum
 
 /*---------------------------------------------------------------------------*/
 PROCESS(pls_broadcast_process, "PLS Sensor");
-PROCESS(pls_supervisory_process, "PLS Supervisory");
+PROCESS(pls_periodic_process, "PLS Periodic");
 //PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
 PROCESS(pls_interrupt_process, "PLS Interrupt");
-AUTOSTART_PROCESSES(&pls_broadcast_process, &pls_supervisory_process, &pls_interrupt_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(&pls_broadcast_process, &pls_periodic_process, &pls_interrupt_process/*, &flash_log_process*/);
 #else
-AUTOSTART_PROCESSES(&pls_broadcast_process, &pls_supervisory_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(&pls_broadcast_process, &pls_periodic_process/*, &flash_log_process*/);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -316,7 +316,7 @@ PROCESS_THREAD(pls_interrupt_process, ev, data)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(pls_supervisory_process, ev, data)
+PROCESS_THREAD(pls_periodic_process, ev, data)
 {
   static struct etimer et;
   static uint8_t event;
@@ -330,32 +330,33 @@ PROCESS_THREAD(pls_supervisory_process, ev, data)
 
   while (1)
   {
-    etimer_set(&et, 60 * CLOCK_SECOND);
+    etimer_set(&et, 58 * CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     /* Send supervisory message */
     if (supervisory_counter > 1) {
       supervisory_counter--;
       event = PLS_SUP_NOEVT;
-      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
       supervisory_counter = PLS_SUP_TIMEOUT;
       event = PLS_SUP_EVT;
-      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
+    process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+
+    etimer_set(&et, 2 * CLOCK_SECOND);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     /* Send periodic message */
     if (periodic_counter > 1) {
       periodic_counter--;
       event = PLS_PULSE_NOEVT;
-      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
     else {
       periodic_counter = PLS_PERIODIC_TIMEOUT;
       event = PLS_PULSE_PERIODIC;
-      process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
     }
+    process_post(&pls_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
   }
 
   PROCESS_END();
