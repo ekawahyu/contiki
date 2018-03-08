@@ -47,6 +47,7 @@
 
 /* Conectric Device */
 #if RUN_ON_COOJA_SIMULATION
+#include "dev/button-sensor.h"
 #else
 #include "flash-logging.h"
 #include "dev/adc-sensor.h"
@@ -469,11 +470,23 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
   conectric_open(&conectric, 132, &callbacks);
 
+#if RUN_ON_COOJA_SIMULATION
+  SENSORS_ACTIVATE(button_sensor);
+#endif
+
   while(1) {
 
+#if RUN_ON_COOJA_SIMULATION
+    PROCESS_WAIT_EVENT_UNTIL((ev == PROCESS_EVENT_CONTINUE || ev == sensors_event) && data != NULL);
+#else
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
+#endif
 
     request = (uint8_t *)data;
+
+#if RUN_ON_COOJA_SIMULATION
+    if (request == &button_sensor) while(1); /* loop here until watchdog reboots */
+#endif
 
     /* temporary workaround to test sending to sink */
     /*                                              */
