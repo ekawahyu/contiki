@@ -610,6 +610,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 #if RUN_ON_COOJA_SIMULATION
+#else
 void
 invoke_process_before_sleep(void)
 {

@@ -455,22 +455,12 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
     NETSTACK_MAC.on();
     conectric_send_to_sink(&conectric);
 
-#if RUN_ON_COOJA_SIMULATION
-#else
-    PROCESS_WAIT_EVENT();
-#endif
+    PROCESS_PAUSE();
 
-#if LPM_CONF_MODE
-    if (loop)
-      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
-    else
-      deep_sleep_requested = 60 * CLOCK_SECOND;
-#else
     if (loop) {
       etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     }
-#endif
 
   }
 
@@ -610,6 +600,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 #if RUN_ON_COOJA_SIMULATION
+#else
 void
 invoke_process_before_sleep(void)
 {
