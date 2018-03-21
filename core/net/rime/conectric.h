@@ -88,6 +88,6 @@ void conectric_open(struct conectric_conn *c, uint16_t channels, const struct co
 void conectric_close(struct conectric_conn *c);
 void conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t is_sink);
 int conectric_send(struct conectric_conn *c, const linkaddr_t *dest);
-int conectric_send_to_sink(struct conectric_conn *c);
+linkaddr_t * conectric_send_to_sink(struct conectric_conn *c);
 
 #endif /* CONECTRIC_H_ */

@@ -422,13 +422,13 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-int
+linkaddr_t *
 conectric_send_to_sink(struct conectric_conn *c)
 {
   static struct sink_entry * sink_available;
   int could_send;
 
-  if (c->is_sink) return 0;
+  if (c->is_sink) return NULL;
 
   sink_available = sink_lookup(NULL);
 
@@ -447,13 +447,13 @@ conectric_send_to_sink(struct conectric_conn *c)
   if(!could_send) {
     PRINTF("%d.%d: conectric_send: could not send\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    return 0;
+    return NULL;
   }
   if(c->cb->sent != NULL) {
     c->cb->sent(c);
   }
 
-  return 1;
+  return &sink_available->addr;
 }
 /*---------------------------------------------------------------------------*/
 void
