@@ -221,6 +221,9 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
    originator->u8[0], originator->u8[1],
    hops, seqno);
 
+  /* Stop flooding the network */
+  // if (linkaddr_cmp(originator, &linkaddr_node_addr)) return 0;
+
   if (msg->netbc == SINK_NETBC) {
     if(c->cb->sink_recv) {
       sink_add(originator, hops);
@@ -233,7 +236,8 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
     }
   }
 
-  return 1; /* Continue flooding the network */
+  /* Continue flooding the network */
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
 static void

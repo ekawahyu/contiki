@@ -80,6 +80,7 @@ volatile unsigned char *gmacp = gmacp_sim;
 #define CONECTRIC_MESSAGE_LEN           2
 
 extern struct conectric_conn conectric;
+extern uint8_t temp_msg_count;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -242,6 +243,7 @@ command_respond(uint8_t * bytereq)
     }
 
     else if (bytereq[0] == 'S' && bytereq[1] == 'T') {
+      temp_msg_count = 0;
       for (i=0; i < sink_num(); i++) {
         putstring("ST:");
         putdec(i);

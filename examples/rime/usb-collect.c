@@ -54,6 +54,7 @@
 #endif
 #include "dev/serial-line.h"
 #include "command.h"
+#include "dev/leds.h"
 
 /* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
@@ -98,6 +99,7 @@ static message_recv broadcast_message_recv;
 static message_recv conectric_message_recv;
 
 static uint8_t dump_header = 0;
+uint8_t temp_msg_count = 0;
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -168,6 +170,8 @@ dump_packetbuf(message_recv * message)
 {
   uint8_t len;
   static char * packetbuf;
+
+  putdec(++temp_msg_count);
 
   putstring(">");
 
@@ -405,6 +409,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
   static uint8_t * request;
   static linkaddr_t to;
+  static linkaddr_t * which_sink;
 
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
@@ -452,7 +457,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   while(loop--) {
     packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_BOOT_PAYLOAD_SIZE);
     NETSTACK_MAC.on();
-    conectric_send_to_sink(&conectric);
+    which_sink = conectric_send_to_sink(&conectric);
     PROCESS_PAUSE();
     if (loop) {
       etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
@@ -486,7 +491,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 //      hexstring_to_bytereq(hexstring, &bytereq[1]);
 //
 //      compose_request_to_packetbuf(bytereq, seqno++, &to);
-//      conectric_send_to_sink(&conectric);
+//      which_sink = conectric_send_to_sink(&conectric);
 //
 //      /*                                              */
 //      /* temporary workaround to test sending to sink */
@@ -505,19 +510,30 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[7] = CONECTRIC_SENSOR_BROADCAST_USB;
       message[8] = (char)(dec*10)+(char)(frac*10);
       message[9] = (char)USB_COLLECT_PERIODIC;
-      loop = CONECTRIC_BURST_NUMBER;
+      loop = 1;//CONECTRIC_BURST_NUMBER;
       while(loop--) {
+        etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
         packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
-        conectric_send_to_sink(&conectric);
+        which_sink = conectric_send_to_sink(&conectric);
+        if (which_sink) {
+          leds_off(LEDS_ALL);
+          if (which_sink->u8[0] == 1) leds_on(LEDS_RED);
+          if (which_sink->u8[0] == 73) leds_on(LEDS_GREEN);
+          if (which_sink->u8[0] == 80) leds_on(LEDS_BLUE);
+        }
+        else {
+          leds_off(LEDS_ALL);
+        }
         PRINTF("%d.%d: conectric sent to sink ts %lu\n",
             linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
             clock_seconds());
         PROCESS_PAUSE();
-        if (loop) {
-          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
-          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-        }
+//        if (loop) {
+//          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+//          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//        }
       }
     }
 
@@ -535,11 +551,11 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[7] = CONECTRIC_SUPERVISORY_REPORT;
       message[8] = (char)(dec*10)+(char)(frac*10);
       message[9] = (char)(time >> 6);
-      loop = CONECTRIC_BURST_NUMBER;
+      loop = 1;//CONECTRIC_BURST_NUMBER;
       while(loop--) {
         packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
-        conectric_send_to_sink(&conectric);
+        which_sink = conectric_send_to_sink(&conectric);
         PRINTF("%d.%d: conectric sent to sink ts %lu\n",
             linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
             clock_seconds());
