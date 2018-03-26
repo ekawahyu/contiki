@@ -44,7 +44,7 @@
 #include <stddef.h> /* For offsetof */
 
 #define PACKET_TIMEOUT (CLOCK_SECOND * 5)
-#define DUPLICATE_SINK_ENTRIES_INTERVAL (10) /* times the interval of sink periodic interval */
+#define DUPLICATE_SINK_ENTRIES_INTERVAL (10) /* times the interval of sink periodic */
 
 #define DEBUG 1
 #if DEBUG
