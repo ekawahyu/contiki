@@ -520,8 +520,8 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
         if (which_sink) {
           leds_off(LEDS_ALL);
           if (which_sink->u8[0] == 1) leds_on(LEDS_RED);
-          if (which_sink->u8[0] == 73) leds_on(LEDS_GREEN);
-          if (which_sink->u8[0] == 80) leds_on(LEDS_BLUE);
+          // if (which_sink->u8[0] == 23) leds_on(LEDS_GREEN);
+          if (which_sink->u8[0] == 40) leds_on(LEDS_BLUE);
         }
         else {
           leds_off(LEDS_ALL);

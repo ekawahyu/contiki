@@ -45,7 +45,7 @@
 
 #define PACKET_TIMEOUT (CLOCK_SECOND * 5)
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -149,6 +149,8 @@ sink_add(const linkaddr_t *addr, uint8_t cost)
   /* Avoid inserting duplicate entries. */
   e = sink_lookup(addr);
   if(e != NULL && linkaddr_cmp(&e->addr, addr)) {
+    /* Compare cost of duplicate entries and keep the lowest one */
+    if (e->cost < cost && e->time < 10) cost = e->cost;
     list_remove(sink_table, e);
   } else {
     /* Allocate a new entry or reuse the oldest entry with highest cost. */
@@ -216,16 +218,17 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
   struct conectric_conn *c = (struct conectric_conn *)
     ((char *)nf - offsetof(struct conectric_conn, netflood));
 
-  PRINTF("%d.%d: broadcast received from %d.%d hops %d seqno %d\n",
+  PRINTF("%d.%d: broadcast received from %d.%d prev %d.%d hops %d seqno %d\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
    originator->u8[0], originator->u8[1],
+   from->u8[0], from->u8[1],
    hops, seqno);
 
   /* Stop flooding the network */
   // if (linkaddr_cmp(originator, &linkaddr_node_addr)) return 0;
 
   if (msg->netbc == SINK_NETBC) {
-    if(c->cb->sink_recv) {
+    if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
       sink_add(originator, hops);
       c->cb->sink_recv(c, originator, hops);
     }
