@@ -44,6 +44,7 @@
 #include <stddef.h> /* For offsetof */
 
 #define PACKET_TIMEOUT (CLOCK_SECOND * 5)
+#define DUPLICATE_SINK_ENTRIES_INTERVAL (10) /* times the interval of sink periodic interval */
 
 #define DEBUG 1
 #if DEBUG
@@ -150,7 +151,7 @@ sink_add(const linkaddr_t *addr, uint8_t cost)
   e = sink_lookup(addr);
   if(e != NULL && linkaddr_cmp(&e->addr, addr)) {
     /* Compare cost of duplicate entries and keep the lowest one */
-    if (e->cost < cost && e->time < 10) cost = e->cost;
+    if (e->cost < cost && e->time < DUPLICATE_SINK_ENTRIES_INTERVAL) cost = e->cost;
     list_remove(sink_table, e);
   } else {
     /* Allocate a new entry or reuse the oldest entry with highest cost. */
