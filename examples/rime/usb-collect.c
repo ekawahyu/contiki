@@ -334,45 +334,45 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   SENSORS_ACTIVATE(button_sensor);
 #endif
 
-  /* Composing boot status message */
-  memset(message, 0, sizeof(message));
-  message[0] = USB_HEADER_SIZE;
-  message[1] = seqno++;
-  message[2] = 0;
-  message[3] = 0;
-  message[4] = 0xFF;
-  message[5] = 0xFF;
-  message[6] = USB_BOOT_PAYLOAD_SIZE;
-  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
-#if RUN_ON_COOJA_SIMULATION
-  batt = 0;
-  sane = batt * 3 * 1.15 / 2047;
-  dec = sane;
-  frac = sane - dec;
-  message[8] = (char)(dec*10)+(char)(frac*10);
-  message[9] = 0;
-#else
-  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-  sane = batt * 3 * 1.15 / 2047;
-  dec = sane;
-  frac = sane - dec;
-  message[8] = (char)(dec*10)+(char)(frac*10);
-  message[9] = clock_reset_cause();
-#endif
-
-  loop = CONECTRIC_BURST_NUMBER;
-
-  /* Sending bursts of boot status message out */
-  while(loop--) {
-    packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_BOOT_PAYLOAD_SIZE);
-    NETSTACK_MAC.on();
-    which_sink = conectric_send_to_sink(&conectric);
-    PROCESS_PAUSE();
-    if (loop) {
-      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
-  }
+//  /* Composing boot status message */
+//  memset(message, 0, sizeof(message));
+//  message[0] = USB_HEADER_SIZE;
+//  message[1] = seqno++;
+//  message[2] = 0;
+//  message[3] = 0;
+//  message[4] = 0xFF;
+//  message[5] = 0xFF;
+//  message[6] = USB_BOOT_PAYLOAD_SIZE;
+//  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+//#if RUN_ON_COOJA_SIMULATION
+//  batt = 0;
+//  sane = batt * 3 * 1.15 / 2047;
+//  dec = sane;
+//  frac = sane - dec;
+//  message[8] = (char)(dec*10)+(char)(frac*10);
+//  message[9] = 0;
+//#else
+//  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+//  sane = batt * 3 * 1.15 / 2047;
+//  dec = sane;
+//  frac = sane - dec;
+//  message[8] = (char)(dec*10)+(char)(frac*10);
+//  message[9] = clock_reset_cause();
+//#endif
+//
+//  loop = CONECTRIC_BURST_NUMBER;
+//
+//  /* Sending bursts of boot status message out */
+//  while(loop--) {
+//    packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_BOOT_PAYLOAD_SIZE);
+//    NETSTACK_MAC.on();
+//    which_sink = conectric_send_to_sink(&conectric);
+//    PROCESS_PAUSE();
+//    if (loop) {
+//      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
+//  }
 
   while(1) {
 
