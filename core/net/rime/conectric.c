@@ -225,12 +225,10 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
    from->u8[0], from->u8[1],
    hops, seqno);
 
-  /* Stop flooding the network */
-  // if (linkaddr_cmp(originator, &linkaddr_node_addr)) return 0;
-
   if (msg->netbc == SINK_NETBC) {
     if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
       sink_add(originator, hops);
+      // if (c->is_sink) conectric_netbc_shift_interval(c, 10 * CLOCK_SECOND);
       c->cb->sink_recv(c, originator, hops);
     }
   }
@@ -477,4 +475,10 @@ conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
     ctimer_stop(&c->interval_timer);
   }
 }
+/*---------------------------------------------------------------------------*/
+//void
+//conectric_netbc_shift_interval(struct conectric_conn *c, clock_time_t diff_time)
+//{
+//  ctimer_set(&c->interval_timer, c->interval+diff_time, timer_callback, &c->netflood);
+//}
 /*---------------------------------------------------------------------------*/

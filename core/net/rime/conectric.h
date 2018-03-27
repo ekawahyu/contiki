@@ -89,5 +89,6 @@ void conectric_close(struct conectric_conn *c);
 void conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t is_sink);
 int conectric_send(struct conectric_conn *c, const linkaddr_t *dest);
 linkaddr_t * conectric_send_to_sink(struct conectric_conn *c);
+void conectric_netbc_shift_interval(struct conectric_conn *c, clock_time_t diff_time);
 
 #endif /* CONECTRIC_H_ */
