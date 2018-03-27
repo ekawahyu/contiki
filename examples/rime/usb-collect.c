@@ -76,10 +76,11 @@ static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
 /* USB Device Parameters */
-#define USB_COLLECT_PERIODIC     0x92
-#define USB_COLLECT_NOEVT        0x00
-#define USB_SUP_EVT              0xBB
-#define USB_SUP_NOEVT            0x00
+#define USB_COLLECT_SENSOR_BROADCAST  0x91
+#define USB_COLLECT_PERIODIC          0x92
+#define USB_COLLECT_NOEVT             0x00
+#define USB_SUP_EVT                   0xBB
+#define USB_SUP_NOEVT                 0x00
 
 /* Flash Logging */
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
@@ -205,9 +206,14 @@ AUTOSTART_PROCESSES(
 static void
 broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
+  static uint8_t event;
+
   packetbuf_and_attr_copyto(&broadcast_message_recv, MESSAGE_BROADCAST_RECV);
 
   dump_packetbuf(&broadcast_message_recv);
+
+  event = USB_COLLECT_SENSOR_BROADCAST;
+  process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, &event);
 
   PRINTF("%d.%d: local broadcast from %d.%d rssi %d ts %lu\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -446,7 +452,29 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 //      }
 //    }
 
-    if(*request == USB_SUP_EVT)
+    if(*request == USB_COLLECT_SENSOR_BROADCAST)
+    {
+      memset(message, 0, sizeof(message));
+      message[0] = USB_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0xFF;
+      message[5] = 0xFF;
+      message[6] = USB_PAYLOAD_SIZE;
+      message[7] = 0xDE;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = 0xDE;
+      packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
+      NETSTACK_MAC.on();
+      which_sink = conectric_send_to_sink(&conectric);
+      PRINTF("%d.%d: sensor broadcast sent to sink ts %lu\n",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+          clock_seconds());
+      PROCESS_PAUSE();
+    }
+
+    else if(*request == USB_SUP_EVT)
     {
       uint16_t time = clock_seconds();
       memset(message, 0, sizeof(message));
