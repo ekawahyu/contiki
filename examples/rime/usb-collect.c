@@ -210,7 +210,7 @@ broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 
   packetbuf_and_attr_copyto(&broadcast_message_recv, MESSAGE_BROADCAST_RECV);
 
-  dump_packetbuf(&broadcast_message_recv);
+  // dump_packetbuf(&broadcast_message_recv);
 
   event = USB_COLLECT_SENSOR_BROADCAST;
   process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, &event);
