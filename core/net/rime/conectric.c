@@ -46,7 +46,7 @@
 #define PACKET_TIMEOUT (CLOCK_SECOND * 5)
 #define DUPLICATE_SINK_ENTRIES_INTERVAL (10) /* times the interval of sink periodic */
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
