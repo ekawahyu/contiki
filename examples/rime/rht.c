@@ -122,7 +122,7 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
   SENSORS_ACTIVATE(sht21_sensor);
 #endif
 
-  broadcast_open(&broadcast, 129, &broadcast_call);
+  broadcast_open(&broadcast, 132, &broadcast_call);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);

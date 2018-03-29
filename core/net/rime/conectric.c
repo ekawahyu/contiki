@@ -211,6 +211,21 @@ sink_get(int num)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+static void
+broadcast_received(struct broadcast_conn *bc, const linkaddr_t *from)
+{
+  struct conectric_conn *c = (struct conectric_conn *)
+    ((char *)bc - offsetof(struct conectric_conn, broadcast));
+
+  PRINTF("%d.%d: broadcast received from %d.%d seqno %d\n",
+   linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+   from->u8[0], from->u8[1], seqno);
+
+  if(c->cb->localbroadcast_recv) {
+    c->cb->localbroadcast_recv(c, from);
+  }
+}
+/*---------------------------------------------------------------------------*/
 static int
 netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
          const linkaddr_t *originator, uint8_t seqno, uint8_t hops)
@@ -368,6 +383,8 @@ send_sink_netbc(struct netflood_conn *nf)
   ctimer_set(&c->interval_timer, c->interval, timer_callback, nf);
 }
 /*---------------------------------------------------------------------------*/
+static const struct broadcast_callbacks broadcast_call = {
+    broadcast_received, NULL};
 static const struct netflood_callbacks netflood_call = {
     netflood_received, NULL, NULL};
 static const struct multihop_callbacks multihop_call = {
@@ -381,11 +398,12 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 {
   route_init();
   sink_init();
-  netflood_open(&c->netflood, CLOCK_SECOND/8, channels, &netflood_call);
-  multihop_open(&c->multihop, channels + 1, &multihop_call);
+  broadcast_open(&c->broadcast, channels, &broadcast_call);
+  netflood_open(&c->netflood, CLOCK_SECOND/8, channels + 1, &netflood_call);
+  multihop_open(&c->multihop, channels + 2, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
 		       CLOCK_SECOND/8,
-		       channels + 3,
+		       channels + 4,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
   c->is_sink = 0;
@@ -394,6 +412,7 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 void
 conectric_close(struct conectric_conn *c)
 {
+  broadcast_close(&c->broadcast);
   multihop_close(&c->multihop);
   netflood_close(&c->netflood);
   route_discovery_close(&c->route_discovery_conn);

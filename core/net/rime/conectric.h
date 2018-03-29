@@ -65,6 +65,8 @@ struct conectric_callbacks {
   void (* sent)(struct conectric_conn *c);
   /** Called when a packet, sent with conectric_send(), times out and is dropped. */
   void (* timedout)(struct conectric_conn *c);
+  /** Called when a local broadcast is received. */
+  void (* localbroadcast_recv)(struct conectric_conn *c, const linkaddr_t *from);
   /** Called when a network-wide broadcast is received. */
   void (* netbroadcast_recv)(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops);
   /** Called when a network-wide sink broadcast is received. */
@@ -72,6 +74,7 @@ struct conectric_callbacks {
 };
 
 struct conectric_conn {
+  struct broadcast_conn broadcast;
   struct netflood_conn netflood;
   struct multihop_conn multihop;
   struct route_discovery_conn route_discovery_conn;
