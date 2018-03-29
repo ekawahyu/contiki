@@ -143,15 +143,15 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   /* Update hop count */
   message->message[2] = message->hops;
 
-  /* Replace destination with originator address */
-  if (message->esender.u8[1] || message->esender.u8[0]) {
-    message->message[4] = message->esender.u8[1];
-    message->message[5] = message->esender.u8[0];
-  }
-  else {
-    message->message[4] = message->sender.u8[1];
-    message->message[5] = message->sender.u8[0];
-  }
+//  /* Replace destination with originator address */
+//  if (message->esender.u8[1] || message->esender.u8[0]) {
+//    message->message[4] = message->esender.u8[1];
+//    message->message[5] = message->esender.u8[0];
+//  }
+//  else {
+//    message->message[4] = message->sender.u8[1];
+//    message->message[5] = message->sender.u8[0];
+//  }
 
   /* Decoding request byte */
   dataptr = message->payload;
@@ -456,18 +456,31 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
     {
       memset(message, 0, sizeof(message));
       message[0] = USB_HEADER_SIZE;
-      message[1] = seqno++;
+      message[1] = broadcast_message_recv.seqno;
       message[2] = 0;
       message[3] = 0;
-      message[4] = 0xFF;
-      message[5] = 0xFF;
+      message[4] = broadcast_message_recv.sender.u8[1];
+      message[5] = broadcast_message_recv.sender.u8[0];
       message[6] = USB_PAYLOAD_SIZE;
       message[7] = 0xDE;
       message[8] = (char)(dec*10)+(char)(frac*10);
       message[9] = 0xDE;
+
+      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
       packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
       NETSTACK_MAC.on();
       which_sink = conectric_send_to_sink(&conectric);
+      if (which_sink) {
+        leds_off(LEDS_ALL);
+        if (which_sink->u8[0] == 1) leds_on(LEDS_RED);
+        if (which_sink->u8[0] == 40) leds_on(LEDS_BLUE);
+      }
+      else {
+        PRINTF("%d.%d: which_sink returns NULL\n");
+        leds_off(LEDS_ALL);
+      }
       PRINTF("%d.%d: sensor broadcast sent to sink ts %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           clock_seconds());
