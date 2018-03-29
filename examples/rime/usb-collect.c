@@ -459,17 +459,16 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[1] = broadcast_message_recv.seqno;
       message[2] = 0;
       message[3] = 0;
-      message[4] = broadcast_message_recv.sender.u8[1];
-      message[5] = broadcast_message_recv.sender.u8[0];
-      message[6] = USB_PAYLOAD_SIZE;
-      message[7] = 0xDE;
-      message[8] = (char)(dec*10)+(char)(frac*10);
-      message[9] = 0xDE;
+      message[4] = broadcast_message_recv.sender.u8[1];//0xFF;
+      message[5] = broadcast_message_recv.sender.u8[0];//0xFF;
+      for (loop = 0;loop < broadcast_message_recv.length; loop++) {
+        message[6+loop] = broadcast_message_recv.payload[loop];
+      }
 
       etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
+      packetbuf_copyfrom(message, USB_HEADER_SIZE + broadcast_message_recv.length);
       NETSTACK_MAC.on();
       which_sink = conectric_send_to_sink(&conectric);
       if (which_sink) {
