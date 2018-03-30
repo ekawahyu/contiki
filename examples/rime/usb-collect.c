@@ -403,8 +403,8 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       which_sink = conectric_send_to_sink(&conectric);
       if (which_sink) {
         leds_off(LEDS_ALL);
-        if (which_sink->u8[0] == 1) leds_on(LEDS_RED);
-        if (which_sink->u8[0] == 40) leds_on(LEDS_BLUE);
+        if (which_sink->u8[0] == 10) leds_on(LEDS_RED);
+        if (which_sink->u8[0] == 20) leds_on(LEDS_BLUE);
       }
       else {
         PRINTF("%d.%d: which_sink returns NULL\n");

@@ -126,8 +126,8 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
   message[1] = seqno++;
   message[2] = 0;
   message[3] = 0;
-  message[4] = 0xFF;
-  message[5] = 0xFF;
+  message[4] = 0;
+  message[5] = 0;
   message[6] = RHT_BOOT_PAYLOAD_SIZE;
   message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);

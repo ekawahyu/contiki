@@ -68,7 +68,7 @@
 #endif
 
 /* RHT Network Parameters */
-#define RHT_REPORTING_PERIOD    (10U * CLOCK_SECOND)
+#define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         6
 #define RHT_BOOT_PAYLOAD_SIZE   4
 #define RHT_PAYLOAD_SIZE        7
@@ -128,51 +128,51 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  /* Composing boot status message */
-  memset(message, 0, sizeof(message));
-  message[0] = RHT_HEADER_SIZE;
-  message[1] = seqno++;
-  message[2] = 0;
-  message[3] = 0;
-  message[4] = 0xFF;
-  message[5] = 0xFF;
-  message[6] = RHT_BOOT_PAYLOAD_SIZE;
-  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
-#if RUN_ON_COOJA_SIMULATION
-  batt = 0;
-  sane = batt * 3 * 1.15 / 2047;
-  dec = sane;
-  frac = sane - dec;
-  message[8] = (char)(dec*10)+(char)(frac*10);
-  message[9] = 0;
-#else
-  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-  sane = batt * 3 * 1.15 / 2047;
-  dec = sane;
-  frac = sane - dec;
-  message[8] = (char)(dec*10)+(char)(frac*10);
-  message[9] = clock_reset_cause();
-#endif
-
-  loop = CONECTRIC_BURST_NUMBER;
-
-  while(loop--) {
-
-    packetbuf_copyfrom(message, RHT_HEADER_SIZE + RHT_BOOT_PAYLOAD_SIZE);
-    NETSTACK_MAC.on();
-    broadcast_send(&broadcast);
-
-    // PROCESS_WAIT_EVENT();
-
-    if (loop) {
-      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
-    else {
-      etimer_set(&et, CLOCK_SECOND);
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    }
-  }
+//  /* Composing boot status message */
+//  memset(message, 0, sizeof(message));
+//  message[0] = RHT_HEADER_SIZE;
+//  message[1] = seqno++;
+//  message[2] = 0;
+//  message[3] = 0;
+//  message[4] = 0xFF;
+//  message[5] = 0xFF;
+//  message[6] = RHT_BOOT_PAYLOAD_SIZE;
+//  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+//#if RUN_ON_COOJA_SIMULATION
+//  batt = 0;
+//  sane = batt * 3 * 1.15 / 2047;
+//  dec = sane;
+//  frac = sane - dec;
+//  message[8] = (char)(dec*10)+(char)(frac*10);
+//  message[9] = 0;
+//#else
+//  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+//  sane = batt * 3 * 1.15 / 2047;
+//  dec = sane;
+//  frac = sane - dec;
+//  message[8] = (char)(dec*10)+(char)(frac*10);
+//  message[9] = clock_reset_cause();
+//#endif
+//
+//  loop = CONECTRIC_BURST_NUMBER;
+//
+//  while(loop--) {
+//
+//    packetbuf_copyfrom(message, RHT_HEADER_SIZE + RHT_BOOT_PAYLOAD_SIZE);
+//    NETSTACK_MAC.on();
+//    broadcast_send(&broadcast);
+//
+//    // PROCESS_WAIT_EVENT();
+//
+//    if (loop) {
+//      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
+//    else {
+//      etimer_set(&et, CLOCK_SECOND);
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//    }
+//  }
 
   while(1) {
 
@@ -227,7 +227,7 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
     message[11] = (char)(humid >> 8);
     message[12] = (char)(humid & 0xFC);
 
-    loop = CONECTRIC_BURST_NUMBER;
+    loop = 1;//CONECTRIC_BURST_NUMBER;
 
 //    /* Log data that will be sent out over the air */
 //    logData[0] = (char)(humid >> 8);

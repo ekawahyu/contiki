@@ -143,14 +143,20 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   /* Update hop count */
   message->message[2] = message->hops;
 
-  /* Replace destination with originator address */
-  if (message->esender.u8[1] || message->esender.u8[0]) {
-    message->message[4] = message->esender.u8[1];
-    message->message[5] = message->esender.u8[0];
+  /* If destination is provided */
+  if (message->message[4] || message->message[5]) {
+    /* do nothing */
   }
   else {
-    message->message[4] = message->sender.u8[1];
-    message->message[5] = message->sender.u8[0];
+    /* Replace destination with originator address */
+    if (message->esender.u8[1] || message->esender.u8[0]) {
+      message->message[4] = message->esender.u8[1];
+      message->message[5] = message->esender.u8[0];
+    }
+    else {
+      message->message[4] = message->sender.u8[1];
+      message->message[5] = message->sender.u8[0];
+    }
   }
 
   /* Decoding request byte */
@@ -366,8 +372,8 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[1] = seqno++;
       message[2] = 0;
       message[3] = 0;
-      message[4] = 0xFF;
-      message[5] = 0xFF;
+      message[4] = 0;
+      message[5] = 0;
       message[6] = USB_PAYLOAD_SIZE;
       message[7] = CONECTRIC_SUPERVISORY_REPORT;
       message[8] = (char)(dec*10)+(char)(frac*10);
