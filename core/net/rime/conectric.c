@@ -217,9 +217,9 @@ broadcast_received(struct broadcast_conn *bc, const linkaddr_t *from)
   struct conectric_conn *c = (struct conectric_conn *)
     ((char *)bc - offsetof(struct conectric_conn, broadcast));
 
-  PRINTF("%d.%d: broadcast received from %d.%d seqno %d\n",
+  PRINTF("%d.%d: broadcast received from %d.%d\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-   from->u8[0], from->u8[1], seqno);
+   from->u8[0], from->u8[1]);
 
   if(c->cb->localbroadcast_recv) {
     c->cb->localbroadcast_recv(c, from);
