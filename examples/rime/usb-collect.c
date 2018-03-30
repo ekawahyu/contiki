@@ -59,7 +59,7 @@
 /* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -424,7 +424,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[7] = CONECTRIC_SUPERVISORY_REPORT;
       message[8] = (char)(dec*10)+(char)(frac*10);
       message[9] = (char)(time >> 6);
-      loop = 1;//CONECTRIC_BURST_NUMBER;
+      loop = CONECTRIC_BURST_NUMBER;
       while(loop--) {
         packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
@@ -561,7 +561,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 void
 invoke_process_before_sleep(void)
 {
-  process_post_synch(&usb_broadcast_process, PROCESS_EVENT_CONTINUE, NULL);
+  process_post_synch(&usb_conectric_process, PROCESS_EVENT_CONTINUE, NULL);
 }
 #endif
 /*---------------------------------------------------------------------------*/

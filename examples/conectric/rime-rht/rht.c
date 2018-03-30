@@ -64,7 +64,7 @@
 #endif
 
 /* RHT Network Parameters */
-#define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
+#define RHT_REPORTING_PERIOD    (10U * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         6
 #define RHT_BOOT_PAYLOAD_SIZE   4
 #define RHT_PAYLOAD_SIZE        7
@@ -114,7 +114,7 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
   PROCESS_BEGIN();
   SENSORS_ACTIVATE(sht21_sensor);
 
-  broadcast_open(&broadcast, 129, &broadcast_call);
+  broadcast_open(&broadcast, 132, &broadcast_call);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
