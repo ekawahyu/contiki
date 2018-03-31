@@ -133,6 +133,8 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
    * its own needs
    */
   packetlen = packetbuf_copyto(message->message);
+  message->packetbuf_hdrlen = packetbuf_hdrlen();
+  memcpy(message->packetbuf_hdr, packetbuf_hdrptr(), message->packetbuf_hdrlen);
 
   /* Decoding payload and its length */
   hdrlen = message->message[0];
@@ -181,8 +183,11 @@ dump_packetbuf(message_recv * message)
   putstring(">");
 
   if (dump_header) {
-    len = packetbuf_hdrlen();
-    packetbuf = (char *)packetbuf_hdrptr();
+//    len = packetbuf_hdrlen();
+//    packetbuf = (char *)packetbuf_hdrptr();
+//    while(len--) puthex(*packetbuf++);
+    len = message->packetbuf_hdrlen;
+    packetbuf = (char *)message->packetbuf_hdr;
     while(len--) puthex(*packetbuf++);
   }
 
