@@ -245,11 +245,12 @@ localbroadcast(struct conectric_conn *c, const linkaddr_t *from)
   if (c->is_sink) {
     dump_packetbuf(&localbc_message_recv);
   }
-
-  /* Sensor broadcast received is forwarded to a sink */
-  if (c->is_collect) {
-    event = USB_COLLECT_SENSOR_BROADCAST;
-    process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+  else {
+    /* Sensor broadcast received is forwarded to a sink */
+    if (c->is_collect) {
+      event = USB_COLLECT_SENSOR_BROADCAST;
+      process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+    }
   }
 
   PRINTF("%d.%d: localbc from %d.%d: len %d\n",
