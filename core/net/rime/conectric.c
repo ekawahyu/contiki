@@ -487,6 +487,7 @@ conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
     uint8_t is_sink)
 {
   c->is_sink = is_sink;
+  c->is_collect = 0;
   c->interval = interval;
   if (is_sink) {
     send_sink_netbc(&c->netflood);
