@@ -84,6 +84,7 @@ struct conectric_conn {
   struct ctimer interval_timer;
   clock_time_t interval;
   uint8_t is_sink;
+  uint8_t is_collect;
   uint8_t netbc_id;
 };
 
