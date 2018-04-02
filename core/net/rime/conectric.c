@@ -72,7 +72,8 @@ LIST(sink_table);
 MEMB(sink_mem, struct sink_entry, NUM_SINK_ENTRIES);
 
 static struct ctimer t;
-
+static uint8_t is_sink;
+static uint8_t is_collect;
 static int max_time = DEFAULT_LIFETIME;
 
 struct sink_msg {
@@ -243,7 +244,7 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
   if (msg->netbc == SINK_NETBC) {
     if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
       sink_add(originator, hops);
-      // if (c->is_sink) conectric_netbc_shift_interval(c, 10 * CLOCK_SECOND);
+      // if (is_sink) conectric_netbc_shift_interval(c, 10 * CLOCK_SECOND);
       c->cb->sink_recv(c, originator, hops);
     }
   }
@@ -406,8 +407,8 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 		       channels + 4,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
-  c->is_sink = 0;
-  c->is_collect = 0;
+  is_sink = 0;
+  is_collect = 0;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -454,7 +455,7 @@ conectric_send_to_sink(struct conectric_conn *c)
   static struct sink_entry * sink_available;
   int could_send;
 
-  if (c->is_sink) return NULL;
+  if (is_sink) return NULL;
 
   sink_available = sink_lookup(NULL);
 
@@ -484,17 +485,44 @@ conectric_send_to_sink(struct conectric_conn *c)
 /*---------------------------------------------------------------------------*/
 void
 conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
-    uint8_t is_sink)
+    uint8_t sink)
 {
-  c->is_sink = is_sink;
-  c->is_collect = 0;
-  c->interval = interval;
+  if (sink) sink = 1;
+  if (is_sink == sink) return;
+
+  is_sink = sink;
+
   if (is_sink) {
+    is_collect = 0;
+    c->interval = interval;
     send_sink_netbc(&c->netflood);
   }
   else {
     ctimer_stop(&c->interval_timer);
   }
+}
+/*---------------------------------------------------------------------------*/
+void
+conectric_set_collect(struct conectric_conn *c, uint8_t collect)
+{
+  if (collect) collect = 1;
+  if (is_collect == collect) return;
+
+  is_collect = collect;
+
+  if (is_collect) conectric_set_sink(c, 0, 0);
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+conectric_is_sink(void)
+{
+  return is_sink;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+conectric_is_collect(void)
+{
+  return is_collect;
 }
 /*---------------------------------------------------------------------------*/
 //void

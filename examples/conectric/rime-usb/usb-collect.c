@@ -242,12 +242,12 @@ localbroadcast(struct conectric_conn *c, const linkaddr_t *from)
   packetbuf_and_attr_copyto(&localbc_message_recv, MESSAGE_LOCALBC_RECV);
 
   /* Sensor broadcast received is dumped to serial console */
-  if (c->is_sink) {
+  if (conectric_is_sink()) {
     dump_packetbuf(&localbc_message_recv);
   }
   else {
     /* Sensor broadcast received is forwarded to a sink */
-    if (c->is_collect) {
+    if (conectric_is_collect()) {
       event = USB_COLLECT_SENSOR_BROADCAST;
       process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, &event);
     }
@@ -304,8 +304,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   PROCESS_BEGIN();
 
   conectric_open(&conectric, 132, &callbacks);
-  conectric.is_sink = CONECTRIC_CONF_IS_SINK;
-  conectric.is_collect = CONECTRIC_CONF_IS_COLLECT;
+  conectric_set_collect(&conectric, 1);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);

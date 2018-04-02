@@ -74,9 +74,6 @@ extern "C" {
 
 #define CONECTRIC_BURST_NUMBER                5
 
-#define CONECTRIC_CONF_IS_SINK                0
-#define CONECTRIC_CONF_IS_COLLECT             1
-
 #ifdef __cplusplus
 }
 #endif

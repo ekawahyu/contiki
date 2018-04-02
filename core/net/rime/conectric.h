@@ -83,16 +83,17 @@ struct conectric_conn {
   const struct conectric_callbacks *cb;
   struct ctimer interval_timer;
   clock_time_t interval;
-  uint8_t is_sink;
-  uint8_t is_collect;
   uint8_t netbc_id;
 };
 
 void conectric_open(struct conectric_conn *c, uint16_t channels, const struct conectric_callbacks *callbacks);
 void conectric_close(struct conectric_conn *c);
-void conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t is_sink);
+void conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t sink);
+void conectric_set_collect(struct conectric_conn *c, uint8_t collect);
 int conectric_send(struct conectric_conn *c, const linkaddr_t *dest);
 linkaddr_t * conectric_send_to_sink(struct conectric_conn *c);
-void conectric_netbc_shift_interval(struct conectric_conn *c, clock_time_t diff_time);
+uint8_t conectric_is_sink(void);
+uint8_t conectric_is_collect(void);
+//void conectric_netbc_shift_interval(struct conectric_conn *c, clock_time_t diff_time);
 
 #endif /* CONECTRIC_H_ */
