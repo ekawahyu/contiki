@@ -150,7 +150,7 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   }
   else {
     /* Replace destination with originator address */
-    if (message->esender.u8[1] || message->esender.u8[0]) {
+    if (message->esender.u8[0] || message->esender.u8[1]) {
       message->message[4] = message->esender.u8[0];
       message->message[5] = message->esender.u8[1];
     }
