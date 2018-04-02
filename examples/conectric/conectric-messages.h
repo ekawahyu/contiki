@@ -60,10 +60,9 @@ extern "C" {
 /* Conectric Message Structure */
 typedef struct {
   clock_time_t  timestamp;
-  uint8_t       packetbuf_hdr[128];
-  uint8_t       packetbuf_hdrlen;
-  uint8_t       message_type;
   uint8_t       message[128];
+  uint8_t       message_type;
+  uint8_t       message_len;
   linkaddr_t    sender;
   linkaddr_t    prev_sender;
   linkaddr_t    receiver;

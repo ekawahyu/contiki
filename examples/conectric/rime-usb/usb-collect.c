@@ -133,8 +133,7 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
    * its own needs
    */
   packetlen = packetbuf_copyto(message->message);
-  message->packetbuf_hdrlen = packetbuf_hdrlen();
-  memcpy(message->packetbuf_hdr, packetbuf_hdrptr(), message->packetbuf_hdrlen);
+  message->message_len = packetlen;
 
   /* Decoding payload and its length */
   hdrlen = message->message[0];
@@ -183,15 +182,12 @@ dump_packetbuf(message_recv * message)
   putstring(">");
 
   if (dump_header) {
-//    len = packetbuf_hdrlen();
-//    packetbuf = (char *)packetbuf_hdrptr();
-//    while(len--) puthex(*packetbuf++);
-    len = message->packetbuf_hdrlen;
-    packetbuf = (char *)message->packetbuf_hdr;
+    len = packetbuf_hdrlen();
+    packetbuf = (char *)packetbuf_hdrptr();
     while(len--) puthex(*packetbuf++);
   }
 
-  len = message->message[0] + message->length;
+  len = packetbuf_datalen();
   packetbuf = (char *)message->message;
   while(len--) puthex(*packetbuf++);
 
@@ -353,8 +349,8 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[1] = localbc_message_recv.seqno;
       message[2] = 0;
       message[3] = 0;
-      message[4] = localbc_message_recv.sender.u8[1];//0xFF;
-      message[5] = localbc_message_recv.sender.u8[0];//0xFF;
+      message[4] = localbc_message_recv.sender.u8[1];
+      message[5] = localbc_message_recv.sender.u8[0];
       for (loop = 0;loop < localbc_message_recv.length; loop++) {
         message[6+loop] = localbc_message_recv.payload[loop];
       }
