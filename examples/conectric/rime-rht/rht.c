@@ -187,8 +187,8 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
     message[1] = seqno++;
     message[2] = 0;
     message[3] = 0;
-    message[4] = 0xFF;
-    message[5] = 0xFF;
+    message[4] = 0;
+    message[5] = 0;
     message[6] = RHT_PAYLOAD_SIZE;
     message[7] = CONECTRIC_SENSOR_BROADCAST_RHT;
     message[8] = (char)(dec*10)+(char)(frac*10);
@@ -216,7 +216,7 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
       PROCESS_WAIT_EVENT();
 
       if (loop)
-        deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+        deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
       else
         deep_sleep_requested = RHT_REPORTING_PERIOD;
     }
