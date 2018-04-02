@@ -51,6 +51,9 @@
 #else
 #include "flash-logging.h"
 #include "dev/adc-sensor.h"
+#include "dev/rs485-arch.h"
+#include "dev/uart-arch.h"
+#include "dev/modbus-line.h"
 #endif
 #include "dev/serial-line.h"
 #include "command.h"
@@ -102,6 +105,18 @@ static message_recv conectric_message_recv;
 
 static uint8_t dump_header = 0;
 
+/* EKM */
+#define BUFSIZE 256
+static uint16_t ekm_in_pos;
+static uint8_t submeter_data[BUFSIZE];
+
+/* EKM Messaging */
+#define EKM_DATA_MAX_SIZE 20
+static uint8_t ekm_data_request;
+static linkaddr_t ekm_data_recv;
+static uint8_t ekm_data_payload[EKM_DATA_MAX_SIZE];
+//static uint8_t ekm_close_string[5] = {0x01, 0x42, 0x30, 0x03, 0x75};
+
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -150,13 +165,13 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   }
   else {
     /* Replace destination with originator address */
-    if (message->esender.u8[1] || message->esender.u8[0]) {
-      message->message[4] = message->esender.u8[1];
-      message->message[5] = message->esender.u8[0];
+    if (message->esender.u8[0] || message->esender.u8[1]) {
+      message->message[4] = message->esender.u8[0];
+      message->message[5] = message->esender.u8[1];
     }
     else {
-      message->message[4] = message->sender.u8[1];
-      message->message[5] = message->sender.u8[0];
+      message->message[4] = message->sender.u8[0];
+      message->message[5] = message->sender.u8[1];
     }
   }
 
@@ -194,15 +209,25 @@ dump_packetbuf(message_recv * message)
   putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
+static uint8_t
+shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
+{
+  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
+}
+/*---------------------------------------------------------------------------*/
 struct conectric_conn conectric;
 /*---------------------------------------------------------------------------*/
 PROCESS(rs485_periodic_process, "RS485 Periodic");
 PROCESS(rs485_conectric_process, "RS485 Conectric");
+PROCESS(modbus_in_process, "ModbusIn");
+PROCESS(modbus_out_process, "ModbusOut");
 PROCESS(serial_in_process, "SerialIn");
 AUTOSTART_PROCESSES(
     &rs485_periodic_process,
     &rs485_conectric_process,
 //    &flash_log_process,
+    &modbus_in_process,
+    &modbus_out_process,
     &serial_in_process
 );
 /*---------------------------------------------------------------------------*/
@@ -224,6 +249,14 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   dump_packetbuf(&conectric_message_recv);
+
+  if (conectric_message_recv.request == CONECTRIC_POLL_RS485) {
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &conectric_message_recv);
+  }
+
+  if (conectric_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
+    while(1); /* halt the system here until watchdog kicks in */
+  }
 
   PRINTF("%d.%d: data from %d.%d len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
@@ -349,8 +382,8 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       message[1] = localbc_message_recv.seqno;
       message[2] = 0;
       message[3] = 0;
-      message[4] = localbc_message_recv.sender.u8[1];
-      message[5] = localbc_message_recv.sender.u8[0];
+      message[4] = localbc_message_recv.sender.u8[0];
+      message[5] = localbc_message_recv.sender.u8[1];
       for (loop = 0;loop < localbc_message_recv.length; loop++) {
         message[6+loop] = localbc_message_recv.payload[loop];
       }
@@ -509,6 +542,100 @@ PROCESS_THREAD(serial_in_process, ev, data)
     if (event) {
       process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, event);
     }
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(modbus_in_process, ev, data)
+{
+  static uint8_t datasize;
+  static uint8_t* dataptr;
+  static uint16_t crc;
+  uint8_t cnt;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
+
+    dataptr = &((uint8_t *)data)[1];
+    datasize = ((uint8_t *)data)[0] - 1;
+
+    puthex(datasize);
+    putstring("\n");
+
+    // copy data into submeter buffer (mask high bit)
+    for(cnt = 0; cnt < datasize; cnt++)
+    {
+//      puthex((dataptr[cnt]) & 0x7F);
+      submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
+    }
+    putstring("\n");
+
+    /* If ekm_in_pos >= 0xFF and the buffer is not fragmented, then we go ahead
+     * and send a reply. Otherwise, let the gateway poll again. When the EKM data
+     * gets fragmented, its content is always incorrect.
+     */
+    if((ekm_in_pos >= 0xFF) && (ekm_in_pos == datasize))
+    {
+
+      if (ekm_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+        if (ekm_data_recv.u8[0] == 0xFF && ekm_data_recv.u8[1] == 0xFF) {
+          //printf("modbus out: RREQ by SN\n");
+          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
+            ekm_data_payload);
+        }
+      }
+
+      else if (ekm_data_request == CONECTRIC_POLL_RS485) {
+        if (shortaddr_cmp(&ekm_data_recv, &linkaddr_node_addr)) {
+          //printf("modbus out: POLL RS485\n");
+          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
+            ekm_data_payload);
+        }
+      }
+    }
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(modbus_out_process, ev, data)
+{
+  static struct etimer et;
+  static message_recv * message;
+  static uint8_t * serial_data;
+  static uint8_t reqlen;
+  static uint8_t req;
+  static uint8_t len;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
+
+    message = (message_recv *)data;
+    serial_data = message->payload;
+    reqlen = *serial_data++;
+    req = *serial_data++;
+
+    len = reqlen - 2;
+
+    /* reset modbus input index */
+    ekm_in_pos = 0;
+
+    /* modbus write */
+    while(len--) {
+      uart_arch_writeb(*serial_data++);
+    }
+
+    // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
+    ekm_data_request = message->request;
+    linkaddr_copy(&ekm_data_recv, &message->ereceiver);
+    memcpy(ekm_data_payload, message->payload, message->length);
   }
 
   PROCESS_END();
