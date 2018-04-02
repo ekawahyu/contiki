@@ -58,7 +58,7 @@
 /* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -151,12 +151,12 @@ packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
   else {
     /* Replace destination with originator address */
     if (message->esender.u8[1] || message->esender.u8[0]) {
-      message->message[4] = message->esender.u8[1];
-      message->message[5] = message->esender.u8[0];
+      message->message[4] = message->esender.u8[0];
+      message->message[5] = message->esender.u8[1];
     }
     else {
-      message->message[4] = message->sender.u8[1];
-      message->message[5] = message->sender.u8[0];
+      message->message[4] = message->sender.u8[0];
+      message->message[5] = message->sender.u8[1];
     }
   }
 
@@ -349,8 +349,8 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[1] = localbc_message_recv.seqno;
       message[2] = 0;
       message[3] = 0;
-      message[4] = localbc_message_recv.sender.u8[1];
-      message[5] = localbc_message_recv.sender.u8[0];
+      message[4] = localbc_message_recv.sender.u8[0];
+      message[5] = localbc_message_recv.sender.u8[1];
       for (loop = 0;loop < localbc_message_recv.length; loop++) {
         message[6+loop] = localbc_message_recv.payload[loop];
       }
@@ -508,6 +508,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
     if (event) {
       process_post(&usb_conectric_process, PROCESS_EVENT_CONTINUE, event);
+      PRINTF("Command: %i\n", event[2]);
     }
   }
 
