@@ -105,17 +105,17 @@ static message_recv conectric_message_recv;
 
 static uint8_t dump_header = 0;
 
-/* EKM */
+/* RS485 */
 #define BUFSIZE 256
-static uint16_t ekm_in_pos;
+static uint16_t rs485_in_pos;
 static uint8_t submeter_data[BUFSIZE];
 
-/* EKM Messaging */
-#define EKM_DATA_MAX_SIZE 20
-static uint8_t ekm_data_request;
-static linkaddr_t ekm_data_recv;
-static uint8_t ekm_data_payload[EKM_DATA_MAX_SIZE];
-//static uint8_t ekm_close_string[5] = {0x01, 0x42, 0x30, 0x03, 0x75};
+/* RS485 Messaging */
+#define RS485_DATA_MAX_SIZE 20
+static uint8_t rs485_data_request;
+static linkaddr_t rs485_data_recv;
+static uint8_t rs485_data_payload[RS485_DATA_MAX_SIZE];
+//static uint8_t rs485_close_string[5] = {0x01, 0x42, 0x30, 0x03, 0x75};
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -551,7 +551,7 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 {
   static uint8_t datasize;
   static uint8_t* dataptr;
-  static uint16_t crc;
+  static uint16_t crc16;
   uint8_t cnt;
 
   PROCESS_BEGIN();
@@ -569,34 +569,46 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     // copy data into submeter buffer (mask high bit)
     for(cnt = 0; cnt < datasize; cnt++)
     {
-//      puthex((dataptr[cnt]) & 0x7F);
-      submeter_data[ekm_in_pos++] = (dataptr[cnt]) & 0x7F;
+      /* EKM meters needs to be masked with 0x7F */
+      puthex((dataptr[cnt]) & 0x7F);
+      submeter_data[rs485_in_pos++] = (dataptr[cnt]) & 0x7F;
+//      /* Generic RS485 device */
+//      puthex(dataptr[cnt]);
+//      submeter_data[rs485_in_pos++] = dataptr[cnt];
     }
     putstring("\n");
 
-    /* If ekm_in_pos >= 0xFF and the buffer is not fragmented, then we go ahead
+    crc16 = modbus_crc16_calc(&submeter_data[1], 252);
+    puthex((crc16 & 0xFF00) >> 8);
+    puthex(crc16 & 0x00FF);
+    putstring("\n");
+    puthex((crc16 & 0x7F00) >> 8);
+    puthex(crc16 & 0x007F);
+    putstring("\n");
+
+    /* If rs485_in_pos >= 0xFF and the buffer is not fragmented, then we go ahead
      * and send a reply. Otherwise, let the gateway poll again. When the EKM data
      * gets fragmented, its content is always incorrect.
      */
-    if((ekm_in_pos >= 0xFF) && (ekm_in_pos == datasize))
-    {
-
-      if (ekm_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-        if (ekm_data_recv.u8[0] == 0xFF && ekm_data_recv.u8[1] == 0xFF) {
-          //printf("modbus out: RREQ by SN\n");
-          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
-            ekm_data_payload);
-        }
-      }
-
-      else if (ekm_data_request == CONECTRIC_POLL_RS485) {
-        if (shortaddr_cmp(&ekm_data_recv, &linkaddr_node_addr)) {
-          //printf("modbus out: POLL RS485\n");
-          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
-            ekm_data_payload);
-        }
-      }
-    }
+//    if((rs485_in_pos >= 0xFF) && (rs485_in_pos == datasize))
+//    {
+//
+//      if (rs485_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
+//        if (rs485_data_recv.u8[0] == 0xFF && rs485_data_recv.u8[1] == 0xFF) {
+//          //printf("modbus out: RREQ by SN\n");
+//          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
+//            rs485_data_payload);
+//        }
+//      }
+//
+//      else if (rs485_data_request == CONECTRIC_POLL_RS485) {
+//        if (shortaddr_cmp(&rs485_data_recv, &linkaddr_node_addr)) {
+//          //printf("modbus out: POLL RS485\n");
+//          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
+//            rs485_data_payload);
+//        }
+//      }
+//    }
   }
 
   PROCESS_END();
@@ -610,6 +622,7 @@ PROCESS_THREAD(modbus_out_process, ev, data)
   static uint8_t reqlen;
   static uint8_t req;
   static uint8_t len;
+  uint16_t crc16;
 
   PROCESS_BEGIN();
 
@@ -624,18 +637,31 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 
     len = reqlen - 2;
 
+    crc16 = modbus_crc16_calc(serial_data+1, len-1);
+    crc16 &= 0x7F7F;
+
     /* reset modbus input index */
-    ekm_in_pos = 0;
+    rs485_in_pos = 0;
 
     /* modbus write */
     while(len--) {
+      puthex(*serial_data);
       uart_arch_writeb(*serial_data++);
     }
 
+    /* send crc16 out */
+    puthex(crc16 & 0x007F);
+    uart_arch_writeb(crc16 & 0x007F);
+
+    puthex(((crc16 & 0xFF00) >> 8) & 0x7F);
+    uart_arch_writeb(((crc16 & 0xFF00) >> 8) & 0x7F);
+
+    putstring("\n");
+
     // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
-    ekm_data_request = message->request;
-    linkaddr_copy(&ekm_data_recv, &message->ereceiver);
-    memcpy(ekm_data_payload, message->payload, message->length);
+    rs485_data_request = message->request;
+    linkaddr_copy(&rs485_data_recv, &message->ereceiver);
+    memcpy(rs485_data_payload, message->payload, message->length);
   }
 
   PROCESS_END();
