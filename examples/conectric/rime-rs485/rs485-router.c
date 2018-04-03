@@ -54,6 +54,7 @@
 #include "dev/rs485-arch.h"
 #include "dev/uart-arch.h"
 #include "dev/modbus-line.h"
+#include "dev/modbus-crc16.h"
 #endif
 #include "dev/serial-line.h"
 #include "command.h"
@@ -108,7 +109,7 @@ static uint8_t dump_header = 0;
 /* RS485 */
 #define BUFSIZE 256
 static uint16_t rs485_in_pos;
-static uint8_t submeter_data[BUFSIZE];
+static uint8_t rs485_data[BUFSIZE];
 
 /* RS485 Messaging */
 #define RS485_DATA_MAX_SIZE 20
@@ -255,7 +256,8 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   }
 
   if (conectric_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
-    while(1); /* halt the system here until watchdog kicks in */
+    /* Halt the system right here until watchdog kicks in */
+    while(1);
   }
 
   PRINTF("%d.%d: data from %d.%d len %d hops %d\n",
@@ -563,28 +565,20 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     dataptr = &((uint8_t *)data)[1];
     datasize = ((uint8_t *)data)[0] - 1;
 
-    puthex(datasize);
-    putstring("\n");
-
-    // copy data into submeter buffer (mask high bit)
+    /* Copy data into RS485 buffer */
     for(cnt = 0; cnt < datasize; cnt++)
     {
-      /* EKM meters needs to be masked with 0x7F */
-      puthex((dataptr[cnt]) & 0x7F);
-      submeter_data[rs485_in_pos++] = (dataptr[cnt]) & 0x7F;
-//      /* Generic RS485 device */
-//      puthex(dataptr[cnt]);
-//      submeter_data[rs485_in_pos++] = dataptr[cnt];
+      puthex(dataptr[cnt]);
+      rs485_data[rs485_in_pos++] = dataptr[cnt];
     }
     putstring("\n");
 
-    crc16 = modbus_crc16_calc(&submeter_data[1], 252);
-    puthex((crc16 & 0xFF00) >> 8);
-    puthex(crc16 & 0x00FF);
-    putstring("\n");
-    puthex((crc16 & 0x7F00) >> 8);
-    puthex(crc16 & 0x007F);
-    putstring("\n");
+//    /* This CRC16 calculation is only used to debug the incoming modbus */
+//    crc16 = modbus_crc16_calc(rs485_data, datasize-2);
+//    putstring("crc16rep=");
+//    puthex(crc16 & 0x00FF);
+//    puthex((crc16 & 0xFF00) >> 8);
+//    putstring("\n");
 
     /* If rs485_in_pos >= 0xFF and the buffer is not fragmented, then we go ahead
      * and send a reply. Otherwise, let the gateway poll again. When the EKM data
@@ -637,8 +631,12 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 
     len = reqlen - 2;
 
-    crc16 = modbus_crc16_calc(serial_data+1, len-1);
-    crc16 &= 0x7F7F;
+//    /* This CRC16 calculation is only used to debug the outgoing modbus */
+//    crc16 = modbus_crc16_calc(serial_data, len-2);
+//    putstring("crc16req=");
+//    puthex(crc16 & 0x00FF);
+//    puthex((crc16 & 0xFF00) >> 8);
+//    putstring("\n");
 
     /* reset modbus input index */
     rs485_in_pos = 0;
@@ -648,14 +646,6 @@ PROCESS_THREAD(modbus_out_process, ev, data)
       puthex(*serial_data);
       uart_arch_writeb(*serial_data++);
     }
-
-    /* send crc16 out */
-    puthex(crc16 & 0x007F);
-    uart_arch_writeb(crc16 & 0x007F);
-
-    puthex(((crc16 & 0xFF00) >> 8) & 0x7F);
-    uart_arch_writeb(((crc16 & 0xFF00) >> 8) & 0x7F);
-
     putstring("\n");
 
     // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
