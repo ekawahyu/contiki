@@ -81,6 +81,7 @@ extern volatile uint16_t deep_sleep_requested;
 /* RS485 Device Parameters */
 #define RS485_COLLECT_SENSOR_BROADCAST  0x91
 #define RS485_COLLECT_PERIODIC          0x92
+#define RS485_INCOMING_RESPONSE         0x93
 #define RS485_COLLECT_NOEVT             0x00
 #define RS485_SUP_EVT                   0xBB
 #define RS485_SUP_NOEVT                 0x00
@@ -360,24 +361,34 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
 
     request = (uint8_t *)data;
 
-    /* temporary workaround to test sending to sink */
-    /*                                              */
+    if (*request == RS485_INCOMING_RESPONSE)
+    {
+      memset(message, 0, sizeof(message));
+      message[0] = RS485_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = rs485_data_recv.u8[0];
+      message[5] = rs485_data_recv.u8[1];
+      message[6] = rs485_in_pos;
+      for (loop = 0;loop < rs485_in_pos; loop++) {
+        message[7+loop] = rs485_data[loop];
+      }
 
-//    if (*request == RS485_COLLECT_PERIODIC) {
-//
-//      memset(hexstring, 0, sizeof(hexstring));
-//      strcpy(hexstring, "051A000001");
-//      bytereq[0] = '<';
-//      hexstring_to_bytereq(hexstring, &bytereq[1]);
-//
-//      compose_request_to_packetbuf(bytereq, seqno++, &to);
-//      which_sink = conectric_send_to_sink(&conectric);
-//
-//      /*                                              */
-//      /* temporary workaround to test sending to sink */
-//    }
+      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    if(*request == RS485_COLLECT_SENSOR_BROADCAST)
+      packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos);
+      NETSTACK_MAC.on();
+      which_sink = conectric_send_to_sink(&conectric);
+      if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n");
+      PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+          clock_seconds());
+      PROCESS_PAUSE();
+    }
+
+    else if(*request == RS485_COLLECT_SENSOR_BROADCAST)
     {
       memset(message, 0, sizeof(message));
       message[0] = RS485_HEADER_SIZE;
@@ -551,6 +562,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_in_process, ev, data)
 {
+  static uint8_t event;
   static uint8_t datasize;
   static uint8_t* dataptr;
   static uint16_t crc16;
@@ -579,6 +591,11 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 //    puthex(crc16 & 0x00FF);
 //    puthex((crc16 & 0xFF00) >> 8);
 //    putstring("\n");
+
+    if (rs485_in_pos) {
+      event = RS485_INCOMING_RESPONSE;
+      process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+    }
 
     /* If rs485_in_pos >= 0xFF and the buffer is not fragmented, then we go ahead
      * and send a reply. Otherwise, let the gateway poll again. When the EKM data
