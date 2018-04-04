@@ -211,12 +211,6 @@ dump_packetbuf(message_recv * message)
   putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
-static uint8_t
-shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
-{
-  return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
-}
-/*---------------------------------------------------------------------------*/
 struct conectric_conn conectric;
 /*---------------------------------------------------------------------------*/
 PROCESS(rs485_periodic_process, "RS485 Periodic");
@@ -596,30 +590,6 @@ PROCESS_THREAD(modbus_in_process, ev, data)
       event = RS485_INCOMING_RESPONSE;
       process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, &event);
     }
-
-    /* If rs485_in_pos >= 0xFF and the buffer is not fragmented, then we go ahead
-     * and send a reply. Otherwise, let the gateway poll again. When the EKM data
-     * gets fragmented, its content is always incorrect.
-     */
-//    if((rs485_in_pos >= 0xFF) && (rs485_in_pos == datasize))
-//    {
-//
-//      if (rs485_data_request == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-//        if (rs485_data_recv.u8[0] == 0xFF && rs485_data_recv.u8[1] == 0xFF) {
-//          //printf("modbus out: RREQ by SN\n");
-//          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
-//            rs485_data_payload);
-//        }
-//      }
-//
-//      else if (rs485_data_request == CONECTRIC_POLL_RS485) {
-//        if (shortaddr_cmp(&rs485_data_recv, &linkaddr_node_addr)) {
-//          //printf("modbus out: POLL RS485\n");
-//          process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE,
-//            rs485_data_payload);
-//        }
-//      }
-//    }
   }
 
   PROCESS_END();
