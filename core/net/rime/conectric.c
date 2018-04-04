@@ -431,6 +431,9 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 	 to->u8[0], to->u8[1]);
 
   if (to->u8[0] == 255 && to->u8[1] == 255) {
+    could_send = broadcast_send(&c->broadcast);
+  }
+  else if (to->u8[0] == 0 && to->u8[1] == 0) {
     could_send = netflood_send(&c->netflood, c->netbc_id++);
   }
   else {
