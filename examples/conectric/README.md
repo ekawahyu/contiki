@@ -1,4 +1,4 @@
-![Conectric Logo](logo.png)
+![Conectric Logo](conectric.png)
 
 # Conectric Network IoT Devices and Protocol
 
