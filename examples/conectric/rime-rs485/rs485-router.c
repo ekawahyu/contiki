@@ -107,17 +107,13 @@ static message_recv conectric_message_recv;
 
 static uint8_t dump_header = 0;
 
-/* RS485 */
+/* RS485 Buffer */
 #define BUFSIZE 256
 static uint16_t rs485_in_pos;
 static uint8_t rs485_data[BUFSIZE];
 
 /* RS485 Messaging */
 #define RS485_DATA_MAX_SIZE 20
-static uint8_t rs485_data_request;
-static linkaddr_t rs485_data_recv;
-static uint8_t rs485_data_payload[RS485_DATA_MAX_SIZE];
-//static uint8_t rs485_close_string[5] = {0x01, 0x42, 0x30, 0x03, 0x75};
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -362,8 +358,8 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       message[1] = seqno++;
       message[2] = 0;
       message[3] = 0;
-      message[4] = rs485_data_recv.u8[0];
-      message[5] = rs485_data_recv.u8[1];
+      message[4] = 0;
+      message[5] = 0;
       message[6] = rs485_in_pos;
       for (loop = 0;loop < rs485_in_pos; loop++) {
         message[7+loop] = rs485_data[loop];
@@ -634,11 +630,6 @@ PROCESS_THREAD(modbus_out_process, ev, data)
       uart_arch_writeb(*serial_data++);
     }
     putstring("\n");
-
-    // store message information from last S/N query for transmission later (don't assume the message structure is still valid)
-    rs485_data_request = message->request;
-    linkaddr_copy(&rs485_data_recv, &message->ereceiver);
-    memcpy(rs485_data_payload, message->payload, message->length);
   }
 
   PROCESS_END();
