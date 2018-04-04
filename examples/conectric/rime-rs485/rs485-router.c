@@ -287,6 +287,10 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   dump_packetbuf(&netbc_message_recv);
 
+  if (netbc_message_recv.request == CONECTRIC_POLL_RS485) {
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
+  }
+
   PRINTF("%d.%d: netbc from %d.%d: len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1], packetbuf_datalen(), hops);
@@ -365,17 +369,24 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
         message[7+loop] = rs485_data[loop];
       }
 
-      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
-      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-      packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos);
-      NETSTACK_MAC.on();
-      which_sink = conectric_send_to_sink(&conectric);
-      if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n");
-      PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
-          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-          clock_seconds());
-      PROCESS_PAUSE();
+      loop = CONECTRIC_BURST_NUMBER;
+      while(loop--) {
+        packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos);
+        NETSTACK_MAC.on();
+        which_sink = conectric_send_to_sink(&conectric);
+        if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n");
+        PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+            clock_seconds());
+        PROCESS_PAUSE();
+        if (loop) {
+          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        }
+      }
     }
 
     else if(*request == RS485_COLLECT_SENSOR_BROADCAST)

@@ -58,7 +58,7 @@
 /* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -324,23 +324,6 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
     frac = sane - dec;
 
     request = (uint8_t *)data;
-
-    /* temporary workaround to test sending to sink */
-    /*                                              */
-
-//    if (*request == USB_COLLECT_PERIODIC) {
-//
-//      memset(hexstring, 0, sizeof(hexstring));
-//      strcpy(hexstring, "051A000001");
-//      bytereq[0] = '<';
-//      hexstring_to_bytereq(hexstring, &bytereq[1]);
-//
-//      compose_request_to_packetbuf(bytereq, seqno++, &to);
-//      which_sink = conectric_send_to_sink(&conectric);
-//
-//      /*                                              */
-//      /* temporary workaround to test sending to sink */
-//    }
 
     if(*request == USB_COLLECT_SENSOR_BROADCAST)
     {
