@@ -124,7 +124,7 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
 
   PROCESS_BEGIN();
 
-  broadcast_open(&broadcast, 129, &broadcast_call);
+  broadcast_open(&broadcast, 132, &broadcast_call);
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
@@ -136,8 +136,8 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
   message[1] = seqno++;
   message[2] = 0;
   message[3] = 0;
-  message[4] = 0xFF;
-  message[5] = 0xFF;
+  message[4] = 0;
+  message[5] = 0;
   message[6] = OC_BOOT_PAYLOAD_SIZE;
   message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
   batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
@@ -182,8 +182,8 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
       message[1] = seqno++;
       message[2] = 0;
       message[3] = 0;
-      message[4] = 0xFF;
-      message[5] = 0xFF;
+      message[4] = 0;
+      message[5] = 0;
       message[6] = OC_PAYLOAD_SIZE;
       message[7] = CONECTRIC_SENSOR_BROADCAST_OC;
       message[8] = (char)(dec*10)+(char)(frac*10);
@@ -225,8 +225,8 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
       message[1] = seqno++;
       message[2] = 0;
       message[3] = 0;
-      message[4] = 0xFF;
-      message[5] = 0xFF;
+      message[4] = 0;
+      message[5] = 0;
       message[6] = OC_PAYLOAD_SIZE;
       message[7] = CONECTRIC_SUPERVISORY_REPORT;
       message[8] = (char)(dec*10)+(char)(frac*10);
