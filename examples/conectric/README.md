@@ -15,27 +15,37 @@ In order to send/receive messages over Conectric network, you need to have at le
 Conectric USB Router is equipped with a built-in serial communication peripheral, that allows any computer with at least one USB port to send and receive messages over the mesh network. Any computer can simply dump bytes onto serial console and gets responses at the same inteface.
 
 ### Serial Communication
-A brief explanation on how the serial communication looks like:
 
-    <0a3600000148454c4c4f
-    >06010100dfbc0c68656a6a6f207468657265
-    <0a3600000148454c4c4f
-    >06010100dfbc0c68656a6a6f207468657265
+All of outgoing network messages start with `<` and all of incoming network messages start with `>`. Messages are in hexstring format and every 2 hexstring digits represent 1 byte. Let's assume that there are two computers and two Conectric USB Routers, and you want to send a message `HELLO` (= `48 45 4c 4c 4f` in hexstring) from one end to the other. Please Refer to this [ASCII Table](http://asciitable.com) to get the hexadecimal value for each letter you wanted to send.
 
-All of outgoing network messages start with `<` and all of incoming network messages start with `>`. Let's assume that we have to computers and two Conectric USB Routers, and we want to send 'Hello' message back and forth. We need to follow the messaging protocol as follow. Messages are exchaged in hexstring format.
+The outgoing messaging protocol is as follow:
 
 `<``LEN``REQ``DESTH``DESTL``01``DATA0``DATA1` ... `DATAn`
 
 * `<` an outgoing message starts with this character
-* `LEN` message length including this length byte itself
-* `REQ` request/message type
-* `DESTH` destination address high byte
-* `DESTL` destination address low byte
-* `01` this byte is reserved, always 0x01
-* `DATA0` the first data byte
-* `DATA1` the second data byte
+* `LEN = 0x0a` message length including this length byte itself is 10 hextrings
+* `REQ = 0x61` request/message type of `CONECTRIC_TEXT_MESSAGE`
+* `DESTH = 0xdf` destination address high byte (of 16-bit short address `0xdfbc`)
+* `DESTL = 0xbc` destination address low byte (of  16-bit short address `0xdfbc`)
+* `01 = 0x01` this byte is reserved, always 0x01
+* `DATA0 = 0x48` letter `H`
+* `DATA1 = 0x45` letter `E`
+* `DATA2 = 0x4c` letter `L`
+* `DATA3 = 0x4c` letter `L`
+* `DATA4 = 0x4f` letter `O`
 
-* `DATAn` the last data byte
+So sending out `HELLO` message would look like this:
+
+    <0a6100000148454c4c4f
+
+You can type those digits and letters in, manually by hand, on the serial console, then press `RETURN` key to send this message out in the air. When the wireless device with 16-bit short address of `0xdfbc` is listening and within the radio coverage. It will receive an incoming message that looks like the following:
+
+    >06010100dfbc0d6168656a6a6f207468657265
+
+The incoming message protocol is:
+
+
+
 
 
 ### motion
