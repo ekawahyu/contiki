@@ -23,7 +23,7 @@ The outgoing messaging protocol is as follow:
 `<``LEN``REQ``DESTH``DESTL``01``DATA0``DATA1` ... `DATAn`
 
 * `<` an outgoing message starts with this character
-* `LEN = 0x0a` message length including this length byte itself is 10 hextrings
+* `LEN = 0x0a` message length including this length byte itself is 10 bytes
 * `REQ = 0x61` request/message type of `CONECTRIC_TEXT_MESSAGE`
 * `DESTH = 0xdf` destination address high byte (of 16-bit short address `0xdfbc`)
 * `DESTL = 0xbc` destination address low byte (of  16-bit short address `0xdfbc`)
@@ -40,19 +40,78 @@ So sending out `HELLO` message would look like this:
 
 You can type those digits and letters in, manually by hand, on the serial console, then press `RETURN` key to send this message out in the air. When the wireless device with 16-bit short address of `0xdfbc` is listening and within the radio coverage. It will receive an incoming message that looks like the following:
 
-    >06010100dfbc0d6168656a6a6f207468657265
+    >060101001e200706148454c4c4f
 
 The incoming message protocol is:
 
+`>``HDRLEN``SEQ``HOPS``HOPMAX``SRCH``SRCL``DLEN``DATA0``DATA1` ... `DATAn`
 
+* `>` an incoming message starts with this character
+* `HDRLEN = 0x06` header length including this length byte itself is 6 bytes
+* `SEQ = 0x01` message sequence number
+* `HOP = 0x01` message has been passed through 1 hop (direct message)
+* `HOPMAX = 0x00` zero value means that no hop limit being implemented
+* `SRCH = 0x1e` destination address high byte (of 16-bit short address `0x1e20`)
+* `SRCL = 0x20` destination address low byte (of  16-bit short address `0x1e20`)
+* `DLEN = 0x07` data length is 7 bytes long, including the length byte itself
+* `DATA0 = 0x61` request/message type of `CONECTRIC_TEXT_MESSAGE`
+* `DATA1 = 0x48` letter `H`
+* `DATA2 = 0x45` letter `E`
+* `DATA3 = 0x4c` letter `L`
+* `DATA4 = 0x4c` letter `L`
+* `DATA5 = 0x4f` letter `O`
 
+### RS485 Hub
 
+## Executable Serial Command
+In this section we list all executable commands through serial console:
 
-### motion
+### MAC Address Read (`MR` - MAC Read)
+This command read the full 64-bit MAC Address. The 16-bit short address are extracted from the last two bytes. In this example, it is `0xdfbc`. Example of use:
 
-### switch
+    MR
+    MR:00124b000514dfbc
 
-### tempHumidity
+### Configure USB Router as a data sink (`SS` - Sink Set)
+When USB Router is set as a data sink, it becomes the gateway between the mesh network to the outside world. The mesh network can have single or multiple data sinks. All of sensor broadcasts will be sent to a sink with the lowest cost. Example of use:
+
+    SS
+    SS:Ok
+
+### Disable USB Router as a data sink (`SR` - Sink Reset)
+By default, USB Router is not a data sink. But if it was configured as one, then this command will turn if off.
+
+    SR
+    SR:Ok
+
+### Show data sinks table (`ST` - Sink Table)
+By default, USB Router keeps a table of data sink broadcasts. If no data sink is seen, the command returns no table.
+
+    ST
+    ST:0:df.bc(C:2:LT:10)
+    |  |  |  |   |    |
+    |  |  |  |   |    +-> data sink life time
+    |  |  |  |   +-> cost to reach the data sink
+    |  |  |  +-> data sink address L
+    |  |  +-> data sink address H
+    |  +-> list index
+    +-> Sink Table indicator
+
+### Show routing table (`RT` - Routing Table)
+By default, USB Router keeps a routing table everytime it receives a route discovery request. If no routing table is available, this command returns nothing.
+
+    RT
+    RT:0:df.bc->1e.20(C:2:LT:10)
+    |  |  |  |   |  |   |    |
+    |  |  |  |   |  |   |    +-> routing life time
+    |  |  |  |   |  |   +-> routing cost
+    |  |  |  |   |  +-> next hop address L
+    |  |  |  |   +-> next hop address H
+    |  |  |  +-> destination address L
+    |  |  +-> destination address H
+    |  +-> list index
+    +-> Routing Table indicator
+
 
 ## For Developers
 
