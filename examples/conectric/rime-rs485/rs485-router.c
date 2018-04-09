@@ -57,10 +57,10 @@
 #include "dev/modbus-crc16.h"
 #endif
 #include "dev/serial-line.h"
-#include "command.h"
+#include "../command.h"
 
 /* Conectric Network */
-#include "examples/conectric/conectric-messages.h"
+#include "../conectric-messages.h"
 
 #define DEBUG 0
 #if DEBUG
