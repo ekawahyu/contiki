@@ -20,7 +20,7 @@ All of outgoing network messages start with `<` and all of incoming network mess
 
 The outgoing messaging protocol is as follow:
 
-`<``LEN``REQ``DESTH``DESTL``01``DATA0``DATA1` ... `DATAn`
+`<` `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
 * `<` an outgoing message starts with this character
 * `LEN = 0x0a` message length including this length byte itself is 10 bytes
@@ -44,7 +44,7 @@ You can type those digits and letters in, manually by hand, on the serial consol
 
 The incoming message protocol is:
 
-`>``HDRLEN``SEQ``HOPS``HOPMAX``SRCH``SRCL``DLEN``DATA0``DATA1` ... `DATAn`
+`>` `HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL` `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `>` an incoming message starts with this character
 * `HDRLEN = 0x06` header length including this length byte itself is 6 bytes
