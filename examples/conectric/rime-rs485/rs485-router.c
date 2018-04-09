@@ -364,10 +364,11 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       message[3] = 0;
       message[4] = 0;
       message[5] = 0;
-      message[6] = rs485_in_pos + 2;
+      message[6] = rs485_in_pos + 3;
       message[7] = CONECTRIC_POLL_RS485_REPLY;
+      message[8] = (char)(dec*10)+(char)(frac*10);
       for (loop = 0;loop < rs485_in_pos; loop++) {
-        message[8+loop] = rs485_data[loop];
+        message[9+loop] = rs485_data[loop];
       }
 
 //      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
@@ -375,7 +376,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
 
       loop = CONECTRIC_BURST_NUMBER;
       while(loop--) {
-        packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos);
+        packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos + 3);
         NETSTACK_MAC.on();
         which_sink = conectric_send_to_sink(&conectric);
         if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n");
