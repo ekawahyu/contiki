@@ -364,9 +364,10 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       message[3] = 0;
       message[4] = 0;
       message[5] = 0;
-      message[6] = rs485_in_pos;
+      message[6] = rs485_in_pos + 2;
+      message[7] = CONECTRIC_POLL_RS485_REPLY;
       for (loop = 0;loop < rs485_in_pos; loop++) {
-        message[7+loop] = rs485_data[loop];
+        message[8+loop] = rs485_data[loop];
       }
 
 //      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
