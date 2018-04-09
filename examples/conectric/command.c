@@ -40,7 +40,7 @@
 #include "net/rime/conectric.h"
 
 #include "command.h"
-#include "examples/conectric/conectric-messages.h"
+#include "conectric-messages.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -54,7 +54,7 @@
 #define CONECTRIC_VERSION_STRING "Contiki-unknown"
 #endif
 #ifndef CONECTRIC_PROJECT_STRING
-#define CONECTRIC_PROJECT_STRING "unknown"
+#define CONECTRIC_PROJECT_STRING "Conectric-v1.0.2"
 #endif
 
 #if RUN_ON_COOJA_SIMULATION
