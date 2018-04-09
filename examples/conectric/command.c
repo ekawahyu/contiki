@@ -152,7 +152,8 @@ command_respond(uint8_t * bytereq)
         request == CONECTRIC_POLL_RS485  ||
         request == CONECTRIC_POLL_RS485_CHUNK  ||
         request == CONECTRIC_POLL_SENSORS  ||
-        request == CONECTRIC_GET_LONG_MAC) {
+        request == CONECTRIC_GET_LONG_MAC ||
+        request == CONECTRIC_TEXT_MESSAGE) {
       /* return the pointer of the request bytes */
       return bytereq;
     }
