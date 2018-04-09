@@ -283,7 +283,8 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   static uint8_t hexstring[20];
   static uint8_t bytereq[20];
 
-  static unsigned int batt;
+  static unsigned int vdd;
+  static uint8_t batt;
   static uint8_t seqno = 0;
   static float sane;
   static int dec;
@@ -314,14 +315,15 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
 #if RUN_ON_COOJA_SIMULATION
     PROCESS_WAIT_EVENT_UNTIL((ev == PROCESS_EVENT_CONTINUE || ev == sensors_event) && data != NULL);
-    batt = 0;
+    vdd = 0;
 #else
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
-    batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+    vdd = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
 #endif
-    sane = batt * 3 * 1.15 / 2047;
+    sane = vdd * 3 * 1.15 / 2047;
     dec = sane;
     frac = sane - dec;
+    batt = (uint8_t)(dec*10)+(uint8_t)(frac*10);
 
     request = (uint8_t *)data;
 
@@ -363,8 +365,8 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       message[5] = 0;
       message[6] = USB_PAYLOAD_SIZE;
       message[7] = CONECTRIC_SUPERVISORY_REPORT;
-      message[8] = (char)(dec*10)+(char)(frac*10);
-      message[9] = (char)(time >> 6);
+      message[8] = batt;
+      message[9] = (uint8_t)(time >> 6);
       loop = CONECTRIC_BURST_NUMBER;
       while(loop--) {
         packetbuf_copyfrom(message, USB_HEADER_SIZE + USB_PAYLOAD_SIZE);
@@ -393,7 +395,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
     else if (*request == '<')
     {
-      compose_request_to_packetbuf(request, seqno++, &to);
+      compose_request_to_packetbuf(request, seqno++, batt, &to);
       conectric_send(&conectric, &to);
 
       PRINTF("%d.%d: conectric sent to %d.%d ts %lu\n",

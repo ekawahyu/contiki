@@ -77,7 +77,7 @@ volatile unsigned char *gmacp = gmacp_sim;
 
 /* definition of network message request */
 #define CONECTRIC_MESSAGE_HEADER_LEN    6
-#define CONECTRIC_MESSAGE_LEN           2
+#define CONECTRIC_MESSAGE_LEN           3
 
 extern struct conectric_conn conectric;
 
@@ -326,7 +326,7 @@ command_interpreter(uint8_t * command_line)
 }
 /*---------------------------------------------------------------------------*/
 void
-compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * ereceiver)
+compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver)
 {
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
@@ -373,13 +373,14 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, linkaddr_t * erec
   if (ereceiver) linkaddr_copy(ereceiver, &dest);
 
   /* Filling in packetbuf with request byte and data.
-   * Minimum length of data = 2 ---> [DLen][Req], the rest of data will
+   * Minimum length of data = 3 ---> [DLen][Req][Batt], the rest of data will
    * follow if there is any.
    */
   memset(packet_buffer, 0, sizeof(packet_buffer));
   datalen = reqlen - routelen - CONECTRIC_REQUEST_HEADER_LEN;
   *packet++ = datalen + CONECTRIC_MESSAGE_LEN;
   *packet++ = req;
+  *packet++ = batt;
   route = request;
   request += (routelen - 1);
   i = datalen;

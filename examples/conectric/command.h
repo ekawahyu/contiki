@@ -48,7 +48,7 @@ void hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq);
 void dump_packet_buffer(uint8_t mode);
 uint8_t * command_interpreter(uint8_t * command_line);
 
-void compose_request_to_packetbuf(uint8_t * request,uint8_t seqno, linkaddr_t * ereceiver);
+void compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver);
 void compose_response_to_packetbuf(uint8_t * radio_request, uint8_t seqno, linkaddr_t * ereceiver);
 
 #ifdef __cplusplus
