@@ -62,11 +62,29 @@ The incoming message protocol is:
 * `DATA5 = 0x4c` letter `L`
 * `DATA6 = 0x4f` letter `O`
 
-## Header and Data Field
+## Header and Data Fields
 Incoming messages contain header and data fields. In the header you can find message sequence number, number of hops it has been pass through, and the originator short address. In the data field, we use the first three bytes to indicate the data length, message type, and power level. The rest of data field is anything else that was originally sent by the originator.
 
+## Supported Message Type
+
+The following table shows supported message types and its enumeration
+
+| Message Types                              | Enumeration |
+|--------------------------------------------|:-----------:|
+| CONECTRIC\_SENSOR\_BROADCAST_RHT           |     0x30    |
+| CONECTRIC\_SENSOR\_BROADCAST_SW            |     0x31    |
+| CONECTRIC\_SENSOR\_BROADCAST_OC            |     0x32    |
+| CONECTRIC\_SUPERVISORY\_REPORT             |     0x33    |
+| CONECTRIC\_POLL\_RS485                     |     0x36    |
+| CONECTRIC\_POLL\_RS485\_REPLY              |     0x37    |
+| CONECTRIC\_SENSOR\_BROADCAST\_PLS          |     0x40    |
+| CONECTRIC\_SENSOR\_BROADCAST\_USB          |     0x41    |
+| CONECTRIC\_DEVICE\_BROADCAST\_BOOT\_STATUS |     0x60    |
+| CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
+
+
 ## Executable Serial Command
-In this section we list all executable commands through serial terminal:
+Other than incoming and outgoing messages. Any input from serial terminal that does not start with `<` or `>` is considered as an executable serial command to change device configuration. The following subsections describe some of those executable serial commands.
 
 ### MAC Address Read (`MR` - MAC Read)
 This command read the full 64-bit MAC Address. The 16-bit short address are extracted from the last two bytes. In this example, it is `0xdfbc`. Example of use:
