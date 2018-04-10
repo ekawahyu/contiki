@@ -32,7 +32,7 @@
 
 /**
  * \file
- *         Conectric Switch Sensor (initially taken from broadcast example)
+ *         Conectric Motion Detection Sensor (initially taken from broadcast example)
  * \author
  *         Adam Dunkels <adam@sics.se>
  *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
@@ -176,7 +176,7 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
 
     if(*sensor_data == OC_EVT)
     {
-      /* Composing SW sensor message */
+      /* Composing OC sensor message */
       memset(message, 0, sizeof(message));
       message[0] = OC_HEADER_SIZE;
       message[1] = seqno++;

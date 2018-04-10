@@ -17,7 +17,6 @@ In order to receive messages from sensors over Conectric network, you need to ha
 The easiest way of testing wireless messaging is by setting up two computers with two Conectric USB Routers. Over some hundreds of feet distance, wireless messaging would stop working because it is simply out of network coverage. The solution to this problemm is very straightforward. Just by putting some Conectric USB Routers in between those computers can actually help to multihop messages over the mesh network. But first thing first, you need to understand how to send/receive messages over serial communication port on the Conectric USB Router.
 
 ## Serial Communication Protocol
-
 Conectric USB Routers have built-in serial communication port to which we send/receive messages. An outgoing wireless messaging starts with `<` and an incoming one starts with `>`. Messages are sent in hexadecimal string format and every two hexadecimal digits represent one byte. Let's pretend that we want to send `HELLO` (= `48 45 4c 4c 4f` in hexadecimal string) from one end to the other. The outgoing wireless messaging protocol is as follow:
 
 `<` `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
@@ -62,26 +61,105 @@ The incoming message protocol is:
 * `DATA5 = 0x4c` letter `L`
 * `DATA6 = 0x4f` letter `O`
 
-## Header and Data Fields
-Incoming messages contain header and data fields. In the header you can find message sequence number, number of hops it has been pass through, and the originator short address. In the data field, we use the first three bytes to indicate the data length, message type, and power level. The rest of data field is anything else that was originally sent by the originator.
+### Supported Request Type
+| Request Types                              | Enumeration |
+|--------------------------------------------|:-----------:|
+| CONECTRIC\_POLL\_RS485                     |     0x36    |
+| CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
 
-## Supported Message Type
-
-The following table shows supported message types and its enumeration
-
+### Supported Message Type
 | Message Types                              | Enumeration |
 |--------------------------------------------|:-----------:|
 | CONECTRIC\_SENSOR\_BROADCAST_RHT           |     0x30    |
 | CONECTRIC\_SENSOR\_BROADCAST_SW            |     0x31    |
 | CONECTRIC\_SENSOR\_BROADCAST_OC            |     0x32    |
 | CONECTRIC\_SUPERVISORY\_REPORT             |     0x33    |
-| CONECTRIC\_POLL\_RS485                     |     0x36    |
 | CONECTRIC\_POLL\_RS485\_REPLY              |     0x37    |
 | CONECTRIC\_SENSOR\_BROADCAST\_PLS          |     0x40    |
 | CONECTRIC\_SENSOR\_BROADCAST\_USB          |     0x41    |
 | CONECTRIC\_DEVICE\_BROADCAST\_BOOT\_STATUS |     0x60    |
 | CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
 
+## Outgoing Message Field
+### Request Type, Destination, and Data Fields
+Outgoing messages contain request type, destination address and data fields. Unlike incoming messages, data field of outgoing messages does not include `DLEN`. An outgoing message with destination address to `0xFFFF` is a local broadcast to neighbors only. If the destination address is set to `0x0000`, the message is broadcasted to all listening devices, network-wide. The outgoing message will only be sent point-to-point if provided with 16-bit short address.
+
+### RS485 Request Field (RS485)
+`LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+* `LEN`, total bytes from `LEN` to `DATAn`
+* `REQ`, valid value is 0x36, `CONECTRIC_POLL_RS485` request type
+* `DESTH`, broadcast, netbroadcast, or point-to-point address
+* `DESTL` broadcast, netbroadcast, or point-to-point address
+* `01`, reserved byte, always 0x01
+* `DATA0` `DATA1` ... `DATAn`, the RS485 request
+
+### Text Message Request Field
+`LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+* `LEN`, total bytes from `LEN` to `DATAn`
+* `REQ`, valid value is 0x61, `CONECTRIC_TEXT_MESSAGE` request type
+* `DESTH`, broadcast, netbroadcast, or point-to-point address
+* `DESTL` broadcast, netbroadcast, or point-to-point address
+* `01`, reserved byte, always 0x01
+* `DATA0` `DATA1` ... `DATAn`, the text message
+
+## Incoming Message Data Fields
+### Message Header and Data Fields
+Incoming messages contain message header and data fields. In the message header you can find message sequence number, number of hops, and the originator short address. In the data field, we use the first three bytes to indicate the data length, message type, and power level. The rest of data field is anything else that was originally sent by the originator.
+
+### Message Header
+`HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL`
+
+* `HDRLEN`, total bytes from `HDRLEN` to `SRCL`
+* `SEQ`, unique number for every message sent out
+* `HOPS`, number of hops the message has been passed through
+* `HOPMAX`, hop limit before the message is dropped, unlimited hop if value assigned is zero
+* `SRCH`, originator address high byte
+* `SRCL`, originator address low byte
+
+### Temperature/Humidity Sensor Data Field (RHT)
+`DLEN` `DATA0` `DATA1` ... `DATAn`
+
+* `DLEN`, total bytes from `DLEN` to `DATAn`
+* `DATA0`, valid value is 0x30, `CONECTRIC_SENSOR_BROADCAST_RHT` message type
+* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA2`, temperature high byte
+* `DATA3`, temperature low byte
+* `DATA4`, humidity high byte
+* `DATA5`, humidity low byte
+
+### Switch Sensor Data Field (SW)
+`DLEN` `DATA0` `DATA1` ... `DATAn`
+
+* `DLEN`, total bytes from `DLEN` to `DATAn`
+* `DATA0`, valid value is 0x31, `CONECTRIC_SENSOR_BROADCAST_SW` message type
+* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA2`, valid value are 0x71 (switch is closed); 0x72 (switch is open)
+
+### Motion Detection Data Field (OC)
+`DLEN` `DATA0` `DATA1` ... `DATAn`
+
+* `DLEN`, total bytes from `DLEN` to `DATAn`
+* `DATA0`, valid value is 0x32, `CONECTRIC_SENSOR_BROADCAST_OC` message type
+* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA2`, valid value are 0x81 (motion detected)
+
+### RS485 Data Field (RS485)
+`DLEN` `DATA0` `DATA1` ... `DATAn`
+
+* `DLEN`, total bytes from `DLEN` to `DATAn`
+* `DATA0`, valid value is 0x37, `CONECTRIC_POLL_RS485_REPLY` message type
+* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA2 ... DATAn`, the RS485 response
+
+### Text Message Data Field
+`DLEN` `DATA0` `DATA1` ... `DATAn`
+
+* `DLEN`, total bytes from `DLEN` to `DATAn`
+* `DATA0`, valid value is 0x61, `CONECTRIC_TEXT_MESSAGE` message type
+* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA2 ... DATAn`, the text message
 
 ## Executable Serial Command
 Other than incoming and outgoing messages. Any input from serial terminal that does not start with `<` or `>` is considered as an executable serial command to change device configuration. The following subsections describe some of those executable serial commands.
@@ -134,7 +212,7 @@ By default, USB Router keeps a routing table everytime it receives a route disco
 
 
 ## For Developers
+TBD
 
 ## Licensing
-
 This project is licensed under the terms of the [FreeBSD license](https://opensource.org/licenses/BSD-2-Clause). In layman's term, TLDR Legal provides an explanation of [FreeBSD license in plain English](https://tldrlegal.com/license/bsd-2-clause-license-(freebsd)).
