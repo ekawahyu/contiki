@@ -104,7 +104,7 @@ Outgoing messages contain request type, destination address and data fields. Unl
 * `01`, reserved byte, always 0x01
 * `DATA0` `DATA1` ... `DATAn`, the text message
 
-## Incoming Message Data Fields
+## Incoming Message Fields
 ### Message Header and Data Fields
 Incoming messages contain message header and data fields. In the message header you can find message sequence number, number of hops, and the originator short address. In the data field, we use the first three bytes to indicate the data length, message type, and power level. The rest of data field is anything else that was originally sent by the originator.
 
