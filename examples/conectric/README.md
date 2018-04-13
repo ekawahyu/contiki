@@ -64,8 +64,13 @@ The incoming message protocol is:
 ### Supported Request Type
 | Request Types                              | Enumeration |
 |--------------------------------------------|:-----------:|
-| CONECTRIC\_POLL\_RS485                     |     0x36    |
+| CONECTRIC\_RS485\_POOL                     |     0x36    |
 | CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
+
+### Supported Configuration Type
+| Configuration Types                              | Enumeration |
+|--------------------------------------------|:-----------:|
+| CONECTRIC\_RS485\_CONFIG                   |     0x70    |
 
 ### Supported Message Type
 | Message Types                              | Enumeration |
@@ -74,7 +79,7 @@ The incoming message protocol is:
 | CONECTRIC\_SENSOR\_BROADCAST_SW            |     0x31    |
 | CONECTRIC\_SENSOR\_BROADCAST_OC            |     0x32    |
 | CONECTRIC\_SUPERVISORY\_REPORT             |     0x33    |
-| CONECTRIC\_POLL\_RS485\_REPLY              |     0x37    |
+| CONECTRIC\_RS485\_POOL\_REPLY              |     0x37    |
 | CONECTRIC\_SENSOR\_BROADCAST\_PLS          |     0x40    |
 | CONECTRIC\_SENSOR\_BROADCAST\_USB          |     0x41    |
 | CONECTRIC\_DEVICE\_BROADCAST\_BOOT\_STATUS |     0x60    |

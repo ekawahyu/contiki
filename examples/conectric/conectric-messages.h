@@ -47,6 +47,9 @@ extern "C" {
 #define CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS  0x60
 #define CONECTRIC_TEXT_MESSAGE                  0x61
 
+/* Configuring */
+#define CONECTRIC_RS485_CONFIG                  0x70
+
 
 /* Any message with MSB bit set to 1 needs immediate attention */
 
