@@ -41,6 +41,14 @@
 
 #include "command.h"
 #include "conectric-messages.h"
+#if defined __IAR_SYSTEMS_ICC__
+#include "conectric-version.h"
+#endif
+
+#ifdef CONTIKI_VERSION_STRING
+#undef CONTIKI_VERSION_STRING
+#define CONTIKI_VERSION_STRING CONECTRIC_VERSION_STRING
+#endif
 
 #define DEBUG 0
 #if DEBUG
@@ -48,13 +56,6 @@
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
-#endif
-
-#ifndef CONECTRIC_VERSION_STRING
-#define CONECTRIC_VERSION_STRING "Contiki-unknown"
-#endif
-#ifndef CONECTRIC_PROJECT_STRING
-#define CONECTRIC_PROJECT_STRING "Conectric-v1.0.2"
 #endif
 
 #if RUN_ON_COOJA_SIMULATION

@@ -29,6 +29,14 @@
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+#if defined __IAR_SYSTEMS_ICC__
+#include "conectric-version.h"
+#endif
+/*---------------------------------------------------------------------------*/
+#ifdef CONTIKI_VERSION_STRING
+#undef CONTIKI_VERSION_STRING
+#define CONTIKI_VERSION_STRING CONECTRIC_VERSION_STRING
+#endif
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
 PROCESS_NAME(viztool_process);
@@ -57,22 +65,6 @@ void invoke_process_before_sleep(void);
 /*---------------------------------------------------------------------------*/
 #ifndef WATCHDOG
 #define WATCHDOG 1
-#endif
-/*---------------------------------------------------------------------------*/
-/*
- * TODO add pre-built command line to collect git information on IAR
- *
- */
-#ifndef CONECTRIC_VERSION_STRING
-#define CONECTRIC_VERSION_STRING "Contiki-unknown"
-#endif
-#ifndef CONECTRIC_PROJECT_STRING
-#define CONECTRIC_PROJECT_STRING "unknow"
-#endif
-/*---------------------------------------------------------------------------*/
-#ifdef CONTIKI_VERSION_STRING
-#undef CONTIKI_VERSION_STRING
-#define CONTIKI_VERSION_STRING CONECTRIC_VERSION_STRING
 #endif
 /*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
