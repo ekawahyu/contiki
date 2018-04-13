@@ -242,7 +242,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   dump_packetbuf(&conectric_message_recv);
 
-  if (conectric_message_recv.request == CONECTRIC_POLL_RS485) {
+  if (conectric_message_recv.request == CONECTRIC_RS485_POLL) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &conectric_message_recv);
   }
 
@@ -287,7 +287,7 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   dump_packetbuf(&netbc_message_recv);
 
-  if (netbc_message_recv.request == CONECTRIC_POLL_RS485) {
+  if (netbc_message_recv.request == CONECTRIC_RS485_POLL) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
   }
 
@@ -367,7 +367,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       message[4] = 0;
       message[5] = 0;
       message[6] = rs485_in_pos + 3;
-      message[7] = CONECTRIC_POLL_RS485_REPLY;
+      message[7] = CONECTRIC_RS485_POLL_REPLY;
       message[8] = batt;
       for (loop = 0;loop < rs485_in_pos; loop++) {
         message[9+loop] = rs485_data[loop];

@@ -88,7 +88,7 @@ Outgoing messages contain request type, destination address and data fields. Unl
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
 * `LEN`, total bytes from `LEN` to `DATAn`
-* `REQ`, valid value is 0x36, `CONECTRIC_POLL_RS485` request type
+* `REQ`, valid value is 0x36, `CONECTRIC_RS485_POLL` request type
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
 * `DESTL` broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01
@@ -149,7 +149,7 @@ Incoming messages contain message header and data fields. In the message header 
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
-* `DATA0`, valid value is 0x37, `CONECTRIC_POLL_RS485_REPLY` message type
+* `DATA0`, valid value is 0x37, `CONECTRIC_RS485_POLL_REPLY` message type
 * `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
 * `DATA2 ... DATAn`, the RS485 response
 

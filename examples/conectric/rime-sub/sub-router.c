@@ -601,7 +601,7 @@ PROCESS_THREAD(modbus_in_process, ev, data)
         }
       }
 
-      else if (ekm_data_request == CONECTRIC_POLL_RS485) {
+      else if (ekm_data_request == CONECTRIC_RS485_POLL) {
         if (shortaddr_cmp(&ekm_data_recv, &linkaddr_node_addr)) {
           //printf("modbus out: POLL RS485\n");
           process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
@@ -764,13 +764,13 @@ compose_response_to_packetbuf(uint8_t * radio_request,
     response = CONECTRIC_REBOOT_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
-  if (req == CONECTRIC_POLL_RS485) {
-    response = CONECTRIC_POLL_RS485_REPLY;
+  if (req == CONECTRIC_RS485_POLL) {
+    response = CONECTRIC_RS485_POLL_REPLY;
     responselen += 2;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
-  if (req == CONECTRIC_POLL_RS485_CHUNK) {
-    response = CONECTRIC_POLL_RS485_CHUNK_REPLY;
+  if (req == CONECTRIC_RS485_POLL_CHUNK) {
+    response = CONECTRIC_RS485_POLL_CHUNK_REPLY;
     chunk_number = *radio_request++;
     chunk_size   = *radio_request++;
     responselen += chunk_size;
@@ -792,13 +792,13 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 
   i = responselen-2;
 
-  if (req == CONECTRIC_POLL_RS485) {
+  if (req == CONECTRIC_RS485_POLL) {
     /* FIXME this has to be calculated from RS485 reply length */
     *packet++ = 0x04; /* number of chunks available to poll */
     *packet++ = 0x40; /* chunk size */
   }
 
-  if (req == CONECTRIC_POLL_RS485_CHUNK) {
+  if (req == CONECTRIC_RS485_POLL_CHUNK) {
     for (i = 0; i < chunk_size; i++)
       *packet++ = submeter_data[(chunk_size*chunk_number) + i];
   }
@@ -906,8 +906,8 @@ call_decision_maker(void * incoming, uint8_t type)
 //    else if (
 //        request == CONECTRIC_MULTIHOP_PING ||
 //        request == CONECTRIC_REBOOT_REQUEST ||
-//        request == CONECTRIC_POLL_RS485  ||
-//        request == CONECTRIC_POLL_RS485_CHUNK  ||
+//        request == CONECTRIC_RS485_POLL  ||
+//        request == CONECTRIC_RS485_POLL_CHUNK  ||
 //        request == CONECTRIC_POLL_SENSORS  ||
 //        request == CONECTRIC_GET_LONG_MAC)
 //      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
@@ -962,8 +962,8 @@ call_decision_maker(void * incoming, uint8_t type)
     /* multihop request with built-in routing table */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
         mhop_message_recv.request == CONECTRIC_REBOOT_REQUEST ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
+        mhop_message_recv.request == CONECTRIC_RS485_POLL  ||
+        mhop_message_recv.request == CONECTRIC_RS485_POLL_CHUNK  ||
         mhop_message_recv.request == CONECTRIC_POLL_WI ||
         mhop_message_recv.request == CONECTRIC_IMG_UPDATE_DIR ||
         mhop_message_recv.request == CONECTRIC_IMG_COMPLETE  
@@ -975,8 +975,8 @@ call_decision_maker(void * incoming, uint8_t type)
     /* multihop reply, no routing table */
     if (mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
         mhop_message_recv.request == CONECTRIC_REBOOT_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
+        mhop_message_recv.request == CONECTRIC_RS485_POLL_REPLY ||
+        mhop_message_recv.request == CONECTRIC_RS485_POLL_CHUNK_REPLY ||
         mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY ||
         mhop_message_recv.request == CONECTRIC_IMG_ACK  
         // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY
@@ -1021,7 +1021,7 @@ call_decision_maker(void * incoming, uint8_t type)
     /* multihop message received */
     if (message->request == CONECTRIC_MULTIHOP_PING ||
         message->request == CONECTRIC_REBOOT_REQUEST ||
-        message->request == CONECTRIC_POLL_RS485_CHUNK  ||
+        message->request == CONECTRIC_RS485_POLL_CHUNK  ||
         message->request == CONECTRIC_POLL_SENSORS  ||
         message->request == CONECTRIC_GET_LONG_MAC)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr)) {
@@ -1032,7 +1032,7 @@ call_decision_maker(void * incoming, uint8_t type)
             message->payload);
       }
 
-    if (message->request == CONECTRIC_POLL_RS485)
+    if (message->request == CONECTRIC_RS485_POLL)
       if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
         process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
             message);

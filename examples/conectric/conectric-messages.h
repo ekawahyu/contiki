@@ -30,10 +30,10 @@ extern "C" {
 #define CONECTRIC_SUPERVISORY_REPORT            0x33
 #define CONECTRIC_SENSOR_UPDATE                 0x34
 #define CONECTRIC_SET_STATE                     0x35
-#define CONECTRIC_POLL_RS485                    0x36
-#define CONECTRIC_POLL_RS485_REPLY              0x37
-#define CONECTRIC_POLL_RS485_CHUNK              0x38
-#define CONECTRIC_POLL_RS485_CHUNK_REPLY        0x39
+#define CONECTRIC_RS485_POLL                    0x36
+#define CONECTRIC_RS485_POLL_REPLY              0x37
+#define CONECTRIC_RS485_POLL_CHUNK              0x38
+#define CONECTRIC_RS485_POLL_CHUNK_REPLY        0x39
 #define CONECTRIC_POLL_WI                       0x3A
 #define CONECTRIC_POLL_WI_REPLY                 0x3B
 #define CONECTRIC_POLL_SENSORS                  0x3C
