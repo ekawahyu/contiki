@@ -107,10 +107,9 @@ Outgoing messages contain request type, destination address and data fields. Unl
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
 * `DESTL` broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01
-* `DATA0`, baudrate: 0=1200, 1=2400, 3=4800, 4=9600
-* `DATA1`, data width: 0=8-bit
-* `DATA2`, parity: 0=none, 1=odd, 2=even
-* `DATA3`, stop bits: 1 or 2
+* `DATA0`, baudrate: 0=2400, 1=4800, 3=9600
+* `DATA1`, parity: 0=none, 1=odd, 2=even
+* `DATA2`, stop bits: 0=1-bit or 1=2-bit
 
 ### Text Message Request Field
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`

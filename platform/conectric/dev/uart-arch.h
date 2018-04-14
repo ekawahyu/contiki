@@ -43,6 +43,17 @@ extern "C" {
 
 #include "contiki.h"
 
+#define UART_B2400        (0 << 6)
+#define UART_B4800        (1 << 6)
+#define UART_B9600        (2 << 6)
+
+#define UART_PARITY_NONE  (0 << 4)
+#define UART_PARITY_ODD   (1 << 4)
+#define UART_PARITY_EVEN  (2 << 4)
+
+#define UART_STOP_BIT_1   (0 << 2)
+#define UART_STOP_BIT_2   (1 << 2)
+
 #if (UART_ON_USART == 0)
 #include "dev/uart0.h"
 #define UART_ARCH_PREFIX uart0
@@ -55,15 +66,18 @@ extern "C" {
 /* Expands to uart0_functions(), uart1_functions() */
 #define uart_arch_init(...) uart_arch_init_x(UART_ARCH_PREFIX, __VA_ARGS__)
 #define uart_arch_writeb(...) uart_arch_writeb_x(UART_ARCH_PREFIX, __VA_ARGS__)
+#define uart_arch_config(...) uart_arch_config_x(UART_ARCH_PREFIX, __VA_ARGS__)
 #define uart_arch_set_input(f) uart_arch_set_input_x(UART_ARCH_PREFIX, f)
 /*---------------------------------------------------------------------------*/
 /* Second round of macro substitutions. You can stop reading here */
 #define uart_arch_init_x(prefix, ...) uart_arch_init_x_x(prefix, __VA_ARGS__)
 #define uart_arch_writeb_x(prefix, ...) uart_arch_writeb_x_x(prefix, __VA_ARGS__)
+#define uart_arch_config_x(prefix, ...) uart_arch_config_x_x(prefix, __VA_ARGS__)
 #define uart_arch_set_input_x(prefix, f) uart_arch_set_input_x_x(prefix, f)
 /*---------------------------------------------------------------------------*/
 #define uart_arch_init_x_x(prefix, ...) prefix##_init(__VA_ARGS__)
 #define uart_arch_writeb_x_x(prefix, ...) prefix##_writeb(__VA_ARGS__)
+#define uart_arch_config_x_x(prefix, ...) prefix##_config(__VA_ARGS__)
 #define uart_arch_set_input_x_x(prefix, f) prefix##_set_input(f)
 /*---------------------------------------------------------------------------*/
 

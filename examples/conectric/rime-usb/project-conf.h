@@ -67,8 +67,8 @@ extern "C" {
 
 #define LPM_CONF_MODE                         0
 
-#define RS485_CONF_ENABLE                     1
-#define UART1_CONF_ENABLE                     1
+#define RS485_CONF_ENABLE                     0
+#define UART1_CONF_ENABLE                     0
 
 #define BUTTON_SENSOR_CONF_ON                 0
 
