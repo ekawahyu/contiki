@@ -99,6 +99,19 @@ Outgoing messages contain request type, destination address and data fields. Unl
 * `01`, reserved byte, always 0x01
 * `DATA0` `DATA1` ... `DATAn`, the RS485 request
 
+### RS485 Config Field (RS485)
+`LEN` `CONF` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+* `LEN`, total bytes from `LEN` to `DATAn`
+* `CONF`, valid value is 0x70, `CONECTRIC_RS485_CONFIG` configuration type
+* `DESTH`, broadcast, netbroadcast, or point-to-point address
+* `DESTL` broadcast, netbroadcast, or point-to-point address
+* `01`, reserved byte, always 0x01
+* `DATA0`, baudrate: 0=1200, 1=2400, 3=4800, 4=9600
+* `DATA1`, data width: 0=8-bit
+* `DATA2`, parity: 0=none, 1=odd, 2=even
+* `DATA3`, stop bits: 1 or 2
+
 ### Text Message Request Field
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 

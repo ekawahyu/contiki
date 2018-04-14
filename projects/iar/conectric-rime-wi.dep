@@ -6,10 +6,63 @@
   <configuration>
     <name>Release</name>
     <outputs>
-      <file>$PROJ_DIR$\..\..\core\lib\assert.c</file>
-      <file>$PROJ_DIR$\..\..\core\dev\leds.c</file>
       <file>$PROJ_DIR$\Release\Obj\debug.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\spi.r51</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\conectric-sensors.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\adc-sensor.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\button-sensor.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\spi-arch.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\gpio-arch.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\leds-arch.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-crc16.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-line.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\rs485-arch.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\slip-arch.c</file>
+      <file>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\debug.c</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\putchar.c</file>
+      <file>$PROJ_DIR$\..\..\core\dev\slip.c</file>
+      <file>$PROJ_DIR$\..\..\core\dev\nullradio.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\llsec\anti-replay.c</file>
+      <file>$PROJ_DIR$\Release\Obj\gcr.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\sht21.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\me.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\framer-nullmac.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\flash-logging.r51</file>
+      <file>$PROJ_DIR$\..\..\core\sys\cc.h</file>
+      <file>$PROJ_DIR$\Release\Obj\rime.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\etimer.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\collect-link-estimate.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\uart1.pbi</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\polite.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\ip\tcpip.h</file>
+      <file>$PROJ_DIR$\Release\Obj\nordc.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\petsciiconv.r51</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\mesh.h</file>
+      <file>$PROJ_DIR$\Release\Obj\nullsec.r51</file>
+      <file>$PROJ_DIR$\..\..\core\net\link-stats.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\linkaddr.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\nbr-table.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\net-debug.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\netstack.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\packetbuf.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\queuebuf.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\arg.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\autostart.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\compower.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\ctimer.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\energest.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\etimer.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\mt.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\process.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\procinit.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\rtimer.c</file>
+      <file>$PROJ_DIR$\..\..\core\dev\leds.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\assert.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\ccm-star.c</file>
+      <file>$PROJ_DIR$\Release\Obj\packetqueue.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\random.r51</file>
+      <file>$PROJ_DIR$\..\..\core\sys\stimer.c</file>
+      <file>$PROJ_DIR$\..\..\core\sys\timer.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\cc2530-rf.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\clock.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.c</file>
@@ -36,109 +89,6 @@
       <file>$PROJ_DIR$\..\..\dev\sht21\sht21.c</file>
       <file>$PROJ_DIR$\..\..\examples\conectric\rime-wi\project-conf.h</file>
       <file>$PROJ_DIR$\..\..\examples\conectric\rime-wi\wi-router.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\mesh.h</file>
-      <file>$PROJ_DIR$\Release\Obj\nullsec.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\nullradio.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\packetqueue.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\serial-line.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\net-debug.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\linkaddr.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\random.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\gcr.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\sht21.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\me.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\framer-nullmac.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\flash-logging.r51</file>
-      <file>$PROJ_DIR$\..\..\core\sys\cc.h</file>
-      <file>$PROJ_DIR$\Release\Obj\rime.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\etimer.r51</file>
-      <file>$PROJ_DIR$\..\..\core\net\llsec\anti-replay.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\llsec\nullsec.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\llsec\ccm-star-packetbuf.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\csma.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\crc16.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\gcr.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\ifft.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\list.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\me.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\me_tabs.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\memb.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\mmem.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\petsciiconv.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\print-stats.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\ringbuf.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\ringbufindex.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\sensors.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\settings.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\trickle-timer.c</file>
-      <file>$PROJ_DIR$\Release\Obj\collect-link-estimate.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\uart1.pbi</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\polite.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\ip\tcpip.h</file>
-      <file>$PROJ_DIR$\Release\Obj\nordc.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\petsciiconv.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\collect-neighbor.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\multihop.pbi</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\collect-neighbor.h</file>
-      <file>$PROJ_DIR$\Release\Obj\framer-802154.pbi</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\timesynch.h</file>
-      <file>$PROJ_DIR$\Release\Obj\netstack.r51</file>
-      <file>$PROJ_DIR$\..\..\core\dev\radio.h</file>
-      <file>$PROJ_DIR$\Release\Obj\uart0.pbi</file>
-      <file>$TOOLKIT_DIR$\inc\dlib\c\DLib_Product.h</file>
-      <file>$PROJ_DIR$\Release\Obj\channel.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\wi-router.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\mac-sequence.r51</file>
-      <file>$PROJ_DIR$\..\..\core\lib\random.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\stunicast.h</file>
-      <file>$PROJ_DIR$\Release\Obj\flash-logging.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\cc2530-rf.pbi</file>
-      <file>$TOOLKIT_DIR$\inc\dlib\c\stddef.h</file>
-      <file>$PROJ_DIR$\Release\Obj\stbroadcast.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\adc-sensor.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\mesh.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\spi1.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\nbr-table.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\mac.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\nullrdc-noframer.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\framer-802154.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\ota.r51</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\abc.h</file>
-      <file>$PROJ_DIR$\Release\Obj\print-stats.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\energest.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\unicast.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\dma_intr.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\mmem.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\button-sensor.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\leds-arch.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\abc.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\conectric.r51</file>
-      <file>$PROJ_DIR$\..\..\core\net\net-debug.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\ipv4\uip-fw-drv.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\ip\psock.h</file>
-      <file>$PROJ_DIR$\..\..\core\contiki-net.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\ipv4\uip_arp.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\ip\simple-udp.h</file>
-      <file>$PROJ_DIR$\Release\Obj\sensors.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\nbr-table.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\process.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\uart0.r51</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\ipolite.h</file>
-      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2.h</file>
-      <file>$PROJ_DIR$\..\..\core\sys\compower.h</file>
-      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.h</file>
-      <file>$PROJ_DIR$\Release\Obj\mac.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\mt.pbi</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\mac.h</file>
-      <file>$PROJ_DIR$\Release\Obj\packetbuf.r51</file>
-      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\cc2530-rf.h</file>
-      <file>$PROJ_DIR$\Release\Obj\conectric-sensors.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\slip.r51</file>
-      <file>$PROJ_DIR$\Release\Obj\compower.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\trickle.pbi</file>
-      <file>$PROJ_DIR$\Release\Obj\flash.pbi</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\polite-announcement.h</file>
-      <file>$PROJ_DIR$\Release\Obj\collect.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\autostart.r51</file>
       <file>$PROJ_DIR$\Release\Obj\frame802154e-ie.r51</file>
       <file>$PROJ_DIR$\Release\Obj\ifft.r51</file>
@@ -212,6 +162,87 @@
       <file>$PROJ_DIR$\Release\Obj\broadcast.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\rtimer-arch.r51</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\sfr-bits.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rime.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rimestats.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rmh.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\route-discovery.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\route.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rucb.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rudolph1.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\rudolph2.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\runicast.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\stbroadcast.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\memb.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\mmem.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\petsciiconv.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\print-stats.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\ringbuf.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\ringbufindex.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\sensors.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\settings.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\trickle-timer.c</file>
+      <file>$PROJ_DIR$\Release\Obj\collect-neighbor.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\multihop.pbi</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect-neighbor.h</file>
+      <file>$PROJ_DIR$\Release\Obj\framer-802154.pbi</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\timesynch.h</file>
+      <file>$PROJ_DIR$\Release\Obj\netstack.r51</file>
+      <file>$PROJ_DIR$\..\..\core\dev\radio.h</file>
+      <file>$PROJ_DIR$\Release\Obj\uart0.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\c\DLib_Product.h</file>
+      <file>$PROJ_DIR$\Release\Obj\channel.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\wi-router.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\mac-sequence.r51</file>
+      <file>$PROJ_DIR$\..\..\core\lib\random.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\stunicast.h</file>
+      <file>$PROJ_DIR$\Release\Obj\flash-logging.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\cc2530-rf.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\c\stddef.h</file>
+      <file>$PROJ_DIR$\Release\Obj\stbroadcast.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\adc-sensor.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\mesh.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\spi1.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\nbr-table.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\mac.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\nullrdc-noframer.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\framer-802154.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\ota.r51</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\abc.h</file>
+      <file>$PROJ_DIR$\Release\Obj\print-stats.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\energest.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\unicast.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\dma_intr.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\mmem.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\button-sensor.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\leds-arch.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\abc.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\conectric.r51</file>
+      <file>$PROJ_DIR$\..\..\core\net\net-debug.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\ipv4\uip-fw-drv.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\ip\psock.h</file>
+      <file>$PROJ_DIR$\..\..\core\contiki-net.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\ipv4\uip_arp.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\ip\simple-udp.h</file>
+      <file>$PROJ_DIR$\Release\Obj\sensors.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\nbr-table.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\process.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\uart0.r51</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\ipolite.h</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2.h</file>
+      <file>$PROJ_DIR$\..\..\core\sys\compower.h</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.h</file>
+      <file>$PROJ_DIR$\Release\Obj\mac.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\mt.pbi</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\mac.h</file>
+      <file>$PROJ_DIR$\Release\Obj\packetbuf.r51</file>
+      <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\cc2530-rf.h</file>
+      <file>$PROJ_DIR$\Release\Obj\conectric-sensors.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\slip.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\compower.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\trickle.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\flash.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\collect.pbi</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\polite-announcement.h</file>
       <file>$PROJ_DIR$\..\..\platform\conectric\contiki-conf.h</file>
       <file>$PROJ_DIR$\Release\Obj\runicast.r51</file>
       <file>$PROJ_DIR$\Release\Obj\mmem.r51</file>
@@ -245,58 +276,12 @@
       <file>$PROJ_DIR$\Release\Obj\ipolite.r51</file>
       <file>$PROJ_DIR$\Release\Obj\leds.pbi</file>
       <file>$PROJ_DIR$\..\..\core\lib\list.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\collect-link-estimate.h</file>
       <file>$PROJ_DIR$\Release\Obj\random.pbi</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\conectric-sensors.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\adc-sensor.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\button-sensor.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\spi-arch.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\gpio-arch.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\leds-arch.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-crc16.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-line.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\rs485-arch.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\dev\slip-arch.c</file>
-      <file>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\debug.c</file>
-      <file>$PROJ_DIR$\..\..\platform\conectric\putchar.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect-link-estimate.h</file>
       <file>$TOOLKIT_DIR$\inc\ioCC2530.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\announcement.h</file>
       <file>$PROJ_DIR$\Release\Obj\trickle.r51</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\announcement.h</file>
       <file>$PROJ_DIR$\Release\Obj\ringbuf.pbi</file>
-      <file>$PROJ_DIR$\..\..\core\dev\serial-line.c</file>
-      <file>$PROJ_DIR$\..\..\core\dev\slip.c</file>
-      <file>$PROJ_DIR$\..\..\core\dev\nullradio.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\aes-128.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\frame802154.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\frame802154e-ie.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\framer-802154.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\framer-nullmac.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\mac-sequence.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\mac.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\nordc.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\nullmac.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\nullrdc.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\mac\phase.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\abc.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\announcement.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\broadcast.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\broadcast-announcement.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon-bitopt.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon-raw.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\channel.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\collect-neighbor.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\collect-link-estimate.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\collect.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\conectric.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\mesh.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\multihop.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\netflood.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\neighbor-discovery.c</file>
-      <file>$PROJ_DIR$\..\..\core\lib\ccm-star.c</file>
       <file>$PROJ_DIR$\..\..\core\lib\mmem.h</file>
       <file>$PROJ_DIR$\Release\Obj\arg.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\chameleon.pbi</file>
@@ -338,8 +323,8 @@
       <file>$PROJ_DIR$\Release\Obj\channel.r51</file>
       <file>$PROJ_DIR$\Release\Obj\chameleon-raw.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\broadcast-announcement.pbi</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\neighbor-discovery.h</file>
       <file>$PROJ_DIR$\Release\Obj\announcement.pbi</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\neighbor-discovery.h</file>
       <file>$PROJ_DIR$\Release\Obj\rtimer-arch.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\rudolph1.r51</file>
       <file>$PROJ_DIR$\Release\Obj\mac-sequence.pbi</file>
@@ -407,6 +392,20 @@
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\gpio.h</file>
       <file>$PROJ_DIR$\..\..\core\sys\mt.h</file>
       <file>$PROJ_DIR$\..\..\core\net\link-stats.h</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\mac-sequence.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\mac.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\nordc.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\nullmac.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\nullrdc.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\phase.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\abc.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\announcement.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\broadcast.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\broadcast-announcement.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon-bitopt.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon-raw.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\chameleon.c</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\flash.h</file>
       <file>$PROJ_DIR$\..\..\core\sys\stimer.h</file>
       <file>$PROJ_DIR$\Release\Obj\sensors.r51</file>
@@ -461,67 +460,292 @@
       <file>$PROJ_DIR$\Release\Obj\route-discovery.pbi</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\unicast.h</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\tsch\tsch-conf.h</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\trickle.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\unicast.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\link-stats.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\linkaddr.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\nbr-table.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\net-debug.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\netstack.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\packetbuf.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\queuebuf.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\arg.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\autostart.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\compower.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\ctimer.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\energest.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\etimer.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\mt.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\process.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\procinit.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\rtimer.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\stimer.c</file>
-      <file>$PROJ_DIR$\..\..\core\sys\timer.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\channel.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect-neighbor.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect-link-estimate.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\collect.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\conectric.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\mesh.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\multihop.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\netflood.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\neighbor-discovery.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\packetqueue.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\polite.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\polite-announcement.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\rime.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\rimestats.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\rmh.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\route-discovery.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\route.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\rucb.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\rudolph1.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\rudolph2.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\runicast.c</file>
-      <file>$PROJ_DIR$\..\..\core\net\rime\stbroadcast.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\crc16.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\gcr.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\ifft.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\list.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\me.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\me_tabs.c</file>
+      <file>$PROJ_DIR$\..\..\core\lib\aes-128.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\llsec\nullsec.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\llsec\ccm-star-packetbuf.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\csma.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\frame802154.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\frame802154e-ie.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\framer-802154.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\mac\framer-nullmac.c</file>
+      <file>$PROJ_DIR$\..\..\core\dev\serial-line.c</file>
+      <file>$PROJ_DIR$\Release\Obj\spi.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\nullradio.pbi</file>
+      <file>$PROJ_DIR$\Release\Obj\serial-line.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\linkaddr.r51</file>
+      <file>$PROJ_DIR$\Release\Obj\net-debug.r51</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\stunicast.c</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\timesynch.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\trickle.c</file>
+      <file>$PROJ_DIR$\..\..\core\net\rime\unicast.c</file>
     </outputs>
     <file>
-      <name>$PROJ_DIR$\..\..\core\lib\assert.c</name>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\conectric-sensors.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 450</file>
+          <file> 281</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 370</file>
+          <file> 230</file>
         </tool>
       </outputs>
     </file>
     <file>
-      <name>[ROOT_NODE]</name>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\adc-sensor.c</name>
       <outputs>
         <tool>
-          <name>XLINK</name>
-          <file> 145</file>
+          <name>ICC8051</name>
+          <file> 193</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 446</file>
         </tool>
       </outputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\dev\leds.c</name>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\button-sensor.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 207</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 249</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\spi-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 130</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 138</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\gpio-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 265</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 257</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\leds-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 208</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 128</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-crc16.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 282</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 406</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-line.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 296</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 102</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\rs485-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 259</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 378</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\dev\slip-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 87</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 280</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 412</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 327</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\debug.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 152</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 0</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\platform\conectric\putchar.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 424</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 252</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\dev\slip.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 231</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 326</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\dev\nullradio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 123</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 483</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\llsec\anti-replay.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 89</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 343</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\link-stats.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 433</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 342</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 453 443 337 135 103 22 28 96 385 237 105 106 148 151 247 242 183 288 94 408 129 348 324 442 416 419 111 112 260 72 124 81 415 145 372 304 126 421 328 365 181 227 448 423 380 420 73 272 376 147 364 366 191 294</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\linkaddr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 485</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 311</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 304 126 337 237 22 145 372 72 124 81 415 242 135 183 94 448 421</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\nbr-table.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
@@ -529,130 +753,79 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 237</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\cc2530-rf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 299</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 86</file>
+          <file> 218</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 43 154 201 211 391 419 216 352 146 206 205 156 79 153 254 422 20 125 162 379 155 444 185 449 424 174 409 123 77 179 198 144 443 417 420 161 229 19 28 416 195 387 319 176 395 421 87 197 380 454 343 303 68 381</file>
+          <file> 81 237 106 372 96 269 151 126 421 129 227 376 124 103 260 72 328 191 115 348 442 416 419 111 112 415 145 304 337 22 364 366 288 28 105 247 443 242 135 183 448 423 380 420 73 272 94 365 408 181 147</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\clock.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\net-debug.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 376</file>
+          <file> 486</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 367</file>
+          <file> 436</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 206 19 387 444 28 319 176 201 156 174 416 195 179 20 43 352 211 185 79 155 395 205 449 422 153 424 254 162 421</file>
+          <file> 288 105 237 304 324 415 106 28 124 145 337 372 22 112 147 72 81 126 421 103 443 151 94 242 135 183 448 96 247 129 211 442 416 419 111 260 423 380 420 73 272 294</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\netstack.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 427</file>
+          <file> 180</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 433</file>
+          <file> 359</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 185 444 153 352 206 155 211 201 156 216 43 79 387 20 120 443 417 420 161 162 229 179 19 174 28 416 195 319 176 449 422 395 146 424 421 254 205</file>
+          <file> 372 126 421 112 227 81 237 191 72 337 106 366 124 415 145 304 376 147 94 96 151 247 129 365 408 181 22 242 135 183 448 328 103 105 443 364 288 28 442 416 419 111 260 423 380 420 73 272</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma_intr.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\packetbuf.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 148</file>
+          <file> 228</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 101</file>
+          <file> 113</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 352 387 161 79 417 229 43 206 120 422 211 185 443 420 162 179 201 20 146 309 319 176 153 156 155 216 444 395 339 19 174 28 416 195 449 424 421 254 205</file>
+          <file> 147 242 442 111 337 341 421 112 415 151 28 237 214 349 269 181 22 183 411 368 419 129 124 145 106 96 288 240 94 452 227 148 135 212 216 213 364 416 260 72 81 372 448 276 318 86 122 453 271 365 376 335 304 126 241 215 410 363 367 362 103 105 247 443 423 380 420 73 272 409 115 187 31 236 251 356 177 142 351 408 274 221 134 334 27 418 360 179 305 188 201 328 358 191 366</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\flash.c</name>
+      <name>$PROJ_DIR$\..\..\core\net\queuebuf.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 423</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 130</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 176 319 387 153 155 179 206 43 195 201 156 216 395 146 352 211 185 79 443 417 420 161 162 229 19 174 28 416 449 422 20 401 424 421 254 444</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\gpio.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 385</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 151</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 398</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2-intr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 346</file>
+          <file> 243</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -662,1243 +835,7 @@
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 201 156 216 422 352 206 153 155 43 421 118 254 146 443 417 420 161 162 229 19 174 28 416 195 387 319 176 449 424 20 179 211 185 79 395 444</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 316</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 426</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 201 156 216 422 352 206 153 155 43 421 118 254 146 443 417 420 161 162 229 19 174 28 416 195 387 319 176 449 424 20 179 211 185 79 395 444</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\random.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 37</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 240</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 153 174 420 87 146 179 195 387 443 162 416 319 352 125 20 417 161 229 19 28 176 206 155 424 205 254 77 201 156 216 444 43 211 185 79 449 422 395 421</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\spi.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 3</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 431</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\spi1.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 91</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 315</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart-intr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 389</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 300</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart0.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 116</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 78</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart1.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 177</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 66</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\watchdog.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 191</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 404</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-logging.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 42</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 85</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-state.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 348</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 347</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\ota.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 96</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 451</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 204</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 334</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\cpu\cc253x\soc.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 448</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 233</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\dev\sht21\sht21-sensor.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 301</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 140</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\dev\sht21\sht21.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 39</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 369</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\examples\conectric\rime-wi\wi-router.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 384</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 81</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\llsec\anti-replay.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 139</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 358</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\llsec\nullsec.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 31</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 193</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\llsec\ccm-star-packetbuf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 317</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 359</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\csma.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 442</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 321</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\crc16.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 340</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 327</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\gcr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 214</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 38</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ifft.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 135</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 308</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\list.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 175</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 166</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\me.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 141</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 40</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\me_tabs.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 158</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 372</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\memb.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 439</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 181</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\mmem.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 208</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 102</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\petsciiconv.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 70</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 187</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\print-stats.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 169</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 98</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ringbuf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 227</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 257</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ringbufindex.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 171</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 215</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\sensors.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 403</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 113</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\settings.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 200</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 312</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\trickle-timer.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 168</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 361</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\conectric-sensors.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 296</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 126</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\adc-sensor.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 89</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 447</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\button-sensor.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 103</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 218</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\spi-arch.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 180</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 188</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\gpio-arch.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 234</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 226</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\leds-arch.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 104</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 178</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-crc16.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 297</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 407</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-line.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 311</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 152</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\rs485-arch.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 228</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 393</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\dev\slip-arch.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 137</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 295</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 413</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 342</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\debug.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 202</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 2</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\platform\conectric\putchar.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 425</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 221</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\dev\serial-line.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 34</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 213</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\dev\slip.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 127</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 341</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\dev\nullradio.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 173</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 32</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\aes-128.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 362</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 432</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 170</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 354</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154e-ie.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 134</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 223</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\framer-802154.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 95</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 74</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\framer-nullmac.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 186</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 41</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\mac-sequence.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 82</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 336</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\mac.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 121</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 93</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nordc.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 160</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 69</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nullmac.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 388</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 390</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 183</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 94</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 142</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 440</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\mac\phase.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 147</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 167</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\abc.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 138</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 105</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\announcement.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 441</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 333</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\broadcast.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 394</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 203</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\broadcast-announcement.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 219</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 331</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\chameleon-bitopt.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 230</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 446</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\chameleon-raw.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 159</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 330</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\chameleon.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 189</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 293</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\channel.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 329</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 80</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\collect-neighbor.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 435</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 71</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\collect-link-estimate.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 328</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 65</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\collect.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 194</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 132</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\conectric.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 106</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 302</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 236</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 313</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\mesh.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 365</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 90</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\multihop.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 406</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 72</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\netflood.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 418</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 415</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\neighbor-discovery.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 190</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 232</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\lib\ccm-star.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 224</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 164</file>
-        </tool>
-      </outputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\trickle.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 256</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 129</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 391 201 387 206 421 161 153 352 185 155 209 179 43 211 79 449 424 174 444 20 83 172 156 19 28 416 195 319 176 422 395 97 198 197 144 146 216 254 371 192 454 343 303 68 443 417 420 162 229 373</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\unicast.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 100</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 414</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 161 352 123 209 453 184 364 419 201 206 391 68 255 67 375 185 387 156 43 97 303 197 417 229 162 198 239 174 117 349 144 366 75 211 79 449 73 343 443 420 179 192 172 165 356 30 332 131 136 220 371 19 28 416 195 319 176 422 320 238 84 153 155 424 395 454 146 216 444 421 20 254 373 350 77 87</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\link-stats.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 434</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 357</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 454 444 352 185 153 43 68 146 400 206 155 156 198 201 216 211 79 303 144 409 179 363 339 443 417 420 161 162 229 19 174 28 416 195 387 319 176 422 343 380 77 123 449 424 395 421 20 254 391 197 379 381 87 309</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\linkaddr.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 36</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 326</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 319 176 352 206 43 195 387 19 174 28 416 211 185 79 144 449 422</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\nbr-table.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 92</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 114</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 28 206 156 387 146 238 201 176 422 179 123 391 174 153 229 19 343 87 165 363 443 417 420 161 162 416 195 319 352 43 379 381 303 68 155 216 444 211 185 79 449 424 395 421 20 254 144 380 409 77 197</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\net-debug.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 35</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 437</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 303 155 206 319 339 416 156 68 174 195 352 387 43 162 197 19 28 176 422 153 444 201 144 211 185 79 449 146 216 179 107 443 417 420 161 229 424 395 421 20 254 309</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\netstack.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 76</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 374</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 387 176 422 162 123 28 206 87 19 352 156 381 174 416 195 319 391 197 144 146 201 216 179 380 409 77 43 211 185 79 449 343 153 155 444 379 303 68 443 417 420 161 229 424 395 421 20 254</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\packetbuf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 124</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 163</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 197 211 443 161 352 356 422 162 416 201 68 206 110 364 238 77 43 79 412 383 420 179 174 195 156 146 303 209 144 453 123 198 185 108 112 109 379 417 229 19 28 387 449 291 332 136 172 454 239 380 391 350 319 176 210 111 411 378 382 377 153 155 216 444 424 395 421 20 254 410 165 83 30 131 220 371 73 192 366 409 255 117 184 349 67 419 375 75 320 84 97 343 373 87 381</file>
-        </tool>
-      </inputs>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\core\net\queuebuf.c</name>
-      <outputs>
-        <tool>
-          <name>ICC8051</name>
-          <file> 212</file>
-        </tool>
-        <tool>
-          <name>BICOMP</name>
-          <file> 430</file>
-        </tool>
-      </outputs>
-      <inputs>
-        <tool>
-          <name>BICOMP</name>
-          <file> 211 201 424 161 449 111 43 210 356 377 216 352 155 197 146 364 238 77 68 378 156 79 153 254 410 83 209 144 453 422 123 174 411 382 350 206 444 185 387 395 421 20 165 332 136 172 454 198 239 380 391 108 412 112 109 383 379 443 417 420 162 229 179 19 28 416 195 319 176 303 110 291 30 131 220 371 73 192 366 409 255 117 184 349 67 419 375 75 320 84 97 343 373 87 381</file>
+          <file> 242 151 423 111 448 215 22 241 341 362 247 337 105 147 96 349 269 181 28 363 106 183 103 272 409 187 240 94 452 421 227 124 410 367 335 237 443 135 372 380 420 73 115 318 86 122 453 148 271 365 376 212 411 216 213 368 364 442 416 419 112 260 129 72 81 415 145 304 126 288 214 276 31 236 251 356 177 142 351 408 274 221 134 334 27 418 360 179 305 188 201 328 358 191 366</file>
         </tool>
       </inputs>
     </file>
@@ -1907,17 +844,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 445</file>
+          <file> 444</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 292</file>
+          <file> 277</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 161 416 179 417 229 174 195 387 422 443 420 162 19 28 319 176 449 352 43 395 206 201 153 156 155 216 211 185 79 20 146 424 421 254 397 444</file>
+          <file> 111 415 129 416 260 124 145 372 421 442 419 112 72 81 304 126 448 337 22 380 237 151 103 106 105 247 242 135 183 73 96 423 420 272 382 443</file>
         </tool>
       </inputs>
     </file>
@@ -1926,17 +863,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 133</file>
+          <file> 83</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 392</file>
+          <file> 377</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 352 449 43 155 424 185 201 211 395 206 19 174 28 416 195 387 79 422 420 319 176</file>
+          <file> 337 448 22 105 423 135 151 242 380 237 72 124 81 415 145 372 183 421 419 304 126</file>
         </tool>
       </inputs>
     </file>
@@ -1945,17 +882,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 318</file>
+          <file> 303</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 128</file>
+          <file> 232</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 176 229 387 303 422 28 197 201 19 206 417 119 174 416 195 319 352 454 68 161 395 444 198 43 211 185 79 449 162 144 343 443 420 179 155 424 153 421 20 254 391 146 156 216</file>
+          <file> 126 260 372 288 421 81 147 151 72 237 416 223 124 415 145 304 337 453 28 111 380 443 148 22 242 135 183 448 112 94 328 442 419 129 105 423 103 420 73 272 376 96 106 247</file>
         </tool>
       </inputs>
     </file>
@@ -1964,17 +901,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 405</file>
+          <file> 404</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 143</file>
+          <file> 93</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 216 211 352 206 156 185 201 238 153 43 79 387 20 146 179 19 174 28 416 195 319 176 449 422 155 395 444 161 424 443 417 420 162 229 421 254</file>
+          <file> 247 242 337 237 106 135 151 269 103 22 183 372 73 96 129 72 124 81 415 145 304 126 448 421 105 380 443 111 423 442 416 419 112 260 420 272</file>
         </tool>
       </inputs>
     </file>
@@ -1983,17 +920,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 157</file>
+          <file> 107</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 99</file>
+          <file> 203</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 416 206 174 195 387 422 162 19 28 319 176 449 352 421 43 211 185 79 20 254 444</file>
+          <file> 415 237 124 145 372 421 112 72 81 304 126 448 337 420 22 242 135 183 73 272 443</file>
         </tool>
       </inputs>
     </file>
@@ -2002,17 +939,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 45</file>
+          <file> 24</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 355</file>
+          <file> 340</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 206 79 352 201 43 211 449 185 156 19 174 28 416 195 387 319 176 422 153 179 155 424 395</file>
+          <file> 237 183 337 151 22 242 448 135 106 72 124 81 415 145 372 304 126 421 103 129 105 423 380</file>
         </tool>
       </inputs>
     </file>
@@ -2021,17 +958,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 310</file>
+          <file> 295</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 122</file>
+          <file> 226</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 153 352 444 185 422 254 206 155 424 162 43 201 156 216 211 79 449 395 421 20 399 443 417 420 161 229 179 19 174 28 416 195 387 319 176 146 396</file>
+          <file> 103 337 443 135 421 272 237 105 423 112 22 151 106 247 242 183 448 380 420 73 384 442 416 419 111 260 129 72 124 81 415 145 372 304 126 96 381</file>
         </tool>
       </inputs>
     </file>
@@ -2040,17 +977,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 386</file>
+          <file> 371</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 115</file>
+          <file> 219</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 211 352 28 397 422 185 155 395 206 19 201 387 309 79 174 416 195 339 319 176 43 424 449</file>
+          <file> 242 337 81 382 421 135 105 380 237 72 151 372 294 183 124 415 145 324 304 126 22 423 448</file>
         </tool>
       </inputs>
     </file>
@@ -2059,17 +996,17 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 344</file>
+          <file> 329</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 360</file>
+          <file> 345</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 161 416 179 417 229 174 195 387 422 443 420 162 19 28 319 176 449 352 43 395 206 201 153 156 155 216 211 185 79 20 146 424 421 254 444</file>
+          <file> 111 415 129 416 260 124 145 372 421 442 419 112 72 81 304 126 448 337 22 380 237 151 103 106 105 247 242 135 183 73 96 423 420 272 443</file>
         </tool>
       </inputs>
     </file>
@@ -2078,36 +1015,84 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 231</file>
+          <file> 262</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 306</file>
+          <file> 291</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 352 216 185 211 206 201 421 43 79 387 20 156 146 19 174 28 416 195 319 176 449 422 254 153 155 444 424 162 443 417 420 161 229 179 395</file>
+          <file> 337 247 135 242 237 151 420 22 183 372 73 106 96 72 124 81 415 145 304 126 448 421 272 103 105 443 423 112 442 416 419 111 260 129 380</file>
         </tool>
       </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 95</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\dev\leds.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 146</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 268</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\assert.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 449</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 355</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\ccm-star.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 255</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 114</file>
+        </tool>
+      </outputs>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\core\sys\stimer.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 225</file>
+          <file> 256</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 222</file>
+          <file> 253</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 195 387 43 352 319 176 206 19 174 28 416 211 185 79 449 422 179 402</file>
+          <file> 145 372 22 337 304 126 237 72 124 81 415 242 135 183 448 421 129 401</file>
         </tool>
       </inputs>
     </file>
@@ -2116,56 +1101,370 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 428</file>
+          <file> 427</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 305</file>
+          <file> 290</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 195 387 43 352 319 176 206 19 174 28 416 211 185 79 449 422 179 153</file>
+          <file> 145 372 22 337 304 126 237 72 124 81 415 242 135 183 448 421 129 103</file>
         </tool>
       </inputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\packetqueue.c</name>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\cc2530-rf.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 199</file>
+          <file> 284</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 33</file>
+          <file> 190</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 22 104 151 242 376 418 247 337 96 237 155 106 183 103 272 421 73 229 112 364 105 443 135 448 423 124 408 227 181 129 148 94 442 416 419 111 260 72 81 415 145 372 304 126 380 420 191 147 365 453 328 288 28 366</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\clock.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 361</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 352</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 237 72 372 443 81 304 126 151 106 124 415 145 129 73 22 337 242 135 183 105 380 155 448 421 103 423 272 112 420</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 426</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 432</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 135 443 103 337 237 105 242 151 106 247 22 183 372 73 224 442 416 419 111 112 260 129 72 124 81 415 145 304 126 448 421 380 96 423 420 272 155</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma_intr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 98</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 205</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 337 372 111 183 416 260 22 237 224 421 242 135 442 419 112 129 151 73 96 294 304 126 103 106 105 247 443 380 324 72 124 81 415 145 448 423 420 272 155</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\flash.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 422</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 234</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 126 304 372 103 105 129 237 22 145 151 106 247 380 96 337 242 135 183 442 416 419 111 112 260 72 124 81 415 448 421 73 400 423 420 272 443</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\gpio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 370</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 101</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 383</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2-intr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 331</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 428</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 151 106 247 421 337 237 103 105 22 420 222 272 96 442 416 419 111 112 260 72 124 81 415 145 372 304 126 448 423 73 129 242 135 183 380 443</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\port2.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 301</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 425</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 151 106 247 421 337 237 103 105 22 420 222 272 96 442 416 419 111 112 260 72 124 81 415 145 372 304 126 448 423 73 129 242 135 183 380 443</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\random.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 54</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 270</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 103 124 419 191 96 129 145 372 442 112 415 304 337 229 73 416 111 260 72 81 126 237 105 423 155 272 181 151 106 247 443 22 242 135 183 448 421 380 420</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\spi.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 482</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 430</file>
         </tool>
       </outputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\polite.c</name>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\spi1.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 338</file>
+          <file> 195</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 314</file>
+          <file> 300</file>
         </tool>
       </outputs>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\core\net\rime\polite-announcement.c</name>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart-intr.c</name>
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 337</file>
+          <file> 374</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 353</file>
+          <file> 285</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart0.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 220</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 182</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\uart1.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 127</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 26</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\dev\watchdog.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 141</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 403</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-logging.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 21</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 189</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-state.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 333</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 332</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\ota.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 200</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 450</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 154</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 319</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\cpu\cc253x\soc.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 447</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 264</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\dev\sht21\sht21-sensor.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 286</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 90</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\dev\sht21\sht21.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 18</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 354</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\examples\conectric\rime-wi\wi-router.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 369</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 185</file>
         </tool>
       </outputs>
     </file>
@@ -2174,11 +1473,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 235</file>
+          <file> 266</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 44</file>
+          <file> 23</file>
         </tool>
       </outputs>
     </file>
@@ -2187,11 +1486,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 217</file>
+          <file> 248</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 351</file>
+          <file> 336</file>
         </tool>
       </outputs>
     </file>
@@ -2200,11 +1499,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 345</file>
+          <file> 330</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 149</file>
+          <file> 99</file>
         </tool>
       </outputs>
     </file>
@@ -2213,11 +1512,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 182</file>
+          <file> 132</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 452</file>
+          <file> 451</file>
         </tool>
       </outputs>
     </file>
@@ -2226,11 +1525,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 324</file>
+          <file> 309</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 368</file>
+          <file> 353</file>
         </tool>
       </outputs>
     </file>
@@ -2239,11 +1538,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 436</file>
+          <file> 435</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 304</file>
+          <file> 289</file>
         </tool>
       </outputs>
     </file>
@@ -2252,11 +1551,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 335</file>
+          <file> 320</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 298</file>
+          <file> 283</file>
         </tool>
       </outputs>
     </file>
@@ -2265,11 +1564,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 323</file>
+          <file> 308</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 408</file>
+          <file> 407</file>
         </tool>
       </outputs>
     </file>
@@ -2278,11 +1577,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 207</file>
+          <file> 238</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 150</file>
+          <file> 100</file>
         </tool>
       </outputs>
     </file>
@@ -2291,11 +1590,674 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
+          <file> 192</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 437</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\memb.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 438</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 131</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\mmem.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 239</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 206</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\petsciiconv.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 30</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 137</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\print-stats.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 119</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 202</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\ringbuf.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 258</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 275</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\ringbufindex.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 121</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 246</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\sensors.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 402</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 217</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\settings.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 150</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 297</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\trickle-timer.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 118</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 346</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\mac-sequence.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 186</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 321</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\mac.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 225</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 197</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nordc.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 110</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nullmac.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 373</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 375</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 133</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 198</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\nullrdc.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 92</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 439</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\phase.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 97</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 117</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\abc.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
           <file> 88</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 438</file>
+          <file> 209</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\announcement.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 440</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 317</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\broadcast.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 379</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 153</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\broadcast-announcement.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 250</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 316</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\chameleon-bitopt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 261</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 445</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\chameleon-raw.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 109</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 315</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\chameleon.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 139</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 278</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\channel.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 314</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 184</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\collect-neighbor.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 434</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 175</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\collect-link-estimate.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 313</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 25</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\collect.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 144</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 235</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\conectric.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 210</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 287</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 267</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 298</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\mesh.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 350</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 194</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\multihop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 405</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 176</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\netflood.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 417</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 414</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\neighbor-discovery.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 140</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 263</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\packetqueue.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 149</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 53</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\polite.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 323</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 299</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\polite-announcement.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 322</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 338</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\crc16.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 325</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 312</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\gcr.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 245</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 17</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\ifft.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 85</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 293</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\list.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 125</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 116</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\me.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 91</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 19</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\me_tabs.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 108</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 357</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\lib\aes-128.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 347</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 431</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\llsec\nullsec.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 32</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 143</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\llsec\ccm-star-packetbuf.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 302</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 344</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\csma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 441</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 306</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 120</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 339</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\frame802154e-ie.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 84</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 254</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\framer-802154.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 199</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 178</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\mac\framer-nullmac.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 136</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 20</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\dev\serial-line.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 484</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 244</file>
         </tool>
       </outputs>
     </file>
@@ -2304,11 +2266,11 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 294</file>
+          <file> 279</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 307</file>
+          <file> 292</file>
         </tool>
       </outputs>
     </file>
@@ -2317,13 +2279,51 @@
       <outputs>
         <tool>
           <name>ICC8051</name>
-          <file> 325</file>
+          <file> 310</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 322</file>
+          <file> 307</file>
         </tool>
       </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\trickle.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 273</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 233</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 376 151 372 237 420 111 103 337 135 105 240 129 22 242 183 448 423 124 443 73 187 122 106 72 81 415 145 304 126 421 380 201 148 147 94 96 247 272 356 142 453 328 288 28 442 416 419 112 260 358</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\core\net\rime\unicast.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 204</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 413</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 111 337 227 240 452 134 349 418 151 237 376 28 274 27 360 135 372 106 22 201 288 147 416 260 112 148 271 124 221 334 94 351 179 242 183 448 177 328 442 419 129 142 122 115 341 31 318 236 86 251 356 72 81 415 145 304 126 421 305 269 188 103 105 423 380 453 96 247 443 420 73 272 358 335 181 191</file>
+        </tool>
+      </inputs>
     </file>
     <forcedrebuild>
       <name>[MULTI_TOOL]</name>
