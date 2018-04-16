@@ -122,7 +122,7 @@ command_respond(uint8_t * bytereq)
   uint8_t request;
   int8_t i;
 
-  if (bytereq == NULL) return NULL;
+  if (bytereq == NULL) return 0;
 
   /*******************************************************/
   /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
@@ -333,37 +333,53 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, lin
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
   uint8_t * header = NULL;
+  uint8_t * route = NULL;
+  linkaddr_t dest;
+  uint8_t req;
+  uint8_t reqlen;
   uint8_t datalen;
-  request_line * line;
+  uint8_t routelen;
+  uint8_t i;
 
   if (*request == '<') request++; /* skip the '<' */
 
-  line = (request_line *)request;
+  reqlen     = *request++;
+  req        = *request++;
+  dest.u8[0] = *request++;
+  dest.u8[1] = *request++;
+  routelen   = *request++;
 
-  if (ereceiver) linkaddr_copy(ereceiver, &line->dest);
+  if (ereceiver) linkaddr_copy(ereceiver, &dest);
 
   /* Filling in packetbuf with request byte and data.
    * Minimum length of data = 3 ---> [DLen][Req][Batt], the rest of data will
    * follow if there is any.
    */
   memset(packet_buffer, 0, sizeof(packet_buffer));
-  datalen = line->reqlen - 1 - CONECTRIC_REQUEST_HEADER_LEN;
+  datalen = reqlen - routelen - CONECTRIC_REQUEST_HEADER_LEN;
   *packet++ = datalen + CONECTRIC_MESSAGE_LEN;
-  *packet++ = line->req;
+  *packet++ = req;
   *packet++ = batt;
-  while (datalen--) *packet++ = *line->payload++;
+  route = request;
+  request += (routelen - 1);
+  i = datalen;
+  while (i--) *packet++ = *request++;
 
   packetbuf_copyfrom(packet_buffer, datalen + CONECTRIC_MESSAGE_LEN);
 
-  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN); /* allocate some space for header */
+  routelen--; /* get rid of the length byte */
+
+  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN + routelen); /* allocate some space for header */
 
   header = (uint8_t *)packetbuf_hdrptr();
-  *header++ = CONECTRIC_MESSAGE_HEADER_LEN; /* header length */
-  *header++ = seqno;                        /* seqno */
-  *header++ = 0;                            /* hop count */
-  *header++ = 0;                            /* number of hops */
-  *header++ = line->dest.u8[0];             /* destination addr H */
-  *header++ = line->dest.u8[1];             /* destination addr L */
+  *header++ = CONECTRIC_MESSAGE_HEADER_LEN + routelen;   /* header length */
+  *header++ = seqno;          /* seqno */
+  *header++ = 0;              /* hop count */
+  *header++ = 0;              /* number of hops */
+  *header++ = dest.u8[0];     /* destination addr H */
+  *header++ = dest.u8[1];     /* destination addr L */
+  while(routelen--)
+        *header++ = *route++; /* routing table */
 
   /* The packetbuf is filled and ready to be sent */
 }
