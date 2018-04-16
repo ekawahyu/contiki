@@ -224,6 +224,8 @@ main(void) CC_NON_BANKED
 
   uart_arch_set_input(modbus_line_input_byte);
 
+  uart_arch_config(UART_B9600 | UART_PARITY_EVEN | UART_STOP_BIT_1);
+
 #if DMA_ON
   dma_init();
 #endif
