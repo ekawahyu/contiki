@@ -333,76 +333,37 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, lin
   static uint8_t packet_buffer[128];
   uint8_t * packet = packet_buffer;
   uint8_t * header = NULL;
-  uint8_t * route = NULL;
-  linkaddr_t dest;
-  uint8_t req;
-  uint8_t reqlen;
   uint8_t datalen;
-  uint8_t routelen;
-  uint8_t i;
-
-  /*****************************************************/
-  /***** NETWORK MESSAGE REQUEST/RESPONSE PROTOCOL *****/
-  /*****************************************************/
-  /*
-   * [HdrLen][Seq][HopCnt][MaxHop][DestH][DestL][R1H][R1L]...[RnH][RnL][PLen][Req][Data0][Data1]...[Datan]
-   *
-   * [HdrLen] = header + routing table length including the length byte itself
-   * [Seq]    = sequence number
-   * [HopCnt] = hop count
-   * [MaxHop] = maximum hops before it gets dropped
-   * [DestH]  = destination address H
-   * [DestL]  = destination address L
-   * [R1H]    = the first hop address H
-   * [R1L]    = the first hop address L
-   * [RnH]    = the last hop address H ---> [DestH]
-   * [RnL]    = the last hop address L ---> [DestL]
-   * [PLen]   = payload length is the total of PLEN + Req + data
-   * [Req]    = request byte
-   * [Data0]  = data sequence starts
-   * [Datan]  = the last data sequence
-   *
-   */
+  request_line * line;
 
   if (*request == '<') request++; /* skip the '<' */
 
-  reqlen     = *request++;
-  req        = *request++;
-  dest.u8[0] = *request++;
-  dest.u8[1] = *request++;
-  routelen   = *request++;
+  line = (request_line *)request;
 
-  if (ereceiver) linkaddr_copy(ereceiver, &dest);
+  if (ereceiver) linkaddr_copy(ereceiver, &line->dest);
 
   /* Filling in packetbuf with request byte and data.
    * Minimum length of data = 3 ---> [DLen][Req][Batt], the rest of data will
    * follow if there is any.
    */
   memset(packet_buffer, 0, sizeof(packet_buffer));
-  datalen = reqlen - routelen - CONECTRIC_REQUEST_HEADER_LEN;
+  datalen = line->reqlen - 1 - CONECTRIC_REQUEST_HEADER_LEN;
   *packet++ = datalen + CONECTRIC_MESSAGE_LEN;
-  *packet++ = req;
+  *packet++ = line->req;
   *packet++ = batt;
-  route = request;
-  request += (routelen - 1);
-  i = datalen;
-  while (i--) *packet++ = *request++;
+  while (datalen--) *packet++ = *line->payload++;
 
   packetbuf_copyfrom(packet_buffer, datalen + CONECTRIC_MESSAGE_LEN);
 
-  routelen--; /* get rid of the length byte */
-
-  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN + routelen); /* allocate some space for header */
+  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN); /* allocate some space for header */
 
   header = (uint8_t *)packetbuf_hdrptr();
-  *header++ = CONECTRIC_MESSAGE_HEADER_LEN + routelen;   /* header length */
-  *header++ = seqno;          /* seqno */
-  *header++ = 0;              /* hop count */
-  *header++ = 0;              /* number of hops */
-  *header++ = dest.u8[0];     /* destination addr H */
-  *header++ = dest.u8[1];     /* destination addr L */
-  while(routelen--)
-        *header++ = *route++; /* routing table */
+  *header++ = CONECTRIC_MESSAGE_HEADER_LEN; /* header length */
+  *header++ = seqno;                        /* seqno */
+  *header++ = 0;                            /* hop count */
+  *header++ = 0;                            /* number of hops */
+  *header++ = line->dest.u8[0];             /* destination addr H */
+  *header++ = line->dest.u8[1];             /* destination addr L */
 
   /* The packetbuf is filled and ready to be sent */
 }

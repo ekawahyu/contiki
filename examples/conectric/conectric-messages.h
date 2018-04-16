@@ -84,6 +84,17 @@ typedef struct {
   uint16_t      rssi;
 } message_recv;
 
+
+/* Conectric Request Structure */
+typedef struct {
+  uint8_t reqlen;
+  uint8_t req;
+  linkaddr_t dest;
+  uint8_t hdr_next;
+  uint8_t * payload;
+} request_line;
+
+
 #ifdef __cplusplus
 }
 #endif
