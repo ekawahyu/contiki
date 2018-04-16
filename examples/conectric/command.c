@@ -122,7 +122,7 @@ command_respond(uint8_t * bytereq)
   uint8_t request;
   int8_t i;
 
-  if (bytereq == NULL) return 0;
+  if (bytereq == NULL) return NULL;
 
   /*******************************************************/
   /***** INTERPRETING REQUEST BYTES FROM SERIAL PORT *****/
@@ -152,6 +152,7 @@ command_respond(uint8_t * bytereq)
         request == CONECTRIC_REBOOT_REQUEST ||
         request == CONECTRIC_RS485_POLL  ||
         request == CONECTRIC_RS485_POLL_CHUNK  ||
+        request == CONECTRIC_RS485_CONFIG  ||
         request == CONECTRIC_POLL_SENSORS  ||
         request == CONECTRIC_GET_LONG_MAC ||
         request == CONECTRIC_TEXT_MESSAGE) {
@@ -404,107 +405,5 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, lin
         *header++ = *route++; /* routing table */
 
   /* The packetbuf is filled and ready to be sent */
-}
-/*---------------------------------------------------------------------------*/
-void
-compose_response_to_packetbuf(uint8_t * radio_request,
-    uint8_t seqno, linkaddr_t * ereceiver)
-{
-  static uint8_t packet_buffer[128];
-  uint8_t * packet = packet_buffer;
-  uint8_t * header = NULL;
-  uint8_t req;
-  uint8_t reqlen;
-  uint8_t response = 0;
-  uint8_t responselen;
-  uint8_t chunk_number = 0;
-  uint8_t chunk_size = 0;
-  uint8_t i;
-
-  if (*radio_request == '>') radio_request++; /* skip the '>' prefix */
-
-  reqlen = *radio_request++;
-  req    = *radio_request++;
-
-  responselen = 2;
-
-//  /* Responses to trickle requests */
-//  if (req == CONECTRIC_ROUTE_REQUEST) {
-//    response = CONECTRIC_ROUTE_REPLY;
-//    linkaddr_copy(ereceiver, &trickle_message_recv.esender);
-//  }
-//  if (req == CONECTRIC_ROUTE_REQUEST_BY_SN) {
-//    response = CONECTRIC_ROUTE_REPLY;
-//    linkaddr_copy(ereceiver, &trickle_message_recv.esender);
-//  }
-//
-//  /* Responses to multihop requests */
-//  if (req == CONECTRIC_MULTIHOP_PING) {
-//    response = CONECTRIC_MULTIHOP_PING_REPLY;
-//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-//  }
-//  if (req == CONECTRIC_REBOOT_REQUEST) {
-//    response = CONECTRIC_REBOOT_REPLY;
-//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-//  }
-//  if (req == CONECTRIC_RS485_POLL) {
-//    response = CONECTRIC_RS485_POLL_REPLY;
-//    responselen += 2;
-//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-//  }
-//  if (req == CONECTRIC_RS485_POLL_CHUNK) {
-//    response = CONECTRIC_RS485_POLL_CHUNK_REPLY;
-//    chunk_number = *radio_request++;
-//    chunk_size   = *radio_request++;
-//    responselen += chunk_size;
-//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-//  }
-//  if (req == CONECTRIC_POLL_SENSORS) {
-//    response = CONECTRIC_POLL_SENSORS_REPLY;
-//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-//  }
-//  if (req == CONECTRIC_GET_LONG_MAC) {
-//    response = CONECTRIC_GET_LONG_MAC_REPLY;
-//    responselen += 8;
-//    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
-//  }
-
-  memset(packet_buffer, 0, sizeof(packet_buffer));
-  *packet++ = responselen;
-  *packet++ = response;
-
-  i = responselen-2;
-
-//  if (req == CONECTRIC_RS485_POLL) {
-//    /* FIXME this has to be calculated from RS485 reply length */
-//    *packet++ = 0x04; /* number of chunks available to poll */
-//    *packet++ = 0x40; /* chunk size */
-//  }
-//
-//  if (req == CONECTRIC_RS485_POLL_CHUNK) {
-//    for (i = 0; i < chunk_size; i++)
-//      *packet++ = rs485_buffer[(chunk_size*chunk_number) + i];
-//  }
-//
-//  if (req == CONECTRIC_GET_LONG_MAC) {
-//    gmacp = &X_IEEE_ADDR;
-//    while (i--) {
-//      *packet++ = gmacp[i];
-//      puthex(gmacp[i]);
-//    }
-//    putstring("\n");
-//  }
-
-  packetbuf_copyfrom(packet_buffer, responselen);
-
-  packetbuf_hdralloc(6);
-
-  header = (uint8_t *)packetbuf_hdrptr();
-  *header++ = 6;                /* header len */
-  *header++ = seqno;            /* seqno */
-  *header++ = 0;                /* hop count */
-  *header++ = 0;                /* number of hops */
-  *header++ = ereceiver->u8[0]; /* destination addr H */
-  *header++ = ereceiver->u8[1]; /* destination addr L */
 }
 /*---------------------------------------------------------------------------*/
