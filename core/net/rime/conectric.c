@@ -40,6 +40,7 @@
 #include "net/rime/rime.h"
 #include "net/rime/route.h"
 #include "net/rime/conectric.h"
+#include "random.h"
 
 #include <stddef.h> /* For offsetof */
 
@@ -254,6 +255,9 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
     }
   }
 
+  /* Add random time for re-transmission */
+  clock_wait(1 + random_rand() % (CLOCK_SECOND/32));
+
   /* Continue flooding the network */
   return 1;
 }
@@ -400,13 +404,14 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
   route_init();
   sink_init();
   broadcast_open(&c->broadcast, channels, &broadcast_call);
-  netflood_open(&c->netflood, CLOCK_SECOND/8, channels + 1, &netflood_call);
+  netflood_open(&c->netflood, CLOCK_SECOND/32, channels + 1, &netflood_call);
   multihop_open(&c->multihop, channels + 2, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
-		       CLOCK_SECOND/8,
+		       CLOCK_SECOND/32,
 		       channels + 4,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
+  c->netbc_id = 255;
   is_sink = 0;
   is_collect = 0;
 }

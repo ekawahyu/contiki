@@ -385,7 +385,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
         PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
             linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
             clock_seconds());
-        PROCESS_PAUSE();
+        // PROCESS_PAUSE();
         if (loop) {
           etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
           PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
@@ -416,7 +416,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       PRINTF("%d.%d: sensor broadcast sent to sink ts %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           clock_seconds());
-      PROCESS_PAUSE();
+      // PROCESS_PAUSE();
     }
 
     else if(*request == RS485_SUP_EVT)
@@ -441,7 +441,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
         PRINTF("%d.%d: conectric sent to sink ts %lu\n",
             linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
             clock_seconds());
-        PROCESS_PAUSE();
+        // PROCESS_PAUSE();
         if (loop) {
           etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
           PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));

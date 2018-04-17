@@ -310,6 +310,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
+  /* Temporary request line test */
   payload[0] = 'H';
   payload[1] = 'e';
   payload[2] = 'l';
@@ -363,7 +364,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
       PRINTF("%d.%d: sensor broadcast sent to sink ts %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           clock_seconds());
-      PROCESS_PAUSE();
+      // PROCESS_PAUSE();
     }
 
     else if(*request == USB_SUP_EVT)
@@ -388,7 +389,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
         PRINTF("%d.%d: conectric sent to sink ts %lu\n",
             linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
             clock_seconds());
-        PROCESS_PAUSE();
+        // PROCESS_PAUSE();
         if (loop) {
           etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
           PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
