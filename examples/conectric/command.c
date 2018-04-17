@@ -40,7 +40,6 @@
 #include "net/rime/conectric.h"
 
 #include "command.h"
-#include "conectric-messages.h"
 #if defined __IAR_SYSTEMS_ICC__
 #include "conectric-version.h"
 #endif
@@ -382,5 +381,67 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, lin
         *header++ = *route++; /* routing table */
 
   /* The packetbuf is filled and ready to be sent */
+}
+/*---------------------------------------------------------------------------*/
+void
+compose_request_line_to_packetbuf(request_line * line, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver)
+{
+  static uint8_t packet_buffer[128];
+  uint8_t * packet = packet_buffer;
+  uint8_t * header = NULL;
+  uint8_t * route = NULL;
+  linkaddr_t dest;
+  uint8_t req;
+  uint8_t reqlen;
+  uint8_t datalen;
+  uint8_t routelen;
+  uint8_t i;
+
+  reqlen     = line->reqlen;
+  req        = line->req;
+  dest.u8[0] = line->dest.u8[0];
+  dest.u8[1] = line->dest.u8[1];
+  routelen   = line->hdr_next;
+
+  if (ereceiver) linkaddr_copy(ereceiver, &line->dest);
+
+  /* Filling in packetbuf with request byte and data.
+   * Minimum length of data = 3 ---> [DLen][Req][Batt], the rest of data will
+   * follow if there is any.
+   */
+  memset(packet_buffer, 0, sizeof(packet_buffer));
+  datalen = reqlen - routelen - CONECTRIC_REQUEST_HEADER_LEN;
+  *packet++ = datalen + CONECTRIC_MESSAGE_LEN;
+  *packet++ = req;
+  *packet++ = batt;
+  i = datalen;
+  while (i--) *packet++ = *line->payload++;
+
+  packetbuf_copyfrom(packet_buffer, datalen + CONECTRIC_MESSAGE_LEN);
+
+  routelen--; /* get rid of the length byte */
+
+  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN + routelen); /* allocate some space for header */
+
+  header = (uint8_t *)packetbuf_hdrptr();
+  *header++ = CONECTRIC_MESSAGE_HEADER_LEN;   /* header length */
+  *header++ = seqno;          /* seqno */
+  *header++ = 0;              /* hop count */
+  *header++ = 0;              /* number of hops */
+  *header++ = dest.u8[0];     /* destination addr H */
+  *header++ = dest.u8[1];     /* destination addr L */
+
+  /* The packetbuf is filled and ready to be sent */
+}
+/*---------------------------------------------------------------------------*/
+void
+compose_request_line(request_line * line, uint8_t request, uint8_t * data, uint8_t datalen)
+{
+  line->reqlen = CONECTRIC_REQUEST_HEADER_LEN + 1 + datalen;
+  line->req = request;
+  line->dest.u8[0] = 0;
+  line->dest.u8[1] = 0;
+  line->hdr_next = 0x01; /* reserved, always 0x01 */
+  line->payload = data;
 }
 /*---------------------------------------------------------------------------*/

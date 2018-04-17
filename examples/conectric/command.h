@@ -37,6 +37,8 @@
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
+#include "conectric-messages.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,6 +51,7 @@ void dump_packet_buffer(uint8_t mode);
 uint8_t * command_interpreter(uint8_t * command_line);
 
 void compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver);
+void compose_request_line(request_line * line, uint8_t request, uint8_t * data, uint8_t datalen);
 
 #ifdef __cplusplus
 }

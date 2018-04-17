@@ -296,6 +296,9 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   static linkaddr_t to;
   static linkaddr_t * which_sink;
 
+  static request_line line;
+  static uint8_t payload[20];
+
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
   PROCESS_BEGIN();
@@ -306,6 +309,16 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  payload[0] = 'H';
+  payload[1] = 'e';
+  payload[2] = 'l';
+  payload[3] = 'l';
+  payload[4] = 'o';
+  compose_request_line(&line, CONECTRIC_TEXT_MESSAGE, payload, 5);
+  compose_request_line_to_packetbuf(&line, seqno++, batt, &to);
+  conectric_send(&conectric, &to);
+  putstring("Hello sent\n");
 
 #if RUN_ON_COOJA_SIMULATION
   SENSORS_ACTIVATE(button_sensor);
