@@ -310,16 +310,16 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  /* Temporary request line test */
-  payload[0] = 'H';
-  payload[1] = 'e';
-  payload[2] = 'l';
-  payload[3] = 'l';
-  payload[4] = 'o';
-  compose_request_line(&line, CONECTRIC_TEXT_MESSAGE, payload, 5);
-  compose_request_line_to_packetbuf(&line, seqno++, batt, &to);
-  conectric_send(&conectric, &to);
-  putstring("Hello sent\n");
+//  /* Temporary request line test */
+//  payload[0] = 'H';
+//  payload[1] = 'e';
+//  payload[2] = 'l';
+//  payload[3] = 'l';
+//  payload[4] = 'o';
+//  compose_request_line(&line, CONECTRIC_TEXT_MESSAGE, payload, 5);
+//  compose_request_line_to_packetbuf(&line, seqno++, batt, &to);
+//  conectric_send(&conectric, &to);
+//  putstring("Hello sent\n");
 
 #if RUN_ON_COOJA_SIMULATION
   SENSORS_ACTIVATE(button_sensor);

@@ -411,7 +411,6 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 		       channels + 4,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
-  c->netbc_id = 255;
   is_sink = 0;
   is_collect = 0;
 }

@@ -49,7 +49,7 @@
 
 #define HOPS_MAX 64
 
-#define SEQNO_LT(a, b) ((int16_t)((a) - (b)) <= 0 && (((a) != (0)) || ((b) != (255))))
+#define SEQNO_LT(a, b) ((int16_t)((a) - (b)) <= 0 && (int16_t)((b) - (a)) <= 5 && (((a) != (0)) || ((b) != (255))))
 
 static const struct packetbuf_attrlist attributes[] =
   {
