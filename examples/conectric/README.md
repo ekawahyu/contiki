@@ -17,7 +17,9 @@ In order to receive messages from sensors over Conectric network, you need to ha
 The easiest way of testing wireless messaging is by setting up two computers with two Conectric USB Routers. Over some hundreds of feet distance, wireless messaging would stop working because it is simply out of network coverage. The solution to this problemm is very straightforward. Just by putting some Conectric USB Routers in between those computers can actually help to multihop messages over the mesh network. But first thing first, you need to understand how to send/receive messages over serial communication port on the Conectric USB Router.
 
 ## Serial Communication Protocol
-Conectric USB Routers have built-in serial communication port to which we send/receive messages. An outgoing wireless messaging starts with `<` and an incoming one starts with `>`. Messages are sent in hexadecimal string format and every two hexadecimal digits represent one byte. Let's pretend that we want to send `HELLO` (= `48 45 4c 4c 4f` in hexadecimal string) from one end to the other. The outgoing wireless messaging protocol is as follow:
+Conectric USB Routers have built-in serial communication port to which we send/receive messages. An outgoing wireless messaging starts with `<` and an incoming one starts with `>`. Messages are sent in hexadecimal string format and every two hexadecimal digits represent one byte. Let's pretend that we want to send `HELLO` (= `48 45 4c 4c 4f` in hexadecimal string) from one end to the other. The outgoing wireless messaging protocol is as follow.
+
+### Outgoing Message Protocol
 
 `<` `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
@@ -41,7 +43,7 @@ You can use any serial terminal and type those hexadecimal digits manually by ha
 
     >060101001e2008612048454c4c4f
 
-The incoming message protocol is:
+### Incoming Message Protocol
 
 `>` `HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL` `DLEN` `DATA0` `DATA1` ... `DATAn`
 
@@ -227,6 +229,10 @@ By default, USB Router keeps a routing table everytime it receives a route disco
     |  +-> list index
     +-> Routing Table indicator
 
+### Show version number (`VER` - Version)
+    VER
+    VER:Contiki-3.x-b2c8a8c
+    VER:conectric-v1.0.2
 
 ## For Developers
 TBD
