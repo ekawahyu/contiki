@@ -600,6 +600,7 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     if (rs485_in_pos) {
       event = RS485_INCOMING_RESPONSE;
       process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+      PRINTF("Command: %i\n", event[2]);
     }
   }
 
