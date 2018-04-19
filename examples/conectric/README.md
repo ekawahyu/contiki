@@ -109,7 +109,7 @@ Outgoing messages contain request type, destination address and data fields. Unl
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
 * `DESTL` broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01
-* `DATA0`, baudrate: 0=2400, 1=4800, 3=9600
+* `DATA0`, baudrate: 0=2400, 1=4800, 2=9600
 * `DATA1`, parity: 0=none, 1=odd, 2=even
 * `DATA2`, stop bits: 0=1-bit or 1=2-bit
 
@@ -234,8 +234,21 @@ By default, USB Router keeps a routing table everytime it receives a route disco
     VER:Contiki-3.x-b2c8a8c
     VER:conectric-v1.0.2
 
-## For Developers
-TBD
+## For Developers (WiP)
+###Flash Memory Allocation
+
+| Flash Address     | Flash Bank | Size (bytes)     | Description        |
+|:-----------------:|:----------:|:--------:|--------------------|
+| 0x00000 - 0x0FFFF | 0-1        | 65536    | Firmware           |
+| 0x10000 - 0x1FFFF | 2-3        | 65536    | Firmware update    |
+| 0x20000 - 0x3E7FF | 4-7        | 124928   | Flash logging      |
+| 0x3E800 - 0x3EFFF | 7          | 2048     | Reserved           |
+| 0x3F000 - 0x3F7FF | 7          | 2048     | Reserved           |
+| 0x3F800 - 0x3FFE7 | 7          | 2024     | Reserved           |
+| 0x3FFE8 - 0x3FFEF | 7          | 8 bytes  | Custom MAC Address |
+| 0x3FFF0 - 0x3FFFF | 7          | 16 bytes | Flash Lock Bits    |
+
+
 
 ## Licensing
 This project is licensed under the terms of the [FreeBSD license](https://opensource.org/licenses/BSD-2-Clause). In layman's term, TLDR Legal provides an explanation of [FreeBSD license in plain English](https://tldrlegal.com/license/bsd-2-clause-license-(freebsd)).
