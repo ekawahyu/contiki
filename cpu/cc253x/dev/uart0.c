@@ -102,7 +102,7 @@ uart0_config(uint8_t config)
 
   /* select stop bit */
   U0UCR &= ~0x04;
-  U0UCR |= (config & 0x40);
+  U0UCR |= (config & 0x04);
 }
 /*---------------------------------------------------------------------------*/
 #endif

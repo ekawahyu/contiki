@@ -116,7 +116,7 @@ uart1_config(uint8_t config)
 
   /* select stop bit */
   U1UCR &= ~0x04;
-  U1UCR |= (config & 0x40);
+  U1UCR |= (config & 0x04);
 }
 /*---------------------------------------------------------------------------*/
 #endif
