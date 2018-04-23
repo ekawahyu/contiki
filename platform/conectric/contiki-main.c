@@ -29,6 +29,7 @@
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+#include "sernum.h"
 #if defined __IAR_SYSTEMS_ICC__
 #include "conectric-version.h"
 #endif
@@ -198,6 +199,18 @@ set_rf_params(void) CC_NON_BANKED
   return;
 }
 /*---------------------------------------------------------------------------*/
+static void
+print_serial_number(void)
+{
+  uint8_t snlen;
+  uint8_t sn[16];
+
+  putstring("S/N:");
+  snlen = sernum_read(sn);
+  while (snlen--) puthex(sn[snlen]);
+  putstring("\n");
+}
+/*---------------------------------------------------------------------------*/
 int
 main(void) CC_NON_BANKED
 {
@@ -259,6 +272,8 @@ main(void) CC_NON_BANKED
   putstring("-" CC2530_FLAVOR_STRING ", ");
   puthex(CHIPINFO1 + 1);
   putstring("KB SRAM\n");
+
+  print_serial_number();
 
   PUTSTRING("\nSDCC Build:\n");
 #if STARTUP_CONF_VERBOSE

@@ -1,7 +1,7 @@
 /*
- * command.h
+ * sernum.h
  *
- * Created on: Feb 26, 2018
+ *  Created on: Apr 19, 2018
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2018, Conectric Network, LLC.
@@ -34,28 +34,18 @@
  *
  */
 
-#ifndef COMMAND_H_
-#define COMMAND_H_
+#ifndef SERNUM_H_
+#define SERNUM_H_
 
-#include "conectric-messages.h"
+#include "soc.h"
+#include "cc253x.h"
+#include "8051def.h"
+#include "flash.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* Device serial number length must be multiple of 4 */
+#define DEVICE_SERIAL_NUMBER_LENGTH   12
 
-#define BUFFER_PAYLOAD        0
-#define BUFFER_ALL            1
+uint8_t sernum_read(uint8_t * sernum);
+uint8_t sernum_write(uint8_t * sernum);
 
-void hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq);
-void dump_packet_buffer(uint8_t mode);
-uint8_t * command_interpreter(uint8_t * command_line);
-
-void compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver);
-void compose_request_line_to_packetbuf(request_line * line, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver);
-void request_line_create(request_line * line, uint8_t request, linkaddr_t * dest, uint8_t * data, uint8_t datalen);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* COMMAND_H_ */
+#endif /* SERNUM_H_ */

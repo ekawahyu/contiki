@@ -40,6 +40,7 @@
 #include "net/rime/conectric.h"
 
 #include "command.h"
+#include "sernum.h"
 #if defined __IAR_SYSTEMS_ICC__
 #include "conectric-version.h"
 #endif
@@ -118,6 +119,8 @@ hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq)
 uint8_t *
 command_respond(uint8_t * bytereq)
 {
+  uint8_t snlen;
+  uint8_t sn[12];
   uint8_t request;
   int8_t i;
 
@@ -228,6 +231,32 @@ command_respond(uint8_t * bytereq)
       putstring(CONECTRIC_PROJECT_STRING "\n");
     }
 
+    else if (bytereq[0] == 'S' && bytereq[1] == 'N' && bytereq[2] == 'R') {
+      putstring("SNR:");
+      snlen = sernum_read(sn);
+      while (snlen--) puthex(sn[snlen]);
+      putstring("\n");
+    }
+
+    else if (bytereq[0] == 'S' && bytereq[1] == 'N' && bytereq[2] == 'W') {
+      if (strlen((const char*)bytereq) == 27) {
+        memset(sn, 0, sizeof(sn));
+        snlen = sizeof(sn);
+        hexstring_to_bytereq(&bytereq[3], sn);
+        putstring("SNW:");
+        while(snlen) puthex(sn[sizeof(sn)-snlen--]);
+        putstring("\n");
+        if (sernum_write(sn))
+          putstring("SNW:Ok\n");
+        else
+          putstring("SNW:Err:already assigned\n");
+        putstring("\n");
+      }
+      else {
+        putstring("SNW:Err:incorrect length\n");
+      }
+    }
+
     else if (bytereq[0] == '@' && bytereq[1] == 'B' && bytereq[2] == 'O' && bytereq[3] == 'O' && bytereq[4] == 'T') {
       putstring("@BOOT:Rebooting...\n");
       while(1);
@@ -278,7 +307,7 @@ command_respond(uint8_t * bytereq)
     else {
       if (strlen((const char*)bytereq) != 0) {
         putstring((char*)bytereq);
-        putstring(":Bad command!\n");
+        putstring(":Bad command\n");
       }
     }
 
@@ -435,12 +464,12 @@ compose_request_line_to_packetbuf(request_line * line, uint8_t seqno, uint8_t ba
 }
 /*---------------------------------------------------------------------------*/
 void
-compose_request_line(request_line * line, uint8_t request, uint8_t * data, uint8_t datalen)
+request_line_create(request_line * line, uint8_t request, linkaddr_t * dest, uint8_t * data, uint8_t datalen)
 {
   line->reqlen = CONECTRIC_REQUEST_HEADER_LEN + 1 + datalen;
   line->req = request;
-  line->dest.u8[0] = 0;
-  line->dest.u8[1] = 0;
+  line->dest.u8[0] = dest->u8[0];
+  line->dest.u8[1] = dest->u8[1];
   line->hdr_next = 0x01; /* reserved, always 0x01 */
   line->payload = data;
 }
