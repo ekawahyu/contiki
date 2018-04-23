@@ -84,7 +84,7 @@ extern struct conectric_conn conectric;
 
 /*---------------------------------------------------------------------------*/
 void
-hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq)
+hexstring_to_bytes(uint8_t * hexstring, uint8_t * bytes)
 {
   uint8_t counter;
   uint8_t hex_string[2];
@@ -112,7 +112,7 @@ hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq)
 
     /* combinining two digits hex bytes into one and store it */
     if (counter++ % 2)
-      bytereq[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
+      bytes[(counter >> 1)-1] = (hex_string[0] << 4) + hex_string[1];
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -242,7 +242,7 @@ command_respond(uint8_t * bytereq)
       if (strlen((const char*)bytereq) == 27) {
         memset(sn, 0, sizeof(sn));
         snlen = sizeof(sn);
-        hexstring_to_bytereq(&bytereq[3], sn);
+        hexstring_to_bytes(&bytereq[3], sn);
         putstring("SNW:");
         while(snlen) puthex(sn[sizeof(sn)-snlen--]);
         putstring("\n");
@@ -329,7 +329,7 @@ command_interpreter(uint8_t * command_line)
   if (request[0] == '<') {
 
     bytereq[0] = '<';
-    hexstring_to_bytereq(&request[1], &bytereq[1]);
+    hexstring_to_bytes(&request[1], &bytereq[1]);
     return command_respond(bytereq);
 
   }

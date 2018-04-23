@@ -46,7 +46,7 @@ extern "C" {
 #define BUFFER_PAYLOAD        0
 #define BUFFER_ALL            1
 
-void hexstring_to_bytereq(uint8_t * hexstring, uint8_t * bytereq);
+void hexstring_to_bytes(uint8_t * hexstring, uint8_t * bytes);
 void dump_packet_buffer(uint8_t mode);
 uint8_t * command_interpreter(uint8_t * command_line);
 
