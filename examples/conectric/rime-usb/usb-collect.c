@@ -316,10 +316,22 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 //  payload[2] = 'l';
 //  payload[3] = 'l';
 //  payload[4] = 'o';
-//  compose_request_line(&line, CONECTRIC_TEXT_MESSAGE, payload, 5);
+//  to.u8[0] = 0;
+//  to.u8[1] = 0;
+//  request_line_create(&line, CONECTRIC_TEXT_MESSAGE, &to, payload, 5);
 //  compose_request_line_to_packetbuf(&line, seqno++, batt, &to);
 //  conectric_send(&conectric, &to);
 //  putstring("Hello sent\n");
+//
+//  payload[0] = 2;
+//  payload[1] = 2;
+//  payload[2] = 0;
+//  to.u8[0] = 0;
+//  to.u8[1] = 0;
+//  request_line_create(&line, CONECTRIC_RS485_CONFIG, &to, payload, 3);
+//  compose_request_line_to_packetbuf(&line, seqno++, batt, &to);
+//  conectric_send(&conectric, &to);
+//  putstring("RS485 config sent\n");
 
 #if RUN_ON_COOJA_SIMULATION
   SENSORS_ACTIVATE(button_sensor);

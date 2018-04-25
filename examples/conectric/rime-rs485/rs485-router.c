@@ -69,6 +69,8 @@
 #define PRINTF(...)
 #endif
 
+#define DEBUG_CRC16 0
+
 /* RS485 Network Parameters */
 #define RS485_SUP_TIMEOUT         180 /* minutes */
 #define RS485_PERIODIC_TIMEOUT    1   /* minutes */
@@ -246,6 +248,13 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &conectric_message_recv);
   }
 
+  if (conectric_message_recv.request == CONECTRIC_RS485_CONFIG) {
+    uart_arch_config(
+        conectric_message_recv.payload[3] << 6 |
+        conectric_message_recv.payload[4] << 4 |
+        conectric_message_recv.payload[5] << 2 );
+  }
+
   if (conectric_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
     /* Halt the system right here until watchdog kicks in */
     while(1);
@@ -289,6 +298,13 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   if (netbc_message_recv.request == CONECTRIC_RS485_POLL) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
+  }
+
+  if (netbc_message_recv.request == CONECTRIC_RS485_CONFIG) {
+    uart_arch_config(
+        netbc_message_recv.payload[3] << 6 |
+        netbc_message_recv.payload[4] << 4 |
+        netbc_message_recv.payload[5] << 2 );
   }
 
   PRINTF("%d.%d: netbc from %d.%d: len %d hops %d\n",
@@ -559,6 +575,7 @@ PROCESS_THREAD(serial_in_process, ev, data)
 
     if (event) {
       process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, event);
+      PRINTF("Command: %i\n", event[2]);
     }
   }
 
@@ -590,12 +607,14 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     }
     putstring("\n");
 
-//    /* This CRC16 calculation is only used to debug the incoming modbus */
-//    crc16 = modbus_crc16_calc(rs485_data, datasize-2);
-//    putstring("crc16rep=");
-//    puthex(crc16 & 0x00FF);
-//    puthex((crc16 & 0xFF00) >> 8);
-//    putstring("\n");
+#if DEBUG_CRC16
+    /* This CRC16 calculation is only used to debug the incoming modbus */
+    crc16 = modbus_crc16_calc(rs485_data, datasize-2);
+    putstring("crc16rep=");
+    puthex(crc16 & 0x00FF);
+    puthex((crc16 & 0xFF00) >> 8);
+    putstring("\n");
+#endif
 
     if (rs485_in_pos) {
       event = RS485_INCOMING_RESPONSE;
@@ -614,6 +633,7 @@ PROCESS_THREAD(modbus_out_process, ev, data)
   static uint8_t * serial_data;
   static uint8_t reqlen;
   static uint8_t req;
+  static uint8_t batt;
   static uint8_t len;
   uint16_t crc16;
 
@@ -627,15 +647,18 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     serial_data = message->payload;
     reqlen = *serial_data++;
     req = *serial_data++;
+    batt = *serial_data++;
 
-    len = reqlen - 2;
+    len = reqlen - 3;
 
-//    /* This CRC16 calculation is only used to debug the outgoing modbus */
-//    crc16 = modbus_crc16_calc(serial_data, len-2);
-//    putstring("crc16req=");
-//    puthex(crc16 & 0x00FF);
-//    puthex((crc16 & 0xFF00) >> 8);
-//    putstring("\n");
+#if DEBUG_CRC16
+    /* This CRC16 calculation is only used to debug the outgoing modbus */
+    crc16 = modbus_crc16_calc(serial_data, len-2);
+    putstring("crc16req=");
+    puthex(crc16 & 0x00FF);
+    puthex((crc16 & 0xFF00) >> 8);
+    putstring("\n");
+#endif
 
     /* reset modbus input index */
     rs485_in_pos = 0;
