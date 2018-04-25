@@ -91,9 +91,9 @@ uart0_config(uint8_t config)
   /* if parity is enabled */
   if (config & 0x30) {
     U0UCR |= 0x18; /* 9-bit data width, enable parity */
-    if (config & 0x30 == UART_PARITY_ODD)
+    if ((config & 0x30) == UART_PARITY_ODD)
       U0UCR &= ~0x20;
-    if (config & 0x30 == UART_PARITY_EVEN)
+    if ((config & 0x30) == UART_PARITY_EVEN)
       U0UCR |= 0x20;
   }
   else {
