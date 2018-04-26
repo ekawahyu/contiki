@@ -89,7 +89,7 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 
   PROCESS_BEGIN();
   
-  ctimer_set(&ct, CLOCK_SECOND/8, modbus_line_timeout, &ptr);
+  ctimer_set(&ct, CLOCK_SECOND/64, modbus_line_timeout, &ptr);
   modbus_line_event_message = process_alloc_event();
   ptr = 0;
 
