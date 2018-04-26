@@ -639,6 +639,9 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 
   PROCESS_BEGIN();
 
+  /* workaround to make modbus_in_process() to start receiving messages */
+  uart_arch_writeb(0);
+
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
