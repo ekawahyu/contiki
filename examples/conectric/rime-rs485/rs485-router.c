@@ -597,7 +597,10 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == modbus_line_event_message && data != NULL);
 
     dataptr = &((uint8_t *)data)[1];
-    datasize = ((uint8_t *)data)[0] - 1;
+    datasize = ((uint8_t *)data)[0];
+
+    /* reset modbus input index */
+    rs485_in_pos = 0;
 
     /* Copy data into RS485 buffer */
     for(cnt = 0; cnt < datasize; cnt++)
@@ -619,7 +622,6 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     if (rs485_in_pos) {
       event = RS485_INCOMING_RESPONSE;
       process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, &event);
-      PRINTF("Command: %i\n", event[2]);
     }
   }
 
