@@ -40,7 +40,7 @@
 #include "net/rime/conectric.h"
 
 #include "command.h"
-#include "sernum.h"
+#include "config.h"
 #if defined __IAR_SYSTEMS_ICC__
 #include "conectric-version.h"
 #endif
@@ -233,7 +233,7 @@ command_respond(uint8_t * bytereq)
 
     else if (bytereq[0] == 'S' && bytereq[1] == 'N' && bytereq[2] == 'R') {
       putstring("SNR:");
-      snlen = sernum_read(sn);
+      snlen = config_sernum_read(sn);
       while (snlen--) puthex(sn[snlen]);
       putstring("\n");
     }
@@ -246,7 +246,7 @@ command_respond(uint8_t * bytereq)
         putstring("SNW:");
         while(snlen) puthex(sn[sizeof(sn)-snlen--]);
         putstring("\n");
-        if (sernum_write(sn))
+        if (config_sernum_write(sn))
           putstring("SNW:Ok\n");
         else
           putstring("SNW:Err:already assigned\n");

@@ -29,7 +29,7 @@
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "sernum.h"
+#include "config.h"
 #if defined __IAR_SYSTEMS_ICC__
 #include "conectric-version.h"
 #endif
@@ -203,10 +203,10 @@ static void
 print_serial_number(void)
 {
   uint8_t snlen;
-  uint8_t sn[16];
+  uint8_t sn[CONFIG_SERIAL_NUMBER_LENGTH];
 
   putstring("S/N:");
-  snlen = sernum_read(sn);
+  snlen = config_sernum_read(sn);
   while (snlen--) puthex(sn[snlen]);
   putstring("\n");
 }

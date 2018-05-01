@@ -1,7 +1,7 @@
 /*
- * sernum.c
+ * config.c
  *
- *  Created on: Apr 19, 2018
+ *  Created on: May 1, 2018
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2018, Conectric Network, LLC.
@@ -35,60 +35,56 @@
  */
 
 #include <stdio.h>
-#include "sernum.h"
+#include "config.h"
+
+/*
+ * Configuration structure is stored as one flash page (2048 bytes) located at
+ * the last page on the flash memory area. Conectric platform includes CC2530F256
+ * SoC with 256kB of flash. There are 128 valid pages on the flash (0-127),
+ * so this configuration is written onto page 127.
+ */
 
 #if defined __IAR_SYSTEMS_ICC__
-/*
- * The device serial number is always stored in 0xFFDC of the highest BANK of
- * our flash. This maps to address 0xFFDC of our XDATA segment, when this BANK
- * is selected. IAR __code placement uses logical code memory addressing, 0xFFDC
- * on bank 7 is equivalent to 0x7FFDC as follow. This code can be used even
- * without a bankable firmware.
- */
-__code const uint8_t hardcoded_sn[12] @ 0x7FFDC =
+/* RS485 configuration word address is 0x3FFD8 */
+__root __code const uint8_t config_rs485[4] @ 0x7FFD8 = {0x00, 0x00, 0x00, 0x02};
+/* Serial number word address is 0x3FFDC */
+__code const uint8_t config_sn[12] @ 0x7FFDC =
 {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 #else
-/*
- * The device serial number is always stored in 0xFFDC of the highest BANK of
- * our flash. This maps to address 0xFFDC of our XDATA segment, when this BANK
- * is selected. Load the bank, read 12 bytes starting at 0xFFDC and restore last BANK.
- * Since we are called from main(), this MUST be BANK1 or something is very
- * wrong. This code can be used even without a bankable firmware.
- */
-#define USER_PROGRAM_PAGE   7
-__code const __at(USER_PROGRAM_PAGE * 0x8000 + 0x7FDC) uint8_t hardcoded_sn[12] =
+#define FLASH_BANK   7
+/* RS485 configuration word address is 0x3FFD8 */
+__code const __at(FLASH_BANK * 0x8000 + 0x7FD8) uint8_t config_rs485[4] =
+{0x00, 0x00, 0x00, 0x02};
+/* Serial number word address is 0x3FFDC */
+__code const __at(FLASH_BANK * 0x8000 + 0x7FDC) uint8_t config_sn[12] =
 {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 #endif
 
 /*---------------------------------------------------------------------------*/
 uint8_t
-sernum_read(uint8_t * sernum) CC_NON_BANKED
+config_sernum_read(uint8_t * sernum)
 {
-  uint8_t len;
-  uint8_t * snp = (uint8_t *)hardcoded_sn;
-  uint8_t memctr = MEMCTR;
+  flash_read(
+      FLASH_PAGE(CONFIG_SERIAL_NUMBER),
+      FLASH_PAGE_OFFSET(CONFIG_SERIAL_NUMBER),
+      sernum,
+      CONFIG_SERIAL_NUMBER_LENGTH
+  );
 
-  MEMCTR = (MEMCTR & 0xF8) | 0x07;
-
-  len = DEVICE_SERIAL_NUMBER_LENGTH;
-  while(len--) *sernum++ = *snp++;
-
-  MEMCTR = memctr;
-
-  return DEVICE_SERIAL_NUMBER_LENGTH;
+  return CONFIG_SERIAL_NUMBER_LENGTH;
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-sernum_write(uint8_t * sernum) CC_NON_BANKED
+config_sernum_write(uint8_t * sernum)
 {
   uint8_t len;
-  uint8_t * snp = (uint8_t *)hardcoded_sn;
-  uint8_t invert[DEVICE_SERIAL_NUMBER_LENGTH];
+  uint8_t * snp = (uint8_t *)config_sn;
+  uint8_t invert[CONFIG_SERIAL_NUMBER_LENGTH];
   uint8_t memctr = MEMCTR;
 
   MEMCTR = (MEMCTR & 0xF8) | 0x07;
 
-  len = DEVICE_SERIAL_NUMBER_LENGTH;
+  len = CONFIG_SERIAL_NUMBER_LENGTH;
 
   /*
    * Serial number has been written once they are not 0xFF, any attempt to
@@ -101,12 +97,30 @@ sernum_write(uint8_t * sernum) CC_NON_BANKED
   MEMCTR = memctr;
 
   /* Invert endianness */
-  len = DEVICE_SERIAL_NUMBER_LENGTH;
+  len = CONFIG_SERIAL_NUMBER_LENGTH;
   while(len--) invert[len] = *sernum++;
 
   /* Write the serial number */
-  if(invert) flash_write_DMA(invert, DEVICE_SERIAL_NUMBER_LENGTH, FLASH_WORD_ADDR(0x3FFDC));
+  if(invert)
+    flash_write_DMA(
+        invert,
+        CONFIG_SERIAL_NUMBER_LENGTH,
+        FLASH_WORD_ADDR(CONFIG_SERIAL_NUMBER)
+    );
 
   return 1;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+config_rs485_params_read(uint8_t * params)
+{
+  flash_read(
+      FLASH_PAGE(CONFIG_RS485_PARAMS),
+      FLASH_PAGE_OFFSET(CONFIG_RS485_PARAMS),
+      params,
+      CONFIG_RS485_PARAMS_LENGTH
+  );
+
+  return CONFIG_RS485_PARAMS_LENGTH;
 }
 /*---------------------------------------------------------------------------*/

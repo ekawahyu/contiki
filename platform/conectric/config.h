@@ -1,7 +1,7 @@
 /*
- * sernum.h
+ * config.h
  *
- *  Created on: Apr 19, 2018
+ *  Created on: May 1, 2018
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2018, Conectric Network, LLC.
@@ -42,10 +42,14 @@
 #include "8051def.h"
 #include "flash.h"
 
-/* Device serial number length must be multiple of 4 */
-#define DEVICE_SERIAL_NUMBER_LENGTH   12
+#define CONFIG_SERIAL_NUMBER_LENGTH   12
+#define CONFIG_RS485_PARAMS_LENGTH    4
 
-uint8_t sernum_read(uint8_t * sernum);
-uint8_t sernum_write(uint8_t * sernum);
+#define CONFIG_SERIAL_NUMBER          0x3FFDC /* word address */
+#define CONFIG_RS485_PARAMS           0x3FFD8 /* word address */
+
+uint8_t config_sernum_read(uint8_t * sernum);
+uint8_t config_sernum_write(uint8_t * sernum);
+uint8_t config_rs485_params_read(uint8_t * params);
 
 #endif /* SERNUM_H_ */

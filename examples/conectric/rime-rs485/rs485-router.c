@@ -62,6 +62,8 @@
 /* Conectric Network */
 #include "../conectric-messages.h"
 
+#include "config.h"
+
 #define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -342,6 +344,9 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   static linkaddr_t to;
   static linkaddr_t * which_sink;
 
+  static uint8_t rs485len;
+  static uint8_t rs485[CONFIG_RS485_PARAMS_LENGTH];
+
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
   PROCESS_BEGIN();
@@ -352,6 +357,29 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  /* Configure RS485 from the flash */
+  putstring("RS485:");
+  rs485len = config_rs485_params_read(rs485);
+  if (rs485[3] << 6 == UART_B2400) putstring("2400");
+  if (rs485[3] << 6 == UART_B4800) putstring("4800");
+  if (rs485[3] << 6 == UART_B9600) putstring("9600");
+  putstring(":8");
+  if (rs485[2] << 4 == UART_PARITY_NONE) putstring("N");
+  if (rs485[2] << 4 == UART_PARITY_ODD) putstring("O");
+  if (rs485[2] << 4 == UART_PARITY_EVEN) putstring("E");
+  if (rs485[1] << 2 == UART_STOP_BIT_1) putstring("1");
+  if (rs485[1] << 2 == UART_STOP_BIT_2) putstring("2");
+  putstring("\n");
+  uart_arch_config(rs485[3] << 6 | rs485[2] << 4 | rs485[1] << 2 );
+
+//  flash_page_erase(FLASH_PAGE(0x3F000));
+//
+//  rs485[0] = 0x00;
+//  rs485[1] = 0x00;
+//  rs485[2] = 0x02;
+//  rs485[3] = 0x01;
+//  flash_write_DMA(rs485, 4, FLASH_WORD_ADDR(0x3F000));
 
 #if RUN_ON_COOJA_SIMULATION
   SENSORS_ACTIVATE(button_sensor);
