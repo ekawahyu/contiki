@@ -158,7 +158,7 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     if (loop)
-      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+      deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
     else
       deep_sleep_requested = 60 * CLOCK_SECOND;
   }
@@ -166,7 +166,7 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
-
+    NETSTACK_MAC.off(0);
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
     dec = sane;
@@ -199,19 +199,17 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
       loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
-        leds_on(LEDS_RED);
-
         packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
 
         NETSTACK_MAC.on();
+        leds_on(LEDS_RED);
         broadcast_send(&broadcast);
+        leds_off(LEDS_RED);
 
         PROCESS_WAIT_EVENT();
 
-        leds_off(LEDS_RED);
-
         if (loop)
-          deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+          deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
         else
           deep_sleep_requested = 60 * CLOCK_SECOND;
       }
@@ -242,7 +240,7 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
         PROCESS_WAIT_EVENT();
 
         if (loop)
-          deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+          deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
         else
           deep_sleep_requested = 60 * CLOCK_SECOND;
       }

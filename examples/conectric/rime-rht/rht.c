@@ -148,7 +148,7 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     if (loop)
-      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+      deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
     else
       deep_sleep_requested = CLOCK_SECOND;
   }
