@@ -34,8 +34,8 @@
  *
  */
 
-#ifndef SERNUM_H_
-#define SERNUM_H_
+#ifndef CONFIG_H_
+#define CONFIG_H_
 
 #include "soc.h"
 #include "cc253x.h"
@@ -56,4 +56,4 @@ uint8_t config_sernum_write(uint8_t * sernum);
 uint8_t config_rs485_params_read(uint8_t * params);
 uint8_t config_update(uint32_t config_addr, uint8_t * config, uint8_t len);
 
-#endif /* SERNUM_H_ */
+#endif /* CONFIG_H_ */

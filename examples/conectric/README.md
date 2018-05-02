@@ -112,6 +112,7 @@ Outgoing messages contain request type, destination address and data fields. Unl
 * `DATA0`, baudrate: 0=2400, 1=4800, 2=9600
 * `DATA1`, parity: 0=none, 1=odd, 2=even
 * `DATA2`, stop bits: 0=1-bit or 1=2-bit
+* `DATA3`, bit-mask: 0xFF=8-bit, 0x7F=7-bit, etc.
 
 ### Text Message Request Field
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
@@ -230,9 +231,28 @@ By default, USB Router keeps a routing table everytime it receives a route disco
     +-> Routing Table indicator
 
 ### Show version number (`VER` - Version)
+Firmware version shows Contiki-OS version and Conectric network stack.
+    
     VER
     VER:Contiki-3.x-b2c8a8c
     VER:conectric-v1.0.2
+
+### Show device serial number (`SNR` - Serial Number Read)
+Device serial number is a 12-bytes hexadecimal number.
+
+    SNR
+    SNR:112233445566778899AABBCC
+
+### Show device serial number (`SNW` - Serial Number Read)
+Conectric Sensors and Devices come with a pre-programmed serial number. If you manually erase and upload a new firmware, you can re-assign the serial number by typing this command.
+
+    SNW112233445566778899AABBCC
+    SNW:Ok
+
+An error message will show up when you try to overwrite the existing serial number:
+
+    SNWABABAB000000111111222222
+    SNW:Err:already assigned
 
 ## For Developers (WiP)
 ###Flash Memory Allocation

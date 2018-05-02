@@ -256,7 +256,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     rs485p[3] = conectric_message_recv.payload[3];
     rs485p[2] = conectric_message_recv.payload[4];
     rs485p[1] = conectric_message_recv.payload[5];
-    rs485p[0] = 0x00; /* not used */
+    rs485p[0] = conectric_message_recv.payload[6];
     config_update(CONFIG_RS485_PARAMS, rs485p, CONFIG_RS485_PARAMS_LENGTH);
     uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2);
   }
@@ -312,7 +312,7 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     rs485p[3] = netbc_message_recv.payload[3];
     rs485p[2] = netbc_message_recv.payload[4];
     rs485p[1] = netbc_message_recv.payload[5];
-    rs485p[0] = 0x00; /* not used */
+    rs485p[0] = netbc_message_recv.payload[6];
     config_update(CONFIG_RS485_PARAMS, rs485p, CONFIG_RS485_PARAMS_LENGTH);
     uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2 );
   }
@@ -423,9 +423,6 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       for (loop = 0;loop < rs485_in_pos; loop++) {
         message[9+loop] = rs485_data[loop];
       }
-
-//      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
-//      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
       loop = CONECTRIC_BURST_NUMBER;
       while(loop--) {
