@@ -48,7 +48,7 @@
 #if defined __IAR_SYSTEMS_ICC__
 __root __code const uint8_t config_rs485[4] @ 0x7FFD8 =
 {0x00, 0x00, 0x00, 0x02};
-__code const uint8_t config_sn[12] @ 0x7FFDC =
+__root __code const uint8_t config_sn[12] @ 0x7FFDC =
 {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 #else
 __code const __at(CONFIG_RS485_PARAMS) uint8_t config_rs485[4] =
@@ -75,35 +75,27 @@ uint8_t
 config_sernum_write(uint8_t * sernum)
 {
   uint8_t len;
-  uint8_t * snp = (uint8_t *)config_sn;
-  uint8_t invert[CONFIG_SERIAL_NUMBER_LENGTH];
-  uint8_t memctr = MEMCTR;
+  uint8_t curr_sernum[CONFIG_SERIAL_NUMBER_LENGTH];
 
-  MEMCTR = (MEMCTR & 0xF8) | 0x07;
-
-  len = CONFIG_SERIAL_NUMBER_LENGTH;
+  len = config_sernum_read(curr_sernum);
 
   /*
-   * Serial number has been written once they are not 0xFF, any attempt to
-   * overwrite is prohibited
+   * If a serial number has been assigned, they are very likely to show
+   * value other than 0xFF. Any attempt to overwrite is prohibited.
    */
   while(len--) {
-    if (*snp++ != 0xFF) return 0;
+    if (curr_sernum[len] != 0xFF)
+      return 0;
+    else
+      curr_sernum[len] = *sernum++;
   }
 
-  MEMCTR = memctr;
-
-  /* Invert endianness */
-  len = CONFIG_SERIAL_NUMBER_LENGTH;
-  while(len--) invert[len] = *sernum++;
-
-  /* Write the serial number */
-  if(invert)
-    flash_write_DMA(
-        invert,
-        CONFIG_SERIAL_NUMBER_LENGTH,
-        FLASH_WORD_ADDR(CONFIG_SERIAL_NUMBER)
-    );
+  /* All is good, flash it */
+  flash_write_DMA(
+      curr_sernum,
+      CONFIG_SERIAL_NUMBER_LENGTH,
+      FLASH_WORD_ADDR(CONFIG_SERIAL_NUMBER)
+  );
 
   return 1;
 }
