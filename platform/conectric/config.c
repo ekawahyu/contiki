@@ -39,24 +39,21 @@
 
 /*
  * Configuration structure is stored as one flash page (2048 bytes) located at
- * the last page on the flash memory area. Conectric platform includes CC2530F256
- * SoC with 256kB of flash. There are 128 valid pages on the flash (0-127),
- * so this configuration is written onto page 127.
+ * the last page of flash memory area. Conectric platform includes CC2530F256
+ * SoC with 256kB of flash divided into 128 valid pages (0-127).
+ *
+ * This configuration is stored on page 127.
  */
 
 #if defined __IAR_SYSTEMS_ICC__
-/* RS485 configuration word address is 0x3FFD8 */
-__root __code const uint8_t config_rs485[4] @ 0x7FFD8 = {0x00, 0x00, 0x00, 0x02};
-/* Serial number word address is 0x3FFDC */
+__root __code const uint8_t config_rs485[4] @ 0x7FFD8 =
+{0x00, 0x00, 0x00, 0x02};
 __code const uint8_t config_sn[12] @ 0x7FFDC =
 {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 #else
-#define FLASH_BANK   7
-/* RS485 configuration word address is 0x3FFD8 */
-__code const __at(FLASH_BANK * 0x8000 + 0x7FD8) uint8_t config_rs485[4] =
+__code const __at(CONFIG_RS485_PARAMS) uint8_t config_rs485[4] =
 {0x00, 0x00, 0x00, 0x02};
-/* Serial number word address is 0x3FFDC */
-__code const __at(FLASH_BANK * 0x8000 + 0x7FDC) uint8_t config_sn[12] =
+__code const __at(CONFIG_SERIAL_NUMBER) uint8_t config_sn[12] =
 {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 #endif
 
