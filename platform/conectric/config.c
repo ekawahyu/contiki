@@ -124,3 +124,63 @@ config_rs485_params_read(uint8_t * params)
   return CONFIG_RS485_PARAMS_LENGTH;
 }
 /*---------------------------------------------------------------------------*/
+uint8_t
+config_update(uint32_t config_addr, uint8_t * config, uint8_t len)
+{
+  uint32_t flash_src_addr;
+  uint32_t flash_dest_addr;
+  uint8_t buffer[4];
+  uint16_t loop;
+
+  /* Mirror everything onto another flash page */
+  flash_page_erase(FLASH_PAGE(CONFIG_MIRROR_START));
+  flash_dest_addr = CONFIG_MIRROR_START;
+  flash_src_addr = CONFIG_ADDR_START;
+  loop = 512;
+  while(loop--) {
+    flash_read(
+        FLASH_PAGE(flash_src_addr),
+        FLASH_PAGE_OFFSET(flash_src_addr),
+        buffer,
+        4
+    );
+    flash_write_DMA(
+        buffer,
+        4,
+        FLASH_WORD_ADDR(flash_dest_addr)
+    );
+    flash_src_addr += 4;
+    flash_dest_addr += 4;
+  }
+
+  /* Copy everything back except the part that needs to get updated */
+  flash_page_erase(FLASH_PAGE(CONFIG_ADDR_START));
+  flash_dest_addr = CONFIG_ADDR_START;
+  flash_src_addr = CONFIG_MIRROR_START;
+  loop = 512;
+  while(loop--) {
+    flash_read(
+        FLASH_PAGE(flash_src_addr),
+        FLASH_PAGE_OFFSET(flash_src_addr),
+        buffer,
+        4
+    );
+    if((flash_dest_addr == config_addr) && (len != 0)) {
+      config_addr += 4;
+      len -= 4;
+      buffer[0] = *config++;
+      buffer[1] = *config++;
+      buffer[2] = *config++;
+      buffer[3] = *config++;
+    }
+    flash_write_DMA(
+        buffer,
+        4,
+        FLASH_WORD_ADDR(flash_dest_addr)
+    );
+    flash_src_addr += 4;
+    flash_dest_addr += 4;
+  }
+
+  return 1;
+}

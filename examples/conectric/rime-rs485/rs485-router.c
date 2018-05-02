@@ -242,6 +242,8 @@ timedout(struct conectric_conn *c)
 static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
+  uint8_t rs485_params[CONFIG_RS485_PARAMS_LENGTH];
+
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   dump_packetbuf(&conectric_message_recv);
@@ -255,6 +257,11 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
         conectric_message_recv.payload[3] << 6 |
         conectric_message_recv.payload[4] << 4 |
         conectric_message_recv.payload[5] << 2 );
+    rs485_params[3] = conectric_message_recv.payload[3];
+    rs485_params[2] = conectric_message_recv.payload[4];
+    rs485_params[1] = conectric_message_recv.payload[5];
+    rs485_params[0] = 0x00; /* not used */
+    config_update(CONFIG_RS485_PARAMS, rs485_params, CONFIG_RS485_PARAMS_LENGTH);
   }
 
   if (conectric_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
@@ -294,6 +301,8 @@ localbroadcast(struct conectric_conn *c, const linkaddr_t *from)
 static void
 netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
+  uint8_t rs485_params[CONFIG_RS485_PARAMS_LENGTH];
+
   packetbuf_and_attr_copyto(&netbc_message_recv, MESSAGE_NETBC_RECV);
 
   dump_packetbuf(&netbc_message_recv);
@@ -307,6 +316,11 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
         netbc_message_recv.payload[3] << 6 |
         netbc_message_recv.payload[4] << 4 |
         netbc_message_recv.payload[5] << 2 );
+    rs485_params[3] = netbc_message_recv.payload[3];
+    rs485_params[2] = netbc_message_recv.payload[4];
+    rs485_params[1] = netbc_message_recv.payload[5];
+    rs485_params[0] = 0x00; /* not used */
+    config_update(CONFIG_RS485_PARAMS, rs485_params, CONFIG_RS485_PARAMS_LENGTH);
   }
 
   PRINTF("%d.%d: netbc from %d.%d: len %d hops %d\n",
@@ -344,8 +358,8 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   static linkaddr_t to;
   static linkaddr_t * which_sink;
 
-  static uint8_t rs485len;
-  static uint8_t rs485[CONFIG_RS485_PARAMS_LENGTH];
+  static uint8_t rs485_params_len;
+  static uint8_t rs485_params[CONFIG_RS485_PARAMS_LENGTH];
 
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
@@ -358,28 +372,21 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-  /* Configure RS485 from the flash */
+  /* Read RS485 parameters from the flash */
   putstring("RS485:");
-  rs485len = config_rs485_params_read(rs485);
-  if (rs485[3] << 6 == UART_B2400) putstring("2400");
-  if (rs485[3] << 6 == UART_B4800) putstring("4800");
-  if (rs485[3] << 6 == UART_B9600) putstring("9600");
+  rs485_params_len = config_rs485_params_read(rs485_params);
+  if (rs485_params[3] << 6 == UART_B2400) putstring("2400");
+  if (rs485_params[3] << 6 == UART_B4800) putstring("4800");
+  if (rs485_params[3] << 6 == UART_B9600) putstring("9600");
   putstring(":8");
-  if (rs485[2] << 4 == UART_PARITY_NONE) putstring("N");
-  if (rs485[2] << 4 == UART_PARITY_ODD) putstring("O");
-  if (rs485[2] << 4 == UART_PARITY_EVEN) putstring("E");
-  if (rs485[1] << 2 == UART_STOP_BIT_1) putstring("1");
-  if (rs485[1] << 2 == UART_STOP_BIT_2) putstring("2");
+  if (rs485_params[2] << 4 == UART_PARITY_NONE) putstring("N");
+  if (rs485_params[2] << 4 == UART_PARITY_ODD) putstring("O");
+  if (rs485_params[2] << 4 == UART_PARITY_EVEN) putstring("E");
+  if (rs485_params[1] << 2 == UART_STOP_BIT_1) putstring("1");
+  if (rs485_params[1] << 2 == UART_STOP_BIT_2) putstring("2");
   putstring("\n");
-  uart_arch_config(rs485[3] << 6 | rs485[2] << 4 | rs485[1] << 2 );
 
-//  flash_page_erase(FLASH_PAGE(0x3F000));
-//
-//  rs485[0] = 0x00;
-//  rs485[1] = 0x00;
-//  rs485[2] = 0x02;
-//  rs485[3] = 0x01;
-//  flash_write_DMA(rs485, 4, FLASH_WORD_ADDR(0x3F000));
+  uart_arch_config(rs485_params[3] << 6 | rs485_params[2] << 4 | rs485_params[1] << 2 );
 
 #if RUN_ON_COOJA_SIMULATION
   SENSORS_ACTIVATE(button_sensor);
