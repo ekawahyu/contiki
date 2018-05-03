@@ -429,7 +429,8 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
         packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos + 3);
         NETSTACK_MAC.on();
         which_sink = conectric_send_to_sink(&conectric);
-        if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n");
+        if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
         PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
             linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
             clock_seconds());
@@ -460,7 +461,8 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       packetbuf_copyfrom(message, RS485_HEADER_SIZE + localbc_message_recv.length);
       NETSTACK_MAC.on();
       which_sink = conectric_send_to_sink(&conectric);
-      if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n");
+      if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
       PRINTF("%d.%d: sensor broadcast sent to sink ts %lu\n",
           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
           clock_seconds());
