@@ -43,6 +43,8 @@ extern "C" {
 #define CONECTRIC_SENSOR_BROADCAST_PLS          0x40
 #define CONECTRIC_SENSOR_BROADCAST_USB          0x41
 
+#define CONECTRIC_RS485_POLL_REPLY_IN_CHUNK     0x42
+
 /*   Reporting boot status */
 #define CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS  0x60
 #define CONECTRIC_TEXT_MESSAGE                  0x61

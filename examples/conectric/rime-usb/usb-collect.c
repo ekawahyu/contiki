@@ -366,7 +366,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
         message[6+loop] = localbc_message_recv.payload[loop];
       }
 
-      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+      etimer_set(&et, CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8));
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
       packetbuf_copyfrom(message, USB_HEADER_SIZE + localbc_message_recv.length);
@@ -404,7 +404,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
             clock_seconds());
         // PROCESS_PAUSE();
         if (loop) {
-          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          etimer_set(&et, CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8));
           PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
         }
       }

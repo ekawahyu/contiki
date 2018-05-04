@@ -417,16 +417,30 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       message[3] = 0;
       message[4] = 0;
       message[5] = 0;
-      message[6] = rs485_in_pos + 3;
-      message[7] = CONECTRIC_RS485_POLL_REPLY;
-      message[8] = batt;
-      for (loop = 0;loop < rs485_in_pos; loop++) {
-        message[9+loop] = rs485_data[loop];
+      if (rs485_in_pos > 64) {
+        message[6] = 2 + 3;
+        message[7] = CONECTRIC_RS485_POLL_REPLY_IN_CHUNK;
+        message[8] = batt;
+        message[9] = (rs485_in_pos >> 6) + ((rs485_in_pos && 63) ? 1 : 0);
+        message[10] = 0x40;
+      }
+      else {
+        message[6] = rs485_in_pos + 3;
+        message[7] = CONECTRIC_RS485_POLL_REPLY;
+        message[8] = batt;
+        for (loop = 0;loop < rs485_in_pos; loop++) {
+          message[9+loop] = rs485_data[loop];
+        }
       }
 
       loop = CONECTRIC_BURST_NUMBER;
       while(loop--) {
-        packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos + 3);
+        if (rs485_in_pos > 64) {
+          packetbuf_copyfrom(message, RS485_HEADER_SIZE + 2 + 3);
+        }
+        else {
+          packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos + 3);
+        }
         NETSTACK_MAC.on();
         which_sink = conectric_send_to_sink(&conectric);
         if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n",
@@ -434,9 +448,12 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
         PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
             linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
             clock_seconds());
+        PRINTF("%d.%d: esender=%d.%d\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+            netbc_message_recv.esender.u8[0], netbc_message_recv.esender.u8[1]);
         // PROCESS_PAUSE();
         if (loop) {
-          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          etimer_set(&et, CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8));
           PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
         }
       }
@@ -455,7 +472,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
         message[6+loop] = localbc_message_recv.payload[loop];
       }
 
-      etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+      etimer_set(&et, CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8));
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
       packetbuf_copyfrom(message, RS485_HEADER_SIZE + localbc_message_recv.length);
@@ -493,7 +510,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
             clock_seconds());
         // PROCESS_PAUSE();
         if (loop) {
-          etimer_set(&et, 1 + random_rand() % (CLOCK_SECOND / 8));
+          etimer_set(&et, CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8));
           PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
         }
       }
