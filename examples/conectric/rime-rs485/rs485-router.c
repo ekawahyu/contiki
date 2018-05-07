@@ -86,6 +86,7 @@ extern volatile uint16_t deep_sleep_requested;
 #define RS485_COLLECT_SENSOR_BROADCAST  0x91
 #define RS485_COLLECT_PERIODIC          0x92
 #define RS485_INCOMING_RESPONSE         0x93
+#define RS485_POLL_CHUNK                0x94
 #define RS485_COLLECT_NOEVT             0x00
 #define RS485_SUP_EVT                   0xBB
 #define RS485_SUP_NOEVT                 0x00
@@ -242,11 +243,16 @@ timedout(struct conectric_conn *c)
 static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
+  static uint8_t event;
   uint8_t rs485p[CONFIG_RS485_PARAMS_LENGTH];
 
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
   dump_packetbuf(&conectric_message_recv);
+
+  if (conectric_message_recv.request == CONECTRIC_RS485_POLL_CHUNK) {
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &conectric_message_recv);
+  }
 
   if (conectric_message_recv.request == CONECTRIC_RS485_POLL) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &conectric_message_recv);
@@ -303,6 +309,10 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   packetbuf_and_attr_copyto(&netbc_message_recv, MESSAGE_NETBC_RECV);
 
   dump_packetbuf(&netbc_message_recv);
+
+  if (netbc_message_recv.request == CONECTRIC_RS485_POLL_CHUNK) {
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
+  }
 
   if (netbc_message_recv.request == CONECTRIC_RS485_POLL) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
@@ -689,6 +699,8 @@ PROCESS_THREAD(modbus_out_process, ev, data)
   static uint8_t batt;
   static uint8_t len;
   uint16_t crc16;
+  uint8_t chunk_number;
+  uint8_t chunk_size;
 
   PROCESS_BEGIN();
 
@@ -716,15 +728,27 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     putstring("\n");
 #endif
 
-    /* reset modbus input index */
-    rs485_in_pos = 0;
+    if (req == CONECTRIC_RS485_POLL) {
+      /* reset modbus input index */
+      rs485_in_pos = 0;
 
-    /* modbus write */
-    while(len--) {
-      puthex(*serial_data);
-      uart_arch_writeb(*serial_data++);
+      /* modbus write */
+      while(len--) {
+        puthex(*serial_data);
+        uart_arch_writeb(*serial_data++);
+      }
+      putstring("\n");
     }
-    putstring("\n");
+    else if (req == CONECTRIC_RS485_POLL_CHUNK) {
+      chunk_number = *serial_data++;
+      chunk_size = *serial_data++;
+//      putstring("Polling chunks n=");
+//      putdec(chunk_number);
+//      putstring(" size=");
+//      putdec(chunk_size);
+//      putstring("\n");
+
+    }
   }
 
   PROCESS_END();
