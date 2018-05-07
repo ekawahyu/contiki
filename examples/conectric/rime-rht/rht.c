@@ -64,7 +64,7 @@
 #endif
 
 /* RHT Network Parameters */
-#define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
+#define RHT_REPORTING_PERIOD    (5/*9U*/ * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         6
 #define RHT_BOOT_PAYLOAD_SIZE   4
 #define RHT_PAYLOAD_SIZE        7
