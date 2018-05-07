@@ -48,7 +48,7 @@
 #if defined __IAR_SYSTEMS_ICC__
 __root __code const uint8_t config_rs485[4] @ 0x7FFD8 =
 {0x00, 0x00, 0x00, 0x02};
-__code const uint8_t config_sn[12] @ 0x7FFDC =
+__root __code const uint8_t config_sn[12] @ 0x7FFDC =
 {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 #else
 __code const __at(CONFIG_RS485_PARAMS) uint8_t config_rs485[4] =
