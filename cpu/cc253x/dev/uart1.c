@@ -101,6 +101,8 @@ uart1_config(uint8_t config)
     UART_SET_SPEED(1, UART_4_M, UART_4_E);
   if ((config & 0xC0) == UART_B9600)
     UART_SET_SPEED(1, UART_9_M, UART_9_E);
+  if ((config & 0xC0) == UART_B19200)
+    UART_SET_SPEED(1, UART_19_M, UART_19_E);
 
   /* if parity is enabled */
   if (config & 0x30) {

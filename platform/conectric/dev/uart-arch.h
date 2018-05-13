@@ -46,6 +46,7 @@ extern "C" {
 #define UART_B2400        (0 << 6)
 #define UART_B4800        (1 << 6)
 #define UART_B9600        (2 << 6)
+#define UART_B19200       (3 << 6)
 
 #define UART_PARITY_NONE  (0 << 4)
 #define UART_PARITY_ODD   (1 << 4)

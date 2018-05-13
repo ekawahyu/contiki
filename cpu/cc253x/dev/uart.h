@@ -36,6 +36,9 @@
 /* 38400 */
 #define UART_38_M     59
 #define UART_38_E     10
+/* 19200 */
+#define UART_19_M     59
+#define UART_19_E     9
 /* 9600 */
 #define UART_9_M      59
 #define UART_9_E       8
