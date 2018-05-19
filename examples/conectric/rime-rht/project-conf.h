@@ -48,7 +48,7 @@ extern "C" {
 #define NETSTACK_CONF_RDC                     nullrdc_driver
 
 #define IEEE802154_CONF_PANID                 0x2007
-#define CC2530_RF_CONF_CHANNEL                25
+#define CC2530_RF_CONF_CHANNEL                20
 #if MODELS_CONF_ANAREN_A2530E_MODULE
 #else
 #define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
