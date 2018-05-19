@@ -89,7 +89,7 @@ PROCESS_THREAD(clock_test_process, ev, data)
     ct = clock_time();
     rt_now = RTIMER_NOW();
     // rt_for = rt_now + (5-i) * (RTIMER_SECOND/2);
-    rt_for = rt_now + 500;
+    rt_for = rt_now + 750;
     printf("Now=%u - For=%u\n", rt_now, rt_for);
     if(rtimer_set(&rt[i], rt_for, 1,
               (void (*)(struct rtimer *, void *))rt_callback, NULL) != RTIMER_OK) {
