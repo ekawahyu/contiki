@@ -53,7 +53,6 @@ uart0_init()
   P0DIR &= ~0x04;   /* RX in */
 #endif
 
-
 #ifdef UART0_RTSCTS
   U0UCR = 0x42; /* defaults: 8N1, RTS/CTS, high stop bit */
 #else
@@ -71,10 +70,11 @@ uart0_init()
 void
 uart0_writeb(uint8_t byte)
 {
-  U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
+  // U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
   U0DBUF = byte;
-  while(!(U0CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
-  U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
+  // while(!(U0CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
+  while(U0CSR & UCSR_ACTIVE); /* Wait until byte has been transmitted. */
+  // U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 }
 /*---------------------------------------------------------------------------*/
 void

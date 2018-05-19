@@ -399,6 +399,9 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   /* Load RS485 parameters from the flash */
   configure_rs485_from_flash();
 
+  /* workaround to make modbus_in_process() to start receiving messages */
+  uart_arch_writeb(0);
+
 #if RUN_ON_COOJA_SIMULATION
   SENSORS_ACTIVATE(button_sensor);
 #endif
@@ -705,9 +708,6 @@ PROCESS_THREAD(modbus_out_process, ev, data)
 
   PROCESS_BEGIN();
 
-  /* workaround to make modbus_in_process() to start receiving messages */
-  uart_arch_writeb(0);
-
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
@@ -717,8 +717,6 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     reqlen = *serial_data++;
     req = *serial_data++;
     batt = *serial_data++;
-
-    len = reqlen - 3;
 
 #if DEBUG_CRC16
     /* This CRC16 calculation is only used to debug the outgoing modbus */
@@ -734,10 +732,14 @@ PROCESS_THREAD(modbus_out_process, ev, data)
       rs485_in_pos = 0;
 
       /* modbus write */
-      while(len--) {
-        puthex(*serial_data);
-        uart_arch_writeb(*serial_data++);
-      }
+      len = reqlen - 3;
+      serial_data = message->payload + 3;
+      while(len--) uart_arch_writeb(*serial_data++);
+
+      /* console write */
+      len = reqlen - 3;
+      serial_data = message->payload + 3;
+      while(len--) puthex(*serial_data++);
       putstring("\n");
     }
     else if (req == CONECTRIC_RS485_POLL_CHUNK) {

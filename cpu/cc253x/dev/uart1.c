@@ -79,16 +79,14 @@ uart1_init()
 void
 uart1_writeb(uint8_t byte)
 {
-  U1CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 #ifdef RS485_CONF_ENABLE
   rs485_de_nre_high();
 #endif
   U1DBUF = byte;
-  while(!(U1CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
+  while(U1CSR & UCSR_ACTIVE); /* Wait until byte has been transmitted. */
 #ifdef RS485_CONF_ENABLE
   rs485_de_nre_low();
 #endif
-  U1CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 }
 /*---------------------------------------------------------------------------*/
 void
