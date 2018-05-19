@@ -357,6 +357,7 @@ configure_rs485_from_flash(void)
   if (p[3] << 6 == UART_B2400) putstring("2400");
   if (p[3] << 6 == UART_B4800) putstring("4800");
   if (p[3] << 6 == UART_B9600) putstring("9600");
+  if (p[3] << 6 == UART_B19200) putstring("19200");
   putstring(":8");
   if (p[2] << 4 == UART_PARITY_NONE) putstring("N");
   if (p[2] << 4 == UART_PARITY_ODD) putstring("O");
