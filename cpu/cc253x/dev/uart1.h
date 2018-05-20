@@ -19,6 +19,7 @@
 #if UART1_ENABLE
 void uart1_init();
 void uart1_writeb(uint8_t byte);
+void uart1_config(uint8_t config);
 
 void uart1_set_input(int (* input)(unsigned char c));
 
@@ -38,6 +39,7 @@ void uart1_rx_isr(void) __interrupt(URX1_VECTOR);
 #else
 #define uart1_init(...)
 #define uart1_writeb(...)
+#define uart1_config(...)
 #define uart1_set_input(...)
 #define UART1_RX_INT(v)
 #define UART1_RX_EN()

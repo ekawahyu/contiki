@@ -89,7 +89,7 @@ PROCESS_THREAD(modbus_line_process, ev, data)
 
   PROCESS_BEGIN();
   
-  ctimer_set(&ct, CLOCK_SECOND/8, modbus_line_timeout, &ptr);
+  ctimer_set(&ct, CLOCK_SECOND/64, modbus_line_timeout, &ptr);
   modbus_line_event_message = process_alloc_event();
   ptr = 0;
 
@@ -101,8 +101,8 @@ PROCESS_THREAD(modbus_line_process, ev, data)
       PROCESS_YIELD();
       if (ctimer_expired(&ct) && ptr != 0) {
         /* Terminate */
-        buf[++ptr] = (uint8_t)'\0';
         buf[0] = ptr;
+        buf[++ptr] = (uint8_t)'\0';
         /* Broadcast event */
         process_post(PROCESS_BROADCAST, modbus_line_event_message, buf);
         /* Wait until all processes have handled the serial line event */

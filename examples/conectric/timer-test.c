@@ -67,15 +67,15 @@ PROCESS_THREAD(clock_test_process, ev, data)
   PROCESS_YIELD();
 
 #if TEST_CLOCK_DELAY_USEC
-  printf("clock_delay_usec test, (10,000 x i) usec:\n");
+  printf("clock_delay_usec test, (1000 x i) usec:\n");
   i = 1;
   while(i < 7) {
     start_count = RTIMER_NOW();
-    clock_delay_usec(10000 * i);
+    clock_delay_usec(1000 * i);
     end_count = RTIMER_NOW();
     diff = end_count - start_count;
     printf("Requested: %u usec, Real: %u rtimer ticks = ~%u us\n",
-        10000 * i, diff, diff * 64);
+        1000 * i, diff, diff * 64);
     i++;
   }
 #endif
@@ -88,8 +88,9 @@ PROCESS_THREAD(clock_test_process, ev, data)
     printf("=======================\n");
     ct = clock_time();
     rt_now = RTIMER_NOW();
-    rt_for = rt_now + (5-i) * (RTIMER_SECOND/2);
-    printf("Now=%u (clock = %u) - For=%u\n", rt_now, ct, rt_for);
+    // rt_for = rt_now + (5-i) * (RTIMER_SECOND/2);
+    rt_for = rt_now + 750;
+    printf("Now=%u - For=%u\n", rt_now, rt_for);
     if(rtimer_set(&rt[i], rt_for, 1,
               (void (*)(struct rtimer *, void *))rt_callback, NULL) != RTIMER_OK) {
       printf("Error setting\n");

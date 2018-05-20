@@ -100,6 +100,7 @@
 
 struct ipolite_conn;
 
+#define IBC_ATTRIBUTES
 #define IPOLITE_ATTRIBUTES IBC_ATTRIBUTES
 
 /**

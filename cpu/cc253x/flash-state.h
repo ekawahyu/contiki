@@ -27,14 +27,16 @@ extern uint8_t read_buf[FLASH_STATE_SIZE_MAX];
 // state ID's (ensure no duplicates)
 enum
 {
-  FLASH_STATE_PG_HEADER = 0x01,
-  FLASH_STATE_WI_SENSOR_LIST = 0x02,
+  FLASH_STATE_PG_HEADER =       0x01,
+  FLASH_STATE_WI_SENSOR_LIST =  0x02,
+  FLASH_STATE_OTA_IMG_VERSION = 0x03,
+  FLASH_STATE_OTA_IMG_SIZE =    0x04
 };
 
 void flashstate_init();
 void flashstate_write(uint8_t stateId, uint8_t *data, uint8_t size);
 // Read state from Flash
 // Return size of state information
-uint8_t flashstate_read(uint8_t stateId, uint8_t *data);
+uint8_t flashstate_read(uint8_t stateId, uint8_t **data);
 
 #endif /* FLASH_STATE_H_ */

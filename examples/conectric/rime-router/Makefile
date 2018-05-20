@@ -2,8 +2,6 @@ DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 CONTIKI = ../../../
 
 PROJECT_NAME:=router
-DEFINES+=CONECTRIC_VERSION_STRING=\"Contiki-${shell git --git-dir ${CONTIKI}/.git rev-parse --short HEAD}\"
-DEFINES+=CONECTRIC_PROJECT_STRING=\"Conectric-$(PROJECT_NAME)-$(RELSTR)\"
 
 HAVE_BANKING=1
 

@@ -42,11 +42,20 @@
  * @{
  */
 
+#include "net/rime/rime.h"
 #include "net/rime/netflood.h"
 
 #include <string.h>
 
-#define HOPS_MAX 16
+#define HOPS_MAX 64
+
+#define SEQNO_LT(a, b) ((int16_t)((a) - (b)) <= 0 && (int16_t)((b) - (a)) <= 5 && (((a) != (0)) || ((b) != (255))))
+
+static const struct packetbuf_attrlist attributes[] =
+  {
+    NETFLOOD_ATTRIBUTES
+    PACKETBUF_ATTR_LAST
+  };
 
 struct netflood_hdr {
   uint16_t originator_seqno;
@@ -88,7 +97,7 @@ recv_from_ipolite(struct ipolite_conn *ipolite, const linkaddr_t *from)
   packetbuf_hdrreduce(sizeof(struct netflood_hdr));
   if(c->u->recv != NULL) {
     if(!(linkaddr_cmp(&hdr.originator, &c->last_originator) &&
-	 hdr.originator_seqno <= c->last_originator_seqno)) {
+        SEQNO_LT(hdr.originator_seqno, c->last_originator_seqno))) {
 
       if(c->u->recv(c, from, &hdr.originator, hdr.originator_seqno,
 		    hops)) {
@@ -109,6 +118,7 @@ recv_from_ipolite(struct ipolite_conn *ipolite, const linkaddr_t *from)
 		   c->last_originator_seqno,
 		  hops);
 	    hdr.hops++;
+	    packetbuf_set_attr(PACKETBUF_ATTR_HOPS, packetbuf_attr(PACKETBUF_ATTR_HOPS) + 1);
 	    memcpy(packetbuf_dataptr(), &hdr, sizeof(struct netflood_hdr));
 	    send(c);
 	    linkaddr_copy(&c->last_originator, &hdr.originator);
@@ -150,6 +160,7 @@ netflood_open(struct netflood_conn *c, clock_time_t queue_time,
   ipolite_open(&c->c, channel, 1, &netflood);
   c->u = u;
   c->queue_time = queue_time;
+  channel_set_attributes(channel, attributes);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -162,16 +173,27 @@ int
 netflood_send(struct netflood_conn *c, uint8_t seqno)
 {
   if(packetbuf_hdralloc(sizeof(struct netflood_hdr))) {
+
     struct netflood_hdr *hdr = packetbuf_hdrptr();
+
+    packetbuf_compact();
+    packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &linkaddr_node_addr);
+    packetbuf_set_attr(PACKETBUF_ATTR_HOPS, 1);
+
     linkaddr_copy(&hdr->originator, &linkaddr_node_addr);
     linkaddr_copy(&c->last_originator, &hdr->originator);
+
     c->last_originator_seqno = hdr->originator_seqno = seqno;
-    hdr->hops = 0;
+
+    hdr->hops = 1;
+
     PRINTF("%d.%d: netflood sending '%s'\n",
 	   linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	   (char *)packetbuf_dataptr());
+
     return ipolite_send(&c->c, 0, 4);
   }
+
   return 0;
 }
 /*---------------------------------------------------------------------------*/

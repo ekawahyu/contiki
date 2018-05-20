@@ -294,7 +294,7 @@
         <option>
           <name>CCDefines</name>
           <state>chip=cc2530</state>
-          <state>WATCHDOG=1</state>
+          <state>WATCHDOG=0</state>
           <state>AUTOSTART_ENABLE=1</state>
           <state>PROJECT_CONF_H="project-conf.h"</state>
           <state>CONTIKI_WITH_RIME=1</state>
@@ -477,7 +477,7 @@
         <option>
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$\..\..\</state>
-          <state>$PROJ_DIR$\..\..\examples\conectric\rime-router\</state>
+          <state>$PROJ_DIR$\..\..\examples\conectric\rime-wi\</state>
           <state>$PROJ_DIR$\..\..\platform\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\dev\</state>
@@ -746,7 +746,7 @@
       <name>BUILDACTION</name>
       <archiveVersion>1</archiveVersion>
       <data>
-        <prebuild></prebuild>
+        <prebuild>CMD.EXE /C "C:\Program Files\Git\git-bash.exe" $PROJ_DIR$/../../platform/conectric/tools/version.sh</prebuild>
         <postbuild></postbuild>
       </data>
     </settings>
@@ -763,7 +763,7 @@
         </option>
         <option>
           <name>OutputFile</name>
-          <state>conectric-rime-wi.d51</state>
+          <state>conectric-rime-wi.a51</state>
         </option>
         <option>
           <name>OutputFormat</name>
@@ -941,7 +941,7 @@
         </option>
         <option>
           <name>DebugInformation</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>RuntimeControl</name>
@@ -953,11 +953,11 @@
         </option>
         <option>
           <name>AllowExtraOutput</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GenerateExtraOutput</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>XExtraOutOverride</name>
@@ -1431,6 +1431,9 @@
           <name>$PROJ_DIR$\..\..\core\net\rime\collect.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\..\core\net\rime\conectric.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</name>
         </file>
         <file>
@@ -1687,6 +1690,9 @@
         <name>$PROJ_DIR$\..\..\cpu\cc253x\flash-state.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\cpu\cc253x\ota.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\cpu\cc253x\rtimer-arch.c</name>
       </file>
       <file>
@@ -1798,7 +1804,10 @@
         </file>
       </group>
       <file>
-        <name>$PROJ_DIR$\..\..\platform\conectric\contiki-main.c</name>
+        <name>$PROJ_DIR$\..\..\platform\conectric\config.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\platform\conectric\debug.c</name>

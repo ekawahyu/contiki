@@ -29,6 +29,15 @@
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+#include "config.h"
+#if defined __IAR_SYSTEMS_ICC__
+#include "conectric-version.h"
+#endif
+/*---------------------------------------------------------------------------*/
+#ifdef CONTIKI_VERSION_STRING
+#undef CONTIKI_VERSION_STRING
+#define CONTIKI_VERSION_STRING CONECTRIC_VERSION_STRING
+#endif
 /*---------------------------------------------------------------------------*/
 #if VIZTOOL_CONF_ON
 PROCESS_NAME(viztool_process);
@@ -57,22 +66,6 @@ void invoke_process_before_sleep(void);
 /*---------------------------------------------------------------------------*/
 #ifndef WATCHDOG
 #define WATCHDOG 1
-#endif
-/*---------------------------------------------------------------------------*/
-/*
- * TODO add pre-built command line to collect git information on IAR
- *
- */
-#ifndef CONECTRIC_VERSION_STRING
-#define CONECTRIC_VERSION_STRING "Contiki-unknown"
-#endif
-#ifndef CONECTRIC_PROJECT_STRING
-#define CONECTRIC_PROJECT_STRING "unknow"
-#endif
-/*---------------------------------------------------------------------------*/
-#ifdef CONTIKI_VERSION_STRING
-#undef CONTIKI_VERSION_STRING
-#define CONTIKI_VERSION_STRING CONECTRIC_VERSION_STRING
 #endif
 /*---------------------------------------------------------------------------*/
 #if ENERGEST_CONF_ON
@@ -206,6 +199,18 @@ set_rf_params(void) CC_NON_BANKED
   return;
 }
 /*---------------------------------------------------------------------------*/
+static void
+print_serial_number(void)
+{
+  uint8_t snlen;
+  uint8_t sn[CONFIG_SERIAL_NUMBER_LENGTH];
+
+  putstring("S/N:");
+  snlen = config_sernum_read(sn);
+  while (snlen--) puthex(sn[snlen]);
+  putstring("\n");
+}
+/*---------------------------------------------------------------------------*/
 int
 main(void) CC_NON_BANKED
 {
@@ -268,6 +273,8 @@ main(void) CC_NON_BANKED
   puthex(CHIPINFO1 + 1);
   putstring("KB SRAM\n");
 
+  // print_serial_number();
+
   PUTSTRING("\nSDCC Build:\n");
 #if STARTUP_CONF_VERBOSE
 #ifdef HAVE_SDCC_BANKING
@@ -315,7 +322,8 @@ main(void) CC_NON_BANKED
   process_start(&sensors_process, NULL);
 #endif
 #if BUTTON_SENSOR_ON
-  BUTTON_SENSOR_ACTIVATE();
+  BUTTON_SENSOR_ACTIVATE(1);
+  BUTTON_SENSOR_ACTIVATE(2);
 #endif
 #if ADC_SENSOR_ON
   ADC_SENSOR_ACTIVATE();

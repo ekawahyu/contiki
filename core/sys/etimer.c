@@ -207,6 +207,7 @@ etimer_adjust(struct etimer *et, int timediff)
 {
   et->timer.start += timediff;
   update_time();
+  etimer_request_poll();
 }
 /*---------------------------------------------------------------------------*/
 int

@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 #define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      1
+#define MODELS_CONF_ANAREN_A2530E_MODULE      0
 
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     nullrdc_driver
@@ -57,10 +57,7 @@ extern "C" {
 
 #define LPM_CONF_MODE                         2
 
-/* TODO this is just a workaround of a repurposed RS485 board for door sensor */
-#define RS485_CONF_ENABLE                     1
-#define UART1_CONF_ENABLE                     0
-/* end of workaround of a repurposed RS485 board for door sensor */
+#define BUTTON_SENSOR_CONF_INPUT_3STATE       1
 
 #define CONECTRIC_BURST_NUMBER                5
 

@@ -51,6 +51,7 @@
 // Conectric Device
 #include "flash-logging.h"
 #include "flash-state.h"
+#include "ota.h"
 //#include "dev/button-sensor.h"
 #include "dev/rs485-arch.h"
 #include "dev/serial-line.h"  // REMOVE AFTER DEBUG
@@ -79,6 +80,11 @@
 #define PUTDEC(...)
 #define PUTCHAR(...)
 #endif
+
+// Device Configuration
+#define CONECTRIC_DEVICE_TYPE_WI 0x90
+static const uint16_t WI_Version = WI_VERSION;
+uint16_t ota_img_version = OTA_NO_IMG;  
 
 typedef union {
   uint16_t len;
@@ -123,6 +129,8 @@ extern volatile uint16_t deep_sleep_requested;
 
 // device general
 #define DEVICE_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 30U)) // BMB
+
+struct ctimer img_reset_timer;
 
 // WI state
 #define WI_ROOM_STATUS_BIT_SHIFT 7
@@ -286,6 +294,21 @@ shortaddr_cmp(linkaddr_t * addr1, linkaddr_t * addr2)
 {
   return (addr1->u8[0] == addr2->u8[0] && addr1->u8[1] == addr2->u8[1]);
 }
+/*--------------------------------------------------------------------------*/
+// Device Management Functions
+
+void ota_img_version_restore()
+{
+  uint8_t *data;
+  uint8_t size;
+  size = flashstate_read(FLASH_STATE_OTA_IMG_VERSION, &data);
+  if(size == 2)
+  {
+    memcpy(&ota_img_version, data, size);
+    if(ota_img_version > WI_Version)
+      ota_restore_map();
+  }
+}
 
 /*---------------------------------------------------------------------------*/
 // RHT Event Management Functions
@@ -344,12 +367,12 @@ static child_sensor_t * child_sensors_find(linkaddr_t addr)
 
 static void child_sensor_restore()
 {
-  uint8_t * state;
+  uint8_t *state;
   uint8_t size;
   linkaddr_t child_addr;
   uint8_t ptr;  // parameter to timeout function
   
-  size = flashstate_read(FLASH_STATE_WI_SENSOR_LIST, state);
+  size = flashstate_read(FLASH_STATE_WI_SENSOR_LIST, &state);
   
   wi_state.num_child_sensors = (uint8_t)(size >> 1);  // 2 bytes per child
       
@@ -365,6 +388,59 @@ static void child_sensor_restore()
     child_sensors[ct].seqno_cnt = CONECTRIC_BURST_NUMBER;
     ctimer_set(&child_sensors[ct].sup_timer, DEVICE_SUP_TIMEOUT, sensor_timeout, &ptr); // start supervisory timer
   }
+}
+
+static void process_img_update(uint8_t * payload)
+{
+   static uint8_t img_segment[OTA_SEGMENT_MAX];    
+   uint16_t img_version;
+   uint16_t addr_offset;
+   uint8_t dev_type;
+   uint16_t crc16, crc16_result;
+   uint8_t data_len;
+   
+   img_version = (payload[2] << 8) + payload[3];
+   dev_type = payload[4];
+   crc16 = (payload[7] << 8) + payload[8];
+   addr_offset = (payload[10] << 8) + payload[11];
+   data_len = payload[12];
+   
+   // exit if not for me
+   if(dev_type != CONECTRIC_DEVICE_TYPE_WI)
+     return;
+   
+   // exit if old version
+   if(img_version <= WI_VERSION)
+     return;
+   
+   // BMB: Not implemented
+   // crc16_result = crc16_data(&payload[13], data_len, crc16_result);
+   
+   // validate checksum (including data_len): BMB - set to FF for test, need to implement checksum
+   if(crc16 != 0xFFFF || data_len > OTA_SEGMENT_MAX)
+     return;
+   
+   if((ota_img_version == OTA_NO_IMG && img_version > WI_Version) || (img_version > ota_img_version))
+   { // first image segment of a new image
+
+     // clear flash
+     ota_clear();
+     // save img version in state variables
+     flashstate_write(FLASH_STATE_OTA_IMG_VERSION, (uint8_t*)&img_version, sizeof(img_version));
+     ota_img_version = img_version;
+   }
+   else if(img_version != ota_img_version) 
+   { 
+     // old image
+     return;
+   }
+
+   // copy data out of payload in case it gets overwritten by another process
+   memcpy(img_segment, &payload[13], data_len);
+   // write segment of current image
+   ota_flashwrite(addr_offset, data_len, img_segment);
+   // update ota image map
+   ota_update_map(addr_offset);     
 }
 
 static void process_route_request(uint8_t * payload)
@@ -648,7 +724,7 @@ static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
 {
   uint8_t packetlen, hdrlen;
-  uint8_t *dataptr;
+//  uint8_t *dataptr;
 
   /* Backup the previous senders and receivers */
   linkaddr_copy(&message->prev_sender, &message->sender);
@@ -1342,8 +1418,10 @@ PROCESS_THREAD(flash_process, ev, data)
 
   flashlogging_init();
   flashstate_init();
+  ota_init();
 
   child_sensor_restore();
+  ota_img_version_restore();
   
   while (1)
   {
@@ -1423,8 +1501,9 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   uint8_t responselen;
 //  uint8_t chunk_number = 0;
 //  uint8_t chunk_size = 0;
-  uint8_t i;
-  uint8_t wi_request = 0;
+  uint8_t header_status = 0;
+  uint16_t ota_version; 
+  uint16_t ota_next_addr = 0x0000;
   
 //  reqlen = *radio_request++;
   *radio_request++;
@@ -1447,13 +1526,13 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //    response = CONECTRIC_MULTIHOP_PING_REPLY;
 //    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
 //  }
-//  if (req == CONECTRIC_POLL_RS485) {
-//    response = CONECTRIC_POLL_RS485_REPLY;
+//  if (req == CONECTRIC_RS485_POLL) {
+//    response = CONECTRIC_RS485_POLL_REPLY;
 //    responselen += 2;
 //    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
 //  }
-//  if (req == CONECTRIC_POLL_RS485_CHUNK) {
-//    response = CONECTRIC_POLL_RS485_CHUNK_REPLY;
+//  if (req == CONECTRIC_RS485_POLL_CHUNK) {
+//    response = CONECTRIC_RS485_POLL_CHUNK_REPLY;
 //    chunk_number = *radio_request++;
 //    chunk_size   = *radio_request++;
 //    responselen += chunk_size;
@@ -1461,10 +1540,45 @@ compose_response_to_packetbuf(uint8_t * radio_request,
 //  }
   if (req == CONECTRIC_POLL_WI) {
     // Update length based on WI State structure
-    responselen += wi_msg_build(radio_request, &wi_request, &mem_idx) + 1;  // add 1 for header
+    responselen += wi_msg_build(radio_request, &header_status, &mem_idx) + 1;  // add 1 for header
     response = CONECTRIC_POLL_WI_REPLY;
     linkaddr_copy(ereceiver, &mhop_message_recv.esender);
   }
+  if (req == CONECTRIC_IMG_COMPLETE || req == CONECTRIC_IMG_UPDATE_DIR) {
+    // verify image and send appropriate response
+    ota_version = (radio_request[0] << 8) + radio_request[1];
+    // skip device type (assume multihop addressed correctly)
+    uint16_t img_size = (radio_request[3] << 8) + radio_request[4];
+    uint16_t img_crc = (radio_request[5] << 8) + radio_request[6];
+    uint8_t reboot_delay = radio_request[7];
+    
+    if(ota_version != ota_img_version)
+    {
+      header_status = OTA_IMG_INVALID_VER;
+    } 
+    else if(ota_next_segment(img_size, &ota_next_addr))
+    {     
+      header_status = OTA_IMG_INCOMPLETE;
+    }
+    else if (ota_verify_crc(img_size, img_crc))
+    {
+      clock_time_t reset_time = 2^reboot_delay;
+      
+      // set timer for image copy and reboot BMB
+      ctimer_set(&img_reset_timer, reset_time, ota_copyandreset, &reboot_delay); // start supervisory timer
+      
+      header_status = OTA_IMG_SUCCESS;
+    } 
+    else
+    {
+      header_status = OTA_IMG_INVALID_CRC;
+    }
+    
+    responselen += 5;  // CONECTRIC_IMG_ACK_SIZE;
+    response = CONECTRIC_IMG_ACK;
+    linkaddr_copy(ereceiver, &mhop_message_recv.esender);
+  }
+
 //  if (req == CONECTRIC_GET_LONG_MAC) {
 //    response = CONECTRIC_GET_LONG_MAC_REPLY;
 //    responselen += 8;
@@ -1475,24 +1589,33 @@ compose_response_to_packetbuf(uint8_t * radio_request,
   *packet++ = responselen;
   *packet++ = response;
 
-  i = responselen-2;
-  
   if (req == CONECTRIC_POLL_WI) {
+    uint8_t i = responselen-2;
     // add header
-    *packet++ = wi_request;
+    *packet++ = header_status;
     for(uint8_t x=0; x<(i-1); x++) {
       *packet++ = wi_msg[mem_idx+x];
       //puthex(pyld[x]);
     }
   }
   
-//  if (req == CONECTRIC_POLL_RS485) {
+  if(req == CONECTRIC_IMG_COMPLETE || req == CONECTRIC_IMG_UPDATE_DIR)
+  {
+    // build response
+    *packet++ = (uint8_t)(ota_img_version >> 8);
+    *packet++ = (uint8_t)(ota_img_version);
+    *packet++ = header_status;
+    *packet++ = (uint8_t)(ota_next_addr >> 8);
+    *packet++ = (uint8_t)(ota_next_addr);
+    
+  }
+//  if (req == CONECTRIC_RS485_POLL) {
 //    /* FIXME this has to be calculated from RS485 reply length */
 //    *packet++ = 0x04; /* number of chunks available to poll */
 //    *packet++ = 0x40; /* chunk size */
 //  }
 
-//  if (req == CONECTRIC_POLL_RS485_CHUNK) {
+//  if (req == CONECTRIC_RS485_POLL_CHUNK) {
 //    for (i = 0; i < chunk_size; i++)
 //      *packet++ = rs485_buffer[(chunk_size*chunk_number) + i];
 //  }
@@ -1601,8 +1724,8 @@ call_decision_maker(void * incoming, uint8_t type)
 //    /* Request bytes to be sent as multihop */
 //    else if (
 //        request == CONECTRIC_MULTIHOP_PING ||
-//        request == CONECTRIC_POLL_RS485  ||
-//        request == CONECTRIC_POLL_RS485_CHUNK  ||
+//        request == CONECTRIC_RS485_POLL  ||
+//        request == CONECTRIC_RS485_POLL_CHUNK  ||
 //        request == CONECTRIC_POLL_SENSORS  ||
 //        request == CONECTRIC_GET_LONG_MAC)
 //      process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE, bytereq);
@@ -1657,9 +1780,12 @@ call_decision_maker(void * incoming, uint8_t type)
     /* multihop request with built-in routing table */
     if (
         //mhop_message_recv.request == CONECTRIC_MULTIHOP_PING ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485  ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK  ||
-        mhop_message_recv.request == CONECTRIC_POLL_WI  
+        mhop_message_recv.request == CONECTRIC_RS485_POLL  ||
+        mhop_message_recv.request == CONECTRIC_RS485_POLL_CHUNK  ||
+        mhop_message_recv.request == CONECTRIC_POLL_WI ||
+        mhop_message_recv.request == CONECTRIC_IMG_UPDATE_DIR ||
+        mhop_message_recv.request == CONECTRIC_IMG_COMPLETE
+          
         // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC
           ) {
       forward_addr.u8[0] = mhop_message_recv.message[4 + (mhops << 1)];
@@ -1668,9 +1794,10 @@ call_decision_maker(void * incoming, uint8_t type)
     /* multihop reply, no routing table */
     if (
         //mhop_message_recv.request == CONECTRIC_MULTIHOP_PING_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_RS485_CHUNK_REPLY ||
-        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY 
+        mhop_message_recv.request == CONECTRIC_RS485_POLL_REPLY ||
+        mhop_message_recv.request == CONECTRIC_RS485_POLL_CHUNK_REPLY ||
+        mhop_message_recv.request == CONECTRIC_POLL_WI_REPLY ||
+        mhop_message_recv.request == CONECTRIC_IMG_ACK 
         // || mhop_message_recv.request == CONECTRIC_GET_LONG_MAC_REPLY
           ) {
       linkaddr_copy(&forward_addr, &mhop_message_recv.prev_sender);
@@ -1791,16 +1918,32 @@ call_decision_maker(void * incoming, uint8_t type)
       }
     }
     
+    if (message->request == CONECTRIC_IMG_UPDATE_BCST)
+    {
+       process_img_update(message->payload);
+    }
 //    if (message->request == CONECTRIC_ROUTE_REQUEST_BY_SN)
 //      if (message->ereceiver.u8[0] == 0xFF && message->ereceiver.u8[1] == 0xFF)
 //        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
 //            message);
 
+    if (message->request == CONECTRIC_IMG_UPDATE_DIR)
+    {
+      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
+        
+        // process the image segment
+        process_img_update(message->payload);   
+        // send response
+        process_post(&example_multihop_process, PROCESS_EVENT_CONTINUE,
+            message->payload);
+    }
+    
     /* multihop message received */
     if (
         // message->request == CONECTRIC_MULTIHOP_PING ||
-        // message->request == CONECTRIC_POLL_RS485_CHUNK  ||
-        message->request == CONECTRIC_POLL_WI  
+        // message->request == CONECTRIC_RS485_POLL_CHUNK  ||
+        message->request == CONECTRIC_POLL_WI ||
+        message->request == CONECTRIC_IMG_COMPLETE
         // || message->request == CONECTRIC_GET_LONG_MAC
           )
     {
@@ -1810,7 +1953,7 @@ call_decision_maker(void * incoming, uint8_t type)
             message->payload);
     }
     
-//    if (message->request == CONECTRIC_POLL_RS485)
+//    if (message->request == CONECTRIC_RS485_POLL)
 //      if (shortaddr_cmp(&message->ereceiver, &linkaddr_node_addr))
 //        process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE,
 //            message);

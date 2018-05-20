@@ -477,7 +477,7 @@
         <option>
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$\..\..\</state>
-          <state>$PROJ_DIR$\..\..\examples\conectric\rime-router\</state>
+          <state>$PROJ_DIR$\..\..\examples\conectric\rime-gsteway\</state>
           <state>$PROJ_DIR$\..\..\platform\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\dev\</state>
@@ -746,7 +746,7 @@
       <name>BUILDACTION</name>
       <archiveVersion>1</archiveVersion>
       <data>
-        <prebuild></prebuild>
+        <prebuild>CMD.EXE /C "C:\Program Files\Git\git-bash.exe" $PROJ_DIR$/../../platform/conectric/tools/version.sh</prebuild>
         <postbuild></postbuild>
       </data>
     </settings>
@@ -1431,6 +1431,9 @@
           <name>$PROJ_DIR$\..\..\core\net\rime\collect.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\..\core\net\rime\conectric.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</name>
         </file>
         <file>
@@ -1792,7 +1795,7 @@
         </file>
       </group>
       <file>
-        <name>$PROJ_DIR$\..\..\platform\conectric\contiki-main.c</name>
+        <name>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\platform\conectric\debug.c</name>

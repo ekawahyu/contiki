@@ -32,44 +32,56 @@
 
 /**
  * \file
- *         Testing the abc layer in Rime
+ *         Conectric Motion Detection Sensor (initially taken from broadcast example)
  * \author
  *         Adam Dunkels <adam@sics.se>
+ *         Ekawahyu Susilo <ekawahyu.susilo@conectric.com>
  */
 
-// General
+/* General */
 #include <stdio.h>
 
-// Contiki
+/* Contiki */
 #include "contiki.h"
 #include "net/rime/rime.h"
 #include "net/netstack.h"
 #include "random.h"
 
-// Conectric Device
+/* Conectric Device */
 #include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 #include "dev/rs485-arch.h"
+#include "dev/leds.h"
 
-// Conectric Network
+/* Conectric Network */
 #include "examples/conectric/conectric-messages.h"
 
-// OC Network Parameters
-#define OC_SUP_TIMEOUT ((clock_time_t)(CLOCK_SECOND * 60U * 30U)) // BMB
-#define OC_HEADER_SIZE         2
+#define DEBUG 0
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+/* OC Network Parameters */
+#define OC_SUP_TIMEOUT         180 /* minutes */
+#define OC_HEADER_SIZE         6
+#define OC_BOOT_PAYLOAD_SIZE   4
 #define OC_PAYLOAD_SIZE        4
-static uint8_t message[OC_HEADER_SIZE + OC_PAYLOAD_SIZE];
+static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
-// OC Device Parameters
-#define OC_EVT            0xAA
+/* OC Device Parameters */
+#define OC_EVT            0x81
 #define OC_SUP_EVT        0xBB
+#define OC_SUP_NOEVT      0x00
 
 /* Flash Logging */
 static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
+/* Logging reference time every 12 hours */
 #define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
 enum
 {
@@ -78,30 +90,29 @@ enum
 };
 
 /*---------------------------------------------------------------------------*/
-PROCESS(oc_abc_process, "PIR Sensor");
-PROCESS(oc_supervisory_process, "OC Supervisory process");
-PROCESS(flash_log_process, "Flash Log process");
+PROCESS(oc_broadcast_process, "OC Sensor");
+PROCESS(oc_supervisory_process, "OC Supervisory");
+//PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
-PROCESS(buttons_test_process, "Button Test Process");
-AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &buttons_test_process, &flash_log_process);
+PROCESS(oc_interrupt_process, "OC Interrupt");
+AUTOSTART_PROCESSES(&oc_broadcast_process, &oc_supervisory_process, &oc_interrupt_process/*, &flash_log_process*/);
 #else
-AUTOSTART_PROCESSES(&oc_abc_process, &oc_supervisory_process, &flash_log_process);
+AUTOSTART_PROCESSES(&oc_broadcast_process, &oc_supervisory_process/*, &flash_log_process*/);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
-abc_recv(struct abc_conn *c)
+broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 {
-  memset(message, 0, sizeof(message));
-  memcpy(message, (char *)packetbuf_dataptr(), packetbuf_datalen());
-  printf("abc message received (%d) '%s'\n", strlen(message), message);
+  PRINTF("broadcast received from %d.%d (%d) '%s'\n",
+      from->u8[0], from->u8[1], strlen(message), message);
 }
-static const struct abc_callbacks abc_call = {abc_recv};
-static struct abc_conn abc;
+static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
+static struct broadcast_conn broadcast;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(oc_abc_process, ev, data)
+PROCESS_THREAD(oc_broadcast_process, ev, data)
 {
   static unsigned int batt;
-  static uint8_t seq_no = 0;
+  static uint8_t seqno = 0;
   static float sane;
   static int dec;
   static float frac;
@@ -109,147 +120,160 @@ PROCESS_THREAD(oc_abc_process, ev, data)
   static struct etimer et;
   static uint8_t loop;
 
-  PROCESS_EXITHANDLER(abc_close(&abc);)
+  PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
 
   PROCESS_BEGIN();
 
-  abc_open(&abc, 128, &abc_call);
+  broadcast_open(&broadcast, 132, &broadcast_call);
 
-//  etimer_set(&et, CLOCK_SECOND);
-//
-//  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-//
-//  memset(message, 0, 40);
-//  message[0] = 0;
-//  message[1] = 0;
-//  message[2] = 0xFF;
-//  message[3] = 0xFF;
-//  message[4] = 0x60;
-//  message[5] = counter++;
-//  message[6] = clock_reset_cause();
-//
-//  loop = CONECTRIC_BURST_NUMBER;
-//
-//  while(loop--) {
-//    packetbuf_copyfrom(message, 7);
-//    NETSTACK_MAC.on();
-//    abc_send(&abc);
-//
-//    PROCESS_WAIT_EVENT();
-//
-//    if (loop)
-//      deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
-//    else
-//      deep_sleep_requested = CLOCK_SECOND;
-//  }
+  /* Wait until system is completely booted up and ready */
+  etimer_set(&et, CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  /* Composing boot status message */
+  memset(message, 0, sizeof(message));
+  message[0] = OC_HEADER_SIZE;
+  message[1] = seqno++;
+  message[2] = 0;
+  message[3] = 0;
+  message[4] = 0;
+  message[5] = 0;
+  message[6] = OC_BOOT_PAYLOAD_SIZE;
+  message[7] = CONECTRIC_DEVICE_BROADCAST_BOOT_STATUS;
+  batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
+  sane = batt * 3 * 1.15 / 2047;
+  dec = sane;
+  frac = sane - dec;
+  message[8] = (char)(dec*10)+(char)(frac*10);
+  message[9] = clock_reset_cause();
+
+  loop = CONECTRIC_BURST_NUMBER;
+
+  while(loop--) {
+
+    packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_BOOT_PAYLOAD_SIZE);
+    NETSTACK_MAC.on();
+    broadcast_send(&broadcast);
+
+    PROCESS_WAIT_EVENT();
+
+    if (loop)
+      deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
+    else
+      deep_sleep_requested = 60 * CLOCK_SECOND;
+  }
 
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
-
+    NETSTACK_MAC.off(0);
     batt = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
     sane = batt * 3 * 1.15 / 2047;
     dec = sane;
     frac = sane - dec;
-      
+
     sensor_data = (uint8_t*)data;
 
     if(*sensor_data == OC_EVT)
     {
+      /* Composing OC sensor message */
+      memset(message, 0, sizeof(message));
+      message[0] = OC_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0;
+      message[5] = 0;
+      message[6] = OC_PAYLOAD_SIZE;
+      message[7] = CONECTRIC_SENSOR_BROADCAST_OC;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = *sensor_data;
 
-      memset(message, 0, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
-      message[0] = OC_HEADER_SIZE;                    // Header Length
-      message[1] = seq_no++;                           // Sequence number
-      message[2] = OC_PAYLOAD_SIZE;                   // Payload Length
-      message[3] = CONECTRIC_SENSOR_BROADCAST_OC;     // Payload Type                    
-      message[4] = (char)(dec*10)+(char)(frac*10);    // Battery
-      message[5] = *sensor_data    ;                  // OC Sensor reading
-
-      // Log data that will be sent out over the air
-      logData[0] = (char)(dec*10)+(char)(frac*10);
-      logData[1] = *sensor_data;
-      logData[2] = 0x00;
-      logData[3] = 0x00;
-      flashlogging_write4(RIME_OC_CMP_ID, OC_SEND, logData);  
+//      /* Log data that will be sent out over the air */
+//      logData[0] = (char)(dec*10)+(char)(frac*10);
+//      logData[1] = *sensor_data;
+//      logData[2] = 0x00;
+//      logData[3] = 0x00;
+//      flashlogging_write4(RIME_OC_CMP_ID, OC_SEND, logData);
     
       loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
         packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
+
         NETSTACK_MAC.on();
-        abc_send(&abc);
+        leds_on(LEDS_RED);
+        broadcast_send(&broadcast);
+        leds_off(LEDS_RED);
 
         PROCESS_WAIT_EVENT();
 
         if (loop)
-          deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+          deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
         else
-          deep_sleep_requested = 10 * CLOCK_SECOND; // BMB how does sleep work?
+          deep_sleep_requested = 60 * CLOCK_SECOND;
       }
     }
     else if(*sensor_data == OC_SUP_EVT)
     {
       uint16_t time = clock_seconds();
       
-      memset(message, 0, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
-      message[0] = OC_HEADER_SIZE;                      // Header Length
-      message[1] = seq_no++;                             // Sequence number
-      message[2] = OC_PAYLOAD_SIZE;                     // Payload Length
-      message[3] = CONECTRIC_SUPERVISORY_REPORT;        // Payload Type                    
-      message[4] = (char)(dec*10)+(char)(frac*10);      // battery
-      message[5] = (char)(time >> 6);                   // time (rough min)
+      memset(message, 0, sizeof(message));
+      message[0] = OC_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0;
+      message[5] = 0;
+      message[6] = OC_PAYLOAD_SIZE;
+      message[7] = CONECTRIC_SUPERVISORY_REPORT;
+      message[8] = (char)(dec*10)+(char)(frac*10);
+      message[9] = (char)(time >> 6);
     
       loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
         packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
         NETSTACK_MAC.on();
-        abc_send(&abc);
+        broadcast_send(&broadcast);
 
         PROCESS_WAIT_EVENT();
 
         if (loop)
-          deep_sleep_requested = 1 + random_rand() % (CLOCK_SECOND / 8);
+          deep_sleep_requested = CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8);
         else
-          deep_sleep_requested = 10 * CLOCK_SECOND; // BMB how does sleep work?
+          deep_sleep_requested = 60 * CLOCK_SECOND;
       }
-      
+    }
+    else if(*sensor_data == OC_SUP_NOEVT) {
+      deep_sleep_requested = 60 * CLOCK_SECOND;
     }
   }
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 #if BUTTON_SENSOR_ON
-PROCESS_THREAD(buttons_test_process, ev, data)
+PROCESS_THREAD(oc_interrupt_process, ev, data)
 {
   struct sensors_sensor *sensor;
-  static struct etimer et;
   static uint8_t counter;
   static uint8_t button;
 
   PROCESS_BEGIN();
 
-  etimer_set(&et, CLOCK_SECOND * 10);
-
   while(1) {
 
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
 
-    if (etimer_expired(&et)) {
-
-      sensor = (struct sensors_sensor *)data;
-      if(sensor == &button_1_sensor) {
-        button = OC_EVT;
-        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
-      }
-      if(sensor == &button_2_sensor) {
-        button = OC_EVT;
-        process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &button);
-      }
-      etimer_restart(&et);
+    sensor = (struct sensors_sensor *)data;
+    if(sensor == &button_1_sensor) {
+      button = OC_EVT;
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &button);
     }
-    else {
-      etimer_restart(&et);
+    if(sensor == &button_2_sensor) {
+      button = OC_EVT;
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &button);
     }
   }
 
@@ -261,49 +285,55 @@ PROCESS_THREAD(oc_supervisory_process, ev, data)
 {
   static struct etimer et;
   static uint8_t event;
-  
+  static int16_t supervisory_counter;
+
   PROCESS_BEGIN();
-  
+
+  supervisory_counter = OC_SUP_TIMEOUT;
+
   while (1)
   {
-    etimer_set(&et, OC_SUP_TIMEOUT);  
+    etimer_set(&et, 60 * CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    
-    // send supervisory unicast (w/ack)
-    event = OC_SUP_EVT;
-    process_post(&oc_abc_process, PROCESS_EVENT_CONTINUE, &event);
+
+    /* Send supervisory message */
+    if (supervisory_counter > 1) {
+      supervisory_counter--;
+      event = OC_SUP_NOEVT;
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+    }
+    else {
+      supervisory_counter = OC_SUP_TIMEOUT;
+      event = OC_SUP_EVT;
+      process_post(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, &event);
+    }
   }
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(flash_log_process, ev, data)
-{
-  static struct etimer et;
-  
-  PROCESS_BEGIN();
-
-  flashlogging_init();
-  
-  while (1)
-  {
-    etimer_set(&et, LOGGING_REF_TIME_PD);  
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    
-    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
-  }
-
-  PROCESS_END();
-}
+//PROCESS_THREAD(flash_log_process, ev, data)
+//{
+//  static struct etimer et;
+//
+//  PROCESS_BEGIN();
+//
+//  flashlogging_init();
+//
+//  while (1)
+//  {
+//    etimer_set(&et, LOGGING_REF_TIME_PD);
+//    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+//
+//    flashlogging_write_fullclock(FLASH_LOGGING_CMP_ID, 0);
+//  }
+//
+//  PROCESS_END();
+//}
 /*---------------------------------------------------------------------------*/
 void
 invoke_process_before_sleep(void)
 {
-  process_post_synch(&oc_abc_process, PROCESS_EVENT_CONTINUE, NULL);
-
-  /* TODO can we try to sleep at close to the max sleep timer?
-   * like 500 * CLOCK_SECOND
-   */
-  if (deep_sleep_requested == 0) deep_sleep_requested = 60 * CLOCK_SECOND;
+  process_post_synch(&oc_broadcast_process, PROCESS_EVENT_CONTINUE, NULL);
 }
 /*---------------------------------------------------------------------------*/

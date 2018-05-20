@@ -4,6 +4,9 @@ ifndef CONTIKI
   $(error CONTIKI not defined! You must specify where CONTIKI resides!)
 endif
 
+DEFINES+=CONECTRIC_VERSION_STRING=\"Contiki-3.x-${shell git --git-dir ${CONTIKI}/.git rev-parse --short HEAD}\"
+DEFINES+=CONECTRIC_PROJECT_STRING=\"${shell git describe --abbrev=0 --tags}\"
+
 CONTIKI_TARGET_DIRS = . dev
 CONTIKI_TARGET_MAIN = $(addprefix $(OBJECTDIR)/,contiki-main.rel)
 
@@ -17,6 +20,7 @@ CONTIKI_TARGET_SOURCEFILES += serial-line.c slip-arch.c slip.c
 CONTIKI_TARGET_SOURCEFILES += putchar.c debug.c
 CONTIKI_TARGET_SOURCEFILES += sht21.c sht21-sensor.c
 CONTIKI_TARGET_SOURCEFILES += rs485-arch.c modbus-line.c modbus-crc16.c
+CONTIKI_TARGET_SOURCEFILES += config.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
