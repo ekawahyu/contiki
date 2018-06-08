@@ -4,20 +4,20 @@
 
 
 ## Introduction
-We are pleased to announce the launch of our Internet of Things Network Protocol stack. It is based on [Contiki](http://www.contiki-os.org/), the ubiqitous open source operating system for the Internet of Things. It connects tiny low-cost, low-power microcontrollers to the Internet and is a powerful toolbox for building complex wireless systems.
+We are pleased to announce the launch of our Internet of Things Network Protocol stack. It is based on [Contiki](http://www.contiki-os.org/), the ubiquitous open source operating system for the Internet of Things. It connects tiny low-cost, low-power microcontrollers to the Internet and is a powerful toolbox for building complex wireless systems.
 
 We have worked hard to develop an easy-to-use mesh networking stack accompanied with concise documentation for you to get started quickly. We have promised to deliver an end-to-end wireless device messaging that requires painless network configuration and a little to no knowledge of mesh networking.
 
 ## Minimum Hardware Requirements
-In order to receive messages from sensors over Conectric network, you need to have at least one Conectric USB Router and one of Conectric Sensors (Temperature, Humidity, Motion, Switch, RS485 Hub, etc). We have published [an article on Medium](https://medium.com/conectric-networks/announcing-conectrics-usb-iot-gateway-sensor-product-86087af7ae57) that allows you to go from unboxing to a functional mesh network with in a matter of minutes. You can also send multihop text messages from one computer to another connnected through Conectric USB Router on each end. Please leave us an email at [solutions@conectric.com](mailto:solutions@conectric.com) for questions about our low-cost IoT Sensors and Device Solutions.
+In order to receive messages from sensors over the Conectric network, you need to have at least one Conectric USB Router and one of the Conectric Sensors (Temperature, Humidity, Motion, Switch, RS485 Hub, etc). We have published [an article on Medium](https://medium.com/conectric-networks/announcing-conectrics-usb-iot-gateway-sensor-product-86087af7ae57) that shows you how to go from unboxing to a functional mesh network in a matter of minutes. You can also send multihop text messages from one computer to another connected through a Conectric USB Router on each end. Please leave us an email at [solutions@conectric.com](mailto:solutions@conectric.com) for questions about our low-cost IoT Sensors and Device Solutions.
 
 ![Conectric Chat](conectric-chat.png)
 
 ## Wireless Multihop Messaging
-The easiest way of testing wireless messaging is by setting up two computers with two Conectric USB Routers. Over some hundreds of feet distance, wireless messaging would stop working because it is simply out of network coverage. The solution to this problemm is very straightforward. Just by putting some Conectric USB Routers in between those computers can actually help to multihop messages over the mesh network. But first thing first, you need to understand how to send/receive messages over serial communication port on the Conectric USB Router.
+The easiest way of testing wireless messaging is by setting up two computers with two Conectric USB Routers. Over a distance of hundreds of feet, wireless messaging stops working because it is simply out of network coverage. The solution to this problem is very straightforward. Just by putting some Conectric USB Routers inbetween those computers, you can seamlessly enable multihop messages over our mesh network. But first things first: you need to understand how to send/receive messages over the serial communication port on the Conectric USB Router.
 
 ## Serial Communication Protocol
-Conectric USB Routers have built-in serial communication port to which we send/receive messages. An outgoing wireless messaging starts with `<` and an incoming one starts with `>`. Messages are sent in hexadecimal string format and every two hexadecimal digits represent one byte. Let's pretend that we want to send `HELLO` (= `48 45 4c 4c 4f` in hexadecimal string) from one end to the other. The outgoing wireless messaging protocol is as follow.
+Conectric USB Routers have a built-in serial communication port through which we send/receive messages. An outgoing wireless messaging starts with `<` and an incoming one starts with `>`. Messages are sent in hexadecimal string format and every two hexadecimal digits represent one byte. Let's pretend that we want to send `HELLO` (= `48 45 4c 4c 4f` as a hexadecimal string) from one end to the other. The outgoing wireless messaging protocol is as follows.
 
 ### Outgoing Message Protocol
 
@@ -39,7 +39,7 @@ So sending out a text message `HELLO` would look like this:
 
     <0a6100000148454c4c4f
 
-You can use any serial terminal and type those hexadecimal digits manually by hand over the serial terminal, then press `RETURN` key to send them out in the air. When the wireless device with 16-bit short address of `0xdfbc` is listening on the other end, and it is within network coverage, it will receive a message that looks like the following:
+You can use any serial terminal and type those hexadecimal digits manually by hand over the serial terminal, then press the `RETURN` key to send them out over the air. If the wireless device having 16-bit short address of `0xdfbc` is listening on the other end, and it is within network coverage, it will receive a message that looks like the following:
 
     >060101001e2008612048454c4c4f
 
@@ -89,7 +89,7 @@ You can use any serial terminal and type those hexadecimal digits manually by ha
 
 ## Outgoing Message Field
 ### Request Type, Destination, and Data Fields
-Outgoing messages contain request type, destination address and data fields. Unlike incoming messages, data field of outgoing messages does not include `DLEN`. An outgoing message with destination address to `0xFFFF` is a local broadcast to neighbors only. If the destination address is set to `0x0000`, the message is broadcasted to all listening devices, network-wide. The outgoing message will only be sent point-to-point if provided with 16-bit short address.
+Outgoing messages contain request type, destination address and data fields. Unlike incoming messages, the data field of outgoing messages does not include `DLEN`. An outgoing message with destination address to `0xFFFF` is a local broadcast to neighbors only. If the destination address is set to `0x0000`, the message is broadcast to all listening devices, network-wide. The outgoing message will only be sent point-to-point if provided with 16-bit short address.
 
 ### RS485 Request Field (RS485)
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
@@ -126,7 +126,7 @@ Outgoing messages contain request type, destination address and data fields. Unl
 
 ## Incoming Message Fields
 ### Message Header and Data Fields
-Incoming messages contain message header and data fields. In the message header you can find message sequence number, number of hops, and the originator short address. In the data field, we use the first three bytes to indicate the data length, message type, and power level. The rest of data field is anything else that was originally sent by the originator.
+Incoming messages contain message header and data fields. In the message header you can find message sequence number, number of hops, and the originator short address. In the data field, we use the first three bytes to indicate the data length, message type, and power level. The rest of the data field is anything else that was originally sent by the originator.
 
 ### Message Header
 `HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL`
@@ -134,7 +134,7 @@ Incoming messages contain message header and data fields. In the message header 
 * `HDRLEN`, total bytes from `HDRLEN` to `SRCL`
 * `SEQ`, unique number for every message sent out
 * `HOPS`, number of hops the message has been passed through
-* `HOPMAX`, hop limit before the message is dropped, unlimited hop if value assigned is zero
+* `HOPMAX`, hop limit before the message is dropped, unlimited hops if this value is zero
 * `SRCH`, originator address high byte
 * `SRCL`, originator address low byte
 
@@ -162,7 +162,7 @@ Incoming messages contain message header and data fields. In the message header 
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
 * `DATA0`, valid value is 0x32, `CONECTRIC_SENSOR_BROADCAST_OC` message type
-* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
 * `DATA2`, valid value are 0x81 (motion detected)
 
 ### RS485 Data Field (RS485)
@@ -170,7 +170,7 @@ Incoming messages contain message header and data fields. In the message header 
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
 * `DATA0`, valid value is 0x37, `CONECTRIC_RS485_POLL_REPLY` message type
-* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
 * `DATA2 ... DATAn`, the RS485 response
 
 ### Text Message Data Field
@@ -178,32 +178,32 @@ Incoming messages contain message header and data fields. In the message header 
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
 * `DATA0`, valid value is 0x61, `CONECTRIC_TEXT_MESSAGE` message type
-* `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
+* `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
 * `DATA2 ... DATAn`, the text message
 
 ## Executable Serial Command
-Other than incoming and outgoing messages. Any input from serial terminal that does not start with `<` or `>` is considered as an executable serial command to change device configuration. The following subsections describe some of those executable serial commands.
+Other than incoming and outgoing messages any input from serial terminal that does not start with `<` or `>` is considered as an executable serial command to change device configuration. The following subsections describe some of those executable serial commands.
 
 ### MAC Address Read (`MR` - MAC Read)
-This command read the full 64-bit MAC Address. The 16-bit short address are extracted from the last two bytes. In this example, it is `0xdfbc`. Example of use:
+This command reads the full 64-bit MAC Address. The 16-bit short address are extracted from the last two bytes. In this example, it is `0xdfbc`. Example:
 
     MR
     MR:00124b000514dfbc
 
 ### Configure USB Router as a data sink (`SS` - Sink Set)
-When USB Router is set as a data sink, it becomes the gateway between the mesh network to the outside world. The mesh network can have single or multiple data sinks. All of sensor broadcasts will be sent to a sink with the lowest cost. Example of use:
+When the USB Router is set as a data sink, it becomes the gateway between the mesh network and the outside world. The mesh network can have single or multiple data sinks. All of the sensor broadcasts will be sent to a sink with the lowest cost. Example of use:
 
     SS
     SS:Ok
 
 ### Disable USB Router as a data sink (`SR` - Sink Reset)
-By default, USB Router is not a data sink. But if it was configured as one, then this command will turn if off.
+By default, the USB Router is not a data sink. But if it was configured as one, then this command will turn if off.
 
     SR
     SR:Ok
 
 ### Show data sinks table (`ST` - Sink Table)
-By default, USB Router keeps a table of data sink broadcasts. If no data sink is seen, the command returns no table.
+By default, the USB Router keeps a table of data sink broadcasts. If no data sink is seen, the command returns no table.
 
     ST
     ST:0:df.bc(C:2:LT:10)
@@ -216,7 +216,7 @@ By default, USB Router keeps a table of data sink broadcasts. If no data sink is
     +-> Sink Table indicator
 
 ### Show routing table (`RT` - Routing Table)
-By default, USB Router keeps a routing table everytime it receives a route discovery request. If no routing table is available, this command returns nothing.
+By default, the USB Router keeps a routing table everytime it receives a route discovery request. If no routing table is available, this command returns nothing.
 
     RT
     RT:0:df.bc->1e.20(C:2:LT:10)
@@ -244,7 +244,7 @@ Device serial number is a 12-bytes hexadecimal number.
     SNR:112233445566778899AABBCC
 
 ### Show device serial number (`SNW` - Serial Number Read)
-Conectric Sensors and Devices come with a pre-programmed serial number. If you manually erase and upload a new firmware, you can re-assign the serial number by typing this command.
+Conectric Sensors and Devices come with a pre-programmed serial number. If you manually erase and upload new firmware, you can re-assign the serial number by typing this command.
 
     SNW112233445566778899AABBCC
     SNW:Ok
