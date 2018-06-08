@@ -9,11 +9,17 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1135101457
+Checksum=-1236927672
 [CallStack]
 ShowArgs=0
 [Disassembly]
 MixedMode=1
+[Breakpoints]
+Bp0=_ "STD_CODE" "{$PROJ_DIR$\..\..\PLATFORM\CONECTRIC\config.c}.176.1" 0 0 0 0 "" 0 ""
+Count=1
+[ChipconEmu]
+Stop timers on halt=0
+Leave target running=1
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -21,12 +27,6 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Breakpoints]
-Bp0=_ "STD_CODE" "{$PROJ_DIR$\..\..\PLATFORM\CONECTRIC\config.c}.176.1" 0 0 0 0 "" 0 ""
-Count=1
-[ChipconEmu]
-Stop timers on halt=0
-Leave target running=1
 [Aliases]
 A0=_ "E:\platform\CONECTRIC\contiki-main.c" ""
 A1=_ "F:\platform\CONECTRIC\contiki-main.c" "E:\platform\conectric\contiki-main.c"

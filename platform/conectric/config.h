@@ -47,9 +47,11 @@
 
 #define CONFIG_SERIAL_NUMBER    0x3FFDC /* word address */
 #define CONFIG_RS485_PARAMS     0x3FFD8 /* word address */
+#define CONFIG_FLASH_LOCK       0x3FFF0 /* word address */
 
 #define CONFIG_SERIAL_NUMBER_LENGTH   12
 #define CONFIG_RS485_PARAMS_LENGTH    4
+#define CONFIG_FLASH_LOCK_LENGTH      16
 
 uint8_t config_sernum_read(uint8_t * sernum);
 uint8_t config_sernum_write(uint8_t * sernum);
