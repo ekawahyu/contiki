@@ -42,14 +42,16 @@
 #include "8051def.h"
 #include "flash.h"
 
-#define CONFIG_ADDR_START       0x3F800 /* flash page 127 */
+#define CONFIG_ADDR_START       0x3E800 /* flash page 125 */
 #define CONFIG_MIRROR_START     0x3F000 /* flash page 126 */
 
-#define CONFIG_SERIAL_NUMBER    0x3FFDC /* word address */
-#define CONFIG_RS485_PARAMS     0x3FFD8 /* word address */
+#define CONFIG_SERIAL_NUMBER    0x3EFDC /* word address */
+#define CONFIG_RS485_PARAMS     0x3EFD8 /* word address */
+#define CONFIG_FLASH_LOCK       0x3FFF0 /* word address */
 
 #define CONFIG_SERIAL_NUMBER_LENGTH   12
 #define CONFIG_RS485_PARAMS_LENGTH    4
+#define CONFIG_FLASH_LOCK_LENGTH      16
 
 uint8_t config_sernum_read(uint8_t * sernum);
 uint8_t config_sernum_write(uint8_t * sernum);

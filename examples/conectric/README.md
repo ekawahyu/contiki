@@ -257,19 +257,17 @@ An error message will show up when you try to overwrite the existing serial numb
 ## For Developers (WiP)
 ###Flash Memory Allocation
 
-| Flash Address     | Flash Bank | Size (bytes)     | Description        |
-|:-----------------:|:----------:|:--------:|--------------------|
-| 0x00000 - 0x0FFFF | 0-1        | 65536    | Firmware           |
-| 0x10000 - 0x1FFFF | 2-3        | 65536    | Firmware update    |
-| 0x20000 - 0x3E7FF | 4-7        | 124928   | Flash logging      |
-| 0x3E800 - 0x3EFFF | 7          | 2048     | Reserved           |
-| 0x3F000 - 0x3F7FF | 7          | 2048     | Reserved           |
-| 0x3F800 - 0x3FFD7 | 7          | 2008     | Reserved           |
-| 0x3FFD8 - 0x3FFDB | 7          | 4 bytes  | RS485 Parameters   |
-| 0x3FFDC - 0x3FFE7 | 7          | 12 bytes | Serial Number      |
-| 0x3FFE8 - 0x3FFEF | 7          | 8 bytes  | Custom MAC Address |
-| 0x3FFF0 - 0x3FFFF | 7          | 16 bytes | Flash Lock Bits    |
-
+| Flash Address     | Flash Bank | Size (bytes) | Description        |
+|:-----------------:|:----------:|:------------:|--------------------|
+| 0x00000 - 0x0FFFF | 0-1        | 65536        | Firmware           |
+| 0x10000 - 0x1FFFF | 2-3        | 65536        | Firmware update    |
+| 0x20000 - 0x3E7FF | 4-7        | 124928       | Flash logging      |
+| 0x3E800 - 0x3EFD7 | 7          | 2008         | Reserved           |
+| 0x3EFD8 - 0x3EFDB | 7          | 4 bytes      | RS485 Parameters   |
+| 0x3EFDC - 0x3EFE7 | 7          | 12 bytes     | Serial Number      |
+| 0x3EFE8 - 0x3FFE7 | 7          | 4096         | Reserved           |
+| 0x3FFE8 - 0x3FFEF | 7          | 8 bytes      | Custom MAC Address |
+| 0x3FFF0 - 0x3FFFF | 7          | 16 bytes     | Flash Lock Bits    |
 
 
 ## Licensing
