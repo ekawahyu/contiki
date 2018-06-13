@@ -51,8 +51,8 @@ void dump_packet_buffer(uint8_t mode);
 uint8_t * command_interpreter(uint8_t * command_line);
 
 void compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver);
-void compose_request_line_to_packetbuf(request_line * line, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver);
-void request_line_create(request_line * line, uint8_t request, linkaddr_t * dest, uint8_t * data, uint8_t datalen);
+//void compose_request_line_to_packetbuf(request_line * line, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver);
+//void request_line_create(request_line * line, uint8_t request, linkaddr_t * dest, uint8_t * data, uint8_t datalen);
 
 #ifdef __cplusplus
 }
