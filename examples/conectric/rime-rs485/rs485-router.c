@@ -310,9 +310,9 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   dump_packetbuf(&netbc_message_recv);
 
-//  if (netbc_message_recv.request == CONECTRIC_RS485_POLL_CHUNK) {
-//    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
-//  }
+  if (netbc_message_recv.request == CONECTRIC_RS485_POLL_CHUNK) {
+    process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
+  }
 
   if (netbc_message_recv.request == CONECTRIC_RS485_POLL) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
