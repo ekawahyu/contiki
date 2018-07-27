@@ -46,7 +46,7 @@ PROCESS_THREAD(example_burst_process, ev, data)
     /* Wait for button click before sending the first message. */
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
 
-    packetbuf_copyfrom("BurstMe", 8);
+    packetbuf_copyfrom("Hello from Conectric to all of sensors, good morning to you all", 64);
     burst_send(&c, CLOCK_SECOND / 8, 2);
   }
   
