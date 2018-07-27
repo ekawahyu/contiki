@@ -66,10 +66,10 @@ struct burst_conn {
   uint8_t burstmax;
 };
 
-void burst_open(struct burst_conn *c, uint16_t channel, uint8_t maxburst,
-    clock_time_t interval, const struct burst_callbacks *cb);
+void burst_open(struct burst_conn *c, uint16_t channel, clock_time_t interval,
+    uint8_t burstmax, const struct burst_callbacks *cb);
 void burst_close(struct burst_conn *c);
-int  burst_send(struct burst_conn *c, clock_time_t interval, uint8_t fwdburstcnt);
+int  burst_send(struct burst_conn *c, clock_time_t interval, uint8_t burstmax);
 void burst_cancel(struct burst_conn *c);
 
 #endif /* BURST_H_ */

@@ -64,9 +64,6 @@ send(void *ptr)
     if (++c->burstcnt < c->burstmax) {
       ctimer_set(&c->t, c->interval / 2 + (random_rand() % (c->interval / 2)), send, c);
     }
-    else {
-      c->burstcnt = 0;
-    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -75,6 +72,8 @@ fwd(struct abc_conn *abc)
 {
   struct burst_conn *c = (struct burst_conn *)abc;
 
+  c->burstcnt = 0;
+
   if(c->cb->recv) {
     c->cb->recv(c, c->originator);
   }
@@ -82,14 +81,12 @@ fwd(struct abc_conn *abc)
     queuebuf_free(c->q);
     c->q = NULL;
   }
-  c->burstcnt = c->burstmax - c->burstfwd;
-  if (c->burstcnt != c->burstmax) {
-//  if(c->burstfwd--) {
-    c->q = queuebuf_new_from_packetbuf();
+  c->q = queuebuf_new_from_packetbuf();
+  if (++c->burstcnt < c->burstmax) {
     ctimer_set(&c->t, c->interval / 2 + (random_rand() % (c->interval / 2)), send, c);
-    if(c->cb->sent) {
-      c->cb->sent(c);
-    }
+  }
+  if(c->cb->sent) {
+    c->cb->sent(c);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -125,13 +122,12 @@ sent(struct abc_conn *c, int status, int num_tx)
 static const struct abc_callbacks abc = { recv, sent };
 /*---------------------------------------------------------------------------*/
 void
-burst_open(struct burst_conn *c, uint16_t channel, uint8_t burstmax,
-    clock_time_t interval, const struct burst_callbacks *cb)
+burst_open(struct burst_conn *c, uint16_t channel, clock_time_t interval,
+    uint8_t burstmax, const struct burst_callbacks *cb)
 {
   abc_open(&c->c, channel, &abc);
-  c->seqno = 253;
+  c->seqno = 0;
   c->burstcnt = 0;
-  c->burstfwd = 1;
   c->burstmax = burstmax;
   c->interval = interval;
   c->cb = cb;
@@ -150,7 +146,7 @@ burst_close(struct burst_conn *c)
 }
 /*---------------------------------------------------------------------------*/
 int
-burst_send(struct burst_conn *c, clock_time_t interval, uint8_t fwdburstcnt)
+burst_send(struct burst_conn *c, clock_time_t interval, uint8_t burstmax)
 {
   if(c->q != NULL) {
     /* If we are already about to send a packet, we cancel the old one. */
@@ -159,13 +155,7 @@ burst_send(struct burst_conn *c, clock_time_t interval, uint8_t fwdburstcnt)
   }
   c->q = queuebuf_new_from_packetbuf();
   c->interval = interval;
-
-  if(c->burstfwd <= c->burstmax) {
-    c->burstfwd = fwdburstcnt;
-  }
-  else {
-    c->burstfwd = c->burstmax;
-  }
+  c->burstmax = burstmax;
 
   /* update packet's sequence number */
   c->seqno++;

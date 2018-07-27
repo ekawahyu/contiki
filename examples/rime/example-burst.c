@@ -38,7 +38,7 @@ PROCESS_THREAD(example_burst_process, ev, data)
   
   PROCESS_BEGIN();
 
-  burst_open(&c, 136, 5, CLOCK_SECOND / 8, &callbacks);
+  burst_open(&c, 136, CLOCK_SECOND / 8, 5, &callbacks);
 
   SENSORS_ACTIVATE(button_sensor);
 
@@ -47,7 +47,7 @@ PROCESS_THREAD(example_burst_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
 
     packetbuf_copyfrom("BurstMe", 8);
-    burst_send(&c, CLOCK_SECOND / 8, 4);
+    burst_send(&c, CLOCK_SECOND / 8, 7);
   }
   
   PROCESS_END();
