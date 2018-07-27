@@ -1,7 +1,7 @@
 /*
- * burst.h
+ * iburst.h
  *
- * Created on: Jul 24, 2018
+ * Created on: Jul 26, 2018
  *     Author: Ekawahyu Susilo
  *
  * Copyright (c) 2018, Conectric Network, LLC.
@@ -34,31 +34,32 @@
  *
  */
 
-#ifndef BURST_H_
-#define BURST_H_
+#ifndef IBURST_H_
+#define IBURST_H_
 
-#include "net/rime/abc.h"
+#include "net/rime/broadcast.h"
 #include "net/queuebuf.h"
 #include "sys/ctimer.h"
 
-struct burst_conn;
+struct iburst_conn;
 
-#define BURST_ATTRIBUTES  { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
+#define IBURST_ATTRIBUTES  { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
                           { PACKETBUF_ATTR_EPACKET_ID, PACKETBUF_ATTR_BIT * 8 },\
-                          ABC_ATTRIBUTES
+                          BROADCAST_ATTRIBUTES
 
-struct burst_callbacks {
-  void (* recv)(struct burst_conn *c, const linkaddr_t * originator);
-  void (* sent)(struct burst_conn *c);
-  void (* dropped)(struct burst_conn *c);
+struct iburst_callbacks {
+  void (* recv)(struct iburst_conn *c, const linkaddr_t * sender, const linkaddr_t * originator);
+  void (* sent)(struct iburst_conn *c);
+  void (* dropped)(struct iburst_conn *c);
 };
 
-struct burst_conn {
-  struct abc_conn c;
-  const struct burst_callbacks *cb;
+struct iburst_conn {
+  struct broadcast_conn c;
+  const struct iburst_callbacks *cb;
   struct ctimer t;
   struct queuebuf *q;
   const linkaddr_t * originator;
+  const linkaddr_t * sender;
   clock_time_t interval;
   uint16_t seqno;
   uint8_t burstcnt; /* for internal use, burst counter */
@@ -66,10 +67,10 @@ struct burst_conn {
   uint8_t burstmax;
 };
 
-void burst_open(struct burst_conn *c, uint16_t channel, clock_time_t interval,
-    uint8_t burstmax, const struct burst_callbacks *cb);
-void burst_close(struct burst_conn *c);
-int  burst_send(struct burst_conn *c, clock_time_t interval, uint8_t burstmax);
-void burst_cancel(struct burst_conn *c);
+void iburst_open(struct iburst_conn *c, uint16_t channel, clock_time_t interval,
+    uint8_t burstmax, const struct iburst_callbacks *cb);
+void iburst_close(struct iburst_conn *c);
+int  iburst_send(struct iburst_conn *c, clock_time_t interval, uint8_t burstmax);
+void iburst_cancel(struct iburst_conn *c);
 
-#endif /* BURST_H_ */
+#endif /* IBURST_H_ */
