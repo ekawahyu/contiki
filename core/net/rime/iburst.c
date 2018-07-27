@@ -55,6 +55,7 @@ send(void *ptr)
   if(c->q != NULL) {
     queuebuf_to_packetbuf(c->q);
     packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_ID, c->seqno);
+    packetbuf_set_attr(PACKETBUF_ATTR_HOPS, c->hops);
     broadcast_send(&c->c);
     if(c->cb->sent) {
       c->cb->sent(c);
@@ -77,7 +78,6 @@ fwd(struct broadcast_conn *broadcast)
     c->q = NULL;
   }
   c->q = queuebuf_new_from_packetbuf();
-  packetbuf_set_attr(PACKETBUF_ATTR_HOPS, c->hops);
   if (++c->burstcnt < c->burstmax) {
     ctimer_set(&c->t, c->interval / 2 + (random_rand() % (c->interval / 2)), send, c);
   }
@@ -101,13 +101,13 @@ recv(struct broadcast_conn *broadcast, const linkaddr_t *sender)
       c->cb->dropped(c);
     }
   }
-  else if((int16_t)((seqno) - (c->seqno)) < 0) {
-    c->seqno = seqno;
-    if(c->cb->recv) {
-      c->cb->recv(c, c->sender, c->originator, c->hops);
-    }
-    fwd((struct broadcast_conn *)c);
-  }
+//  else if((int16_t)((seqno) - (c->seqno)) < 0) {
+//    c->seqno = seqno;
+//    if(c->cb->recv) {
+//      c->cb->recv(c, c->sender, c->originator, c->hops);
+//    }
+//    fwd((struct broadcast_conn *)c);
+//  }
   else {
     c->seqno = seqno;
     if(c->cb->recv) {

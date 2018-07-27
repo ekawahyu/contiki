@@ -100,13 +100,13 @@ recv(struct abc_conn *abc)
       c->cb->dropped(c);
     }
   }
-  else if((int16_t)((seqno) - (c->seqno)) < 0) {
-    c->seqno = seqno;
-    if(c->cb->recv) {
-      c->cb->recv(c, c->originator, c->hops);
-    }
-    fwd((struct abc_conn *)c);
-  }
+//  else if((int16_t)((seqno) - (c->seqno)) < 0) {
+//    c->seqno = seqno;
+//    if(c->cb->recv) {
+//      c->cb->recv(c, c->originator, c->hops);
+//    }
+//    fwd((struct abc_conn *)c);
+//  }
   else {
     c->seqno = seqno;
     if(c->cb->recv) {
