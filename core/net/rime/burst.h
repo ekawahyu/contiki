@@ -72,4 +72,4 @@ void burst_close(struct burst_conn *c);
 int  burst_send(struct burst_conn *c, clock_time_t interval, uint8_t fwdburstcnt);
 void burst_cancel(struct burst_conn *c);
 
-#endif /* burst_H_ */
+#endif /* BURST_H_ */
