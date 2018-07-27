@@ -11,10 +11,10 @@ PROCESS(example_burst_process, "");
 AUTOSTART_PROCESSES(&example_burst_process);
 /*---------------------------------------------------------------------------*/
 static void
-recv(struct burst_conn *c, const linkaddr_t * originator)
+recv(struct burst_conn *c, const linkaddr_t * originator, uint8_t hops)
 {
-  printf("recv from %d.%d (seqno=%d) '%s'\n",
-      originator->u8[0], originator->u8[1],
+  printf("recv from %d.%d - %d hops (seqno=%d) '%s'\n",
+      originator->u8[0], originator->u8[1], hops,
       packetbuf_attr(PACKETBUF_ATTR_EPACKET_ID),
       (char *)packetbuf_dataptr());
 }
@@ -38,7 +38,7 @@ PROCESS_THREAD(example_burst_process, ev, data)
   
   PROCESS_BEGIN();
 
-  burst_open(&c, 136, CLOCK_SECOND / 8, 5, &callbacks);
+  burst_open(&c, 136, CLOCK_SECOND / 8, 2, &callbacks);
 
   SENSORS_ACTIVATE(button_sensor);
 
@@ -47,7 +47,7 @@ PROCESS_THREAD(example_burst_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
 
     packetbuf_copyfrom("BurstMe", 8);
-    burst_send(&c, CLOCK_SECOND / 8, 7);
+    burst_send(&c, CLOCK_SECOND / 8, 2);
   }
   
   PROCESS_END();

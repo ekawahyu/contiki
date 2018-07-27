@@ -41,8 +41,6 @@
 
 #include <stdio.h>
 
-#define SEQNO_LT(a, b) ((int16_t)((a) - (b)) <= 0 && (int16_t)((b) - (a)) <= 5 && (((a) != (0)) || ((b) != (255))))
-
 static const struct packetbuf_attrlist attributes[] =
   {
     IBURST_ATTRIBUTES PACKETBUF_ATTR_LAST
@@ -74,14 +72,12 @@ fwd(struct broadcast_conn *broadcast)
 
   c->burstcnt = 0;
 
-  if(c->cb->recv) {
-    c->cb->recv(c, c->sender, c->originator);
-  }
   if(c->q != NULL) {
     queuebuf_free(c->q);
     c->q = NULL;
   }
   c->q = queuebuf_new_from_packetbuf();
+  packetbuf_set_attr(PACKETBUF_ATTR_HOPS, c->hops);
   if (++c->burstcnt < c->burstmax) {
     ctimer_set(&c->t, c->interval / 2 + (random_rand() % (c->interval / 2)), send, c);
   }
@@ -97,6 +93,7 @@ recv(struct broadcast_conn *broadcast, const linkaddr_t *sender)
   uint16_t seqno = packetbuf_attr(PACKETBUF_ATTR_EPACKET_ID);
 
   c->originator = packetbuf_addr(PACKETBUF_ADDR_ESENDER);
+  c->hops = packetbuf_attr(PACKETBUF_ATTR_HOPS) + 1;
   c->sender = packetbuf_addr(PACKETBUF_ADDR_SENDER);
 
   if(seqno == c->seqno) {
@@ -106,10 +103,16 @@ recv(struct broadcast_conn *broadcast, const linkaddr_t *sender)
   }
   else if((int16_t)((seqno) - (c->seqno)) < 0) {
     c->seqno = seqno;
+    if(c->cb->recv) {
+      c->cb->recv(c, c->sender, c->originator, c->hops);
+    }
     fwd((struct broadcast_conn *)c);
   }
   else {
     c->seqno = seqno;
+    if(c->cb->recv) {
+      c->cb->recv(c, c->originator, c->sender, c->hops);
+    }
     fwd((struct broadcast_conn *)c);
   }
 }
@@ -128,6 +131,7 @@ iburst_open(struct iburst_conn *c, uint16_t channel, clock_time_t interval,
 {
   broadcast_open(&c->c, channel, &broadcast);
   c->seqno = 0;
+  c->hops = 0;
   c->burstcnt = 0;
   c->burstmax = burstmax;
   c->interval = interval;
@@ -155,14 +159,16 @@ iburst_send(struct iburst_conn *c, clock_time_t interval, uint8_t burstmax)
     c->q = NULL;
   }
   c->q = queuebuf_new_from_packetbuf();
+  c->hops = 0;
   c->interval = interval;
   c->burstmax = burstmax;
 
   /* update packet's sequence number */
   c->seqno++;
   if(c->seqno > 255) c->seqno = 1;
-  packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_ID, c->seqno);
   packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &linkaddr_node_addr);
+  packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_ID, c->seqno);
+  packetbuf_set_attr(PACKETBUF_ATTR_HOPS, c->hops);
 
   /* send one packet immediately */
   c->burstcnt = 1;

@@ -45,10 +45,11 @@ struct burst_conn;
 
 #define BURST_ATTRIBUTES  { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
                           { PACKETBUF_ATTR_EPACKET_ID, PACKETBUF_ATTR_BIT * 8 },\
+                          { PACKETBUF_ATTR_HOPS, PACKETBUF_ATTR_BIT * 8 }, \
                           ABC_ATTRIBUTES
 
 struct burst_callbacks {
-  void (* recv)(struct burst_conn *c, const linkaddr_t * originator);
+  void (* recv)(struct burst_conn *c, const linkaddr_t * originator, uint8_t hops);
   void (* sent)(struct burst_conn *c);
   void (* dropped)(struct burst_conn *c);
 };
@@ -61,6 +62,7 @@ struct burst_conn {
   const linkaddr_t * originator;
   clock_time_t interval;
   uint16_t seqno;
+  uint8_t hops;
   uint8_t burstcnt; /* for internal use, burst counter */
   uint8_t burstfwd; /* forwarding burst between 1-burstmax */
   uint8_t burstmax;

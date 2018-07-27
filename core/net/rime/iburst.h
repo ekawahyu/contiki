@@ -43,12 +43,13 @@
 
 struct iburst_conn;
 
-#define IBURST_ATTRIBUTES  { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
+#define IBURST_ATTRIBUTES { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
                           { PACKETBUF_ATTR_EPACKET_ID, PACKETBUF_ATTR_BIT * 8 },\
+                          { PACKETBUF_ATTR_HOPS, PACKETBUF_ATTR_BIT * 8 }, \
                           BROADCAST_ATTRIBUTES
 
 struct iburst_callbacks {
-  void (* recv)(struct iburst_conn *c, const linkaddr_t * sender, const linkaddr_t * originator);
+  void (* recv)(struct iburst_conn *c, const linkaddr_t * originator, const linkaddr_t * sender, uint8_t hops);
   void (* sent)(struct iburst_conn *c);
   void (* dropped)(struct iburst_conn *c);
 };
@@ -62,6 +63,7 @@ struct iburst_conn {
   const linkaddr_t * sender;
   clock_time_t interval;
   uint16_t seqno;
+  uint8_t hops;
   uint8_t burstcnt; /* for internal use, burst counter */
   uint8_t burstfwd; /* forwarding burst between 1-burstmax */
   uint8_t burstmax;
