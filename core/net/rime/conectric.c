@@ -81,6 +81,9 @@ struct sink_msg {
   uint16_t netbc;
 };
 
+#define IBURST_INTERVAL (CLOCK_SECOND / 8)
+#define IBURST_COUNT    5
+
 /*---------------------------------------------------------------------------*/
 static void
 periodic(void *ptr)
@@ -228,24 +231,23 @@ broadcast_received(struct broadcast_conn *bc, const linkaddr_t *from)
   }
 }
 /*---------------------------------------------------------------------------*/
-static int
-netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
-         const linkaddr_t *originator, uint8_t seqno, uint8_t hops)
+static void
+iburst_received(struct iburst_conn *ib, const linkaddr_t *originator,
+    const linkaddr_t *from, uint8_t hops)
 {
   struct sink_msg *msg = packetbuf_dataptr();
   struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)nf - offsetof(struct conectric_conn, netflood));
+    ((char *)ib - offsetof(struct conectric_conn, iburst));
 
-  PRINTF("%d.%d: broadcast received from %d.%d prev %d.%d hops %d seqno %d\n",
+  PRINTF("%d.%d: iburst received from %d.%d prev %d.%d hops %d seqno %d\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
    originator->u8[0], originator->u8[1],
    from->u8[0], from->u8[1],
-   hops, seqno);
+   hops, ib->seqno);
 
   if (msg->netbc == SINK_NETBC) {
     if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
       sink_add(originator, hops);
-      // if (is_sink) conectric_netbc_shift_interval(c, 10 * CLOCK_SECOND);
       c->cb->sink_recv(c, originator, hops);
     }
   }
@@ -254,12 +256,6 @@ netflood_received(struct netflood_conn *nf, const linkaddr_t *from,
       c->cb->netbroadcast_recv(c, originator, hops);
     }
   }
-
-  /* Add random time for re-transmission */
-  clock_wait(1 + random_rand() % (CLOCK_SECOND/32));
-
-  /* Continue flooding the network */
-  return 1;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -359,39 +355,39 @@ route_timed_out(struct route_discovery_conn *rdc)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void send_sink_netbc(struct netflood_conn *nf);
+static void send_sink_netbc(struct iburst_conn *ib);
 /*---------------------------------------------------------------------------*/
 static void
 timer_callback(void *ptr)
 {
-  struct netflood_conn *c = ptr;
+  struct iburst_conn *c = ptr;
   send_sink_netbc(c);
 }
 /*---------------------------------------------------------------------------*/
 static void
-send_sink_netbc(struct netflood_conn *nf)
+send_sink_netbc(struct iburst_conn *ib)
 {
   struct sink_msg * msg;
   struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)nf - offsetof(struct conectric_conn, netflood));
+    ((char *)ib - offsetof(struct conectric_conn, iburst));
 
   packetbuf_clear();
   msg = packetbuf_dataptr();
   packetbuf_set_datalen(sizeof(struct sink_msg));
 
   msg->netbc = SINK_NETBC;
-  netflood_send(&c->netflood, c->netbc_id++);
+  iburst_send(&c->iburst, IBURST_INTERVAL, IBURST_COUNT);
 
   PRINTF("%d.%d: sending sink broadcast\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
 
-  ctimer_set(&c->interval_timer, c->interval, timer_callback, nf);
+  ctimer_set(&c->interval_timer, c->interval, timer_callback, ib);
 }
 /*---------------------------------------------------------------------------*/
 static const struct broadcast_callbacks broadcast_call = {
     broadcast_received, NULL};
-static const struct netflood_callbacks netflood_call = {
-    netflood_received, NULL, NULL};
+static const struct iburst_callbacks iburst_call = {
+    iburst_received, NULL, NULL};
 static const struct multihop_callbacks multihop_call = {
     multihop_received, multihop_forward};
 static const struct route_discovery_callbacks route_discovery_callbacks = {
@@ -404,10 +400,10 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
   route_init();
   sink_init();
   broadcast_open(&c->broadcast, channels, &broadcast_call);
-  netflood_open(&c->netflood, CLOCK_SECOND/32, channels + 1, &netflood_call);
+  iburst_open(&c->iburst, channels + 1, CLOCK_SECOND / 2, 5, &iburst_call);
   multihop_open(&c->multihop, channels + 2, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
-		       CLOCK_SECOND/32,
+		       CLOCK_SECOND / 32,
 		       channels + 4,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
@@ -420,7 +416,7 @@ conectric_close(struct conectric_conn *c)
 {
   broadcast_close(&c->broadcast);
   multihop_close(&c->multihop);
-  netflood_close(&c->netflood);
+  iburst_close(&c->iburst);
   route_discovery_close(&c->route_discovery_conn);
   ctimer_stop(&c->interval_timer);
 }
@@ -438,7 +434,7 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
     could_send = broadcast_send(&c->broadcast);
   }
   else if (to->u8[0] == 0 && to->u8[1] == 0) {
-    could_send = netflood_send(&c->netflood, c->netbc_id++);
+    could_send = iburst_send(&c->iburst, IBURST_INTERVAL,  IBURST_COUNT);
   }
   else {
     could_send = multihop_send(&c->multihop, to);
@@ -475,7 +471,7 @@ conectric_send_to_sink(struct conectric_conn *c)
   else {
     PRINTF("%d.%d: conectric_send_to_sink will broadcast it\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    could_send = netflood_send(&c->netflood, c->netbc_id++);
+    could_send = iburst_send(&c->iburst, IBURST_INTERVAL, IBURST_COUNT);
   }
 
   if(!could_send) {
@@ -502,7 +498,7 @@ conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
   if (is_sink) {
     is_collect = 0;
     c->interval = interval;
-    send_sink_netbc(&c->netflood);
+    send_sink_netbc(&c->iburst);
   }
   else {
     ctimer_stop(&c->interval_timer);
@@ -531,10 +527,3 @@ conectric_is_collect(void)
 {
   return is_collect;
 }
-/*---------------------------------------------------------------------------*/
-//void
-//conectric_netbc_shift_interval(struct conectric_conn *c, clock_time_t diff_time)
-//{
-//  ctimer_set(&c->interval_timer, c->interval+diff_time, timer_callback, &c->netflood);
-//}
-/*---------------------------------------------------------------------------*/
