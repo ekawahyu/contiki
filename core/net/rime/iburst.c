@@ -54,8 +54,6 @@ send(void *ptr)
 
   if(c->q != NULL) {
     queuebuf_to_packetbuf(c->q);
-    packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_ID, c->seqno);
-    packetbuf_set_attr(PACKETBUF_ATTR_HOPS, c->hops);
     broadcast_send(&c->c);
     if(c->cb->sent) {
       c->cb->sent(c);
@@ -158,17 +156,17 @@ iburst_send(struct iburst_conn *c, clock_time_t interval, uint8_t burstmax)
     queuebuf_free(c->q);
     c->q = NULL;
   }
-  c->q = queuebuf_new_from_packetbuf();
   c->hops = 0;
   c->interval = interval;
   c->burstmax = burstmax;
-
-  /* update packet's sequence number */
   c->seqno++;
   if(c->seqno > 255) c->seqno = 1;
   packetbuf_set_addr(PACKETBUF_ADDR_ESENDER, &linkaddr_node_addr);
   packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_ID, c->seqno);
   packetbuf_set_attr(PACKETBUF_ATTR_HOPS, c->hops);
+
+  /* store in buffer for retransmission */
+  c->q = queuebuf_new_from_packetbuf();
 
   /* send one packet immediately */
   c->burstcnt = 1;
