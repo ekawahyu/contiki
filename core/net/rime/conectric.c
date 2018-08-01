@@ -81,7 +81,7 @@ struct sink_msg {
   uint16_t netbc;
 };
 
-#define IBURST_INTERVAL (CLOCK_SECOND / 8)
+#define IBURST_INTERVAL (CLOCK_SECOND / 16)
 #define IBURST_COUNT    5
 
 /*---------------------------------------------------------------------------*/
