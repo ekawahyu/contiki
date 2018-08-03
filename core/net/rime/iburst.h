@@ -65,7 +65,6 @@ struct iburst_conn {
   uint16_t seqno;
   uint8_t hops;
   uint8_t burstcnt; /* for internal use, burst counter */
-  uint8_t burstfwd; /* forwarding burst between 1-burstmax */
   uint8_t burstmax;
 };
 
