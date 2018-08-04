@@ -41,8 +41,14 @@
 #include "net/queuebuf.h"
 #include "sys/ctimer.h"
 
-extern const linkaddr_t multicast_node_addr;
-extern const linkaddr_t multicast_router_addr;
+struct multicast_netaddr {
+  linkaddr_t network;
+  linkaddr_t host;
+};
+
+extern const struct multicast_netaddr multicast_node_addr;
+extern const struct multicast_netaddr multicast_router_addr;
+extern const struct multicast_netaddr multicast_linklocal_addr;
 
 struct multicast_conn;
 
@@ -62,6 +68,6 @@ struct multicast_conn {
 
 void multicast_open(struct multicast_conn *c, uint16_t channel, const struct multicast_callbacks *cb);
 void multicast_close(struct multicast_conn *c);
-void multicast_send(struct multicast_conn *c, linkaddr_t *dest);
+void multicast_send(struct multicast_conn *c, const linkaddr_t *dest);
 
 #endif /* MULTICAST_H_ */

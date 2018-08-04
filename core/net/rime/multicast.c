@@ -42,8 +42,9 @@
 
 #include <stdio.h>
 
-const linkaddr_t multicast_node_addr = {{0x00, 0x01}};
-const linkaddr_t multicast_router_addr = {{0x00, 0x02}};
+const struct multicast_netaddr multicast_node_addr = {.network.u16 = 0xFF02, .host.u16 = 0x0001};
+const struct multicast_netaddr multicast_router_addr = {.network.u16 = 0xFF02, .host.u16 = 0x0002};
+const struct multicast_netaddr multicast_linklocal_addr = {.network.u16 = 0xFE80, .host.u16 = 0x0000};
 
 static const struct packetbuf_attrlist attributes[] =
   {
@@ -66,18 +67,6 @@ recv(struct iburst_conn *ib, const linkaddr_t * originator, const linkaddr_t * s
       c->cb->recv(c, esender);
     }
   }
-
-//  if(ereceiver->u8[0] == 0x00 && ereceiver->u8[1] == 0x01) {
-//    if(c->cb->recv) {
-//      c->cb->recv(c, esender);
-//    }
-//  }
-//
-//  if(ereceiver->u8[0] == 0x00 && ereceiver->u8[1] == 0x02 && c->is_router) {
-//    if(c->cb->recv) {
-//      c->cb->recv(c, esender);
-//    }
-//  }
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -115,7 +104,7 @@ multicast_close(struct multicast_conn *c)
 }
 /*---------------------------------------------------------------------------*/
 void
-multicast_send(struct multicast_conn *c, linkaddr_t *dest)
+multicast_send(struct multicast_conn *c, const linkaddr_t *dest)
 {
   packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, dest);
   if (iburst_send(&c->c, IBURST_INTERVAL, IBURST_COUNT)) {
