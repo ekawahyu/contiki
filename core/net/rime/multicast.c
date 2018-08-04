@@ -42,6 +42,9 @@
 
 #include <stdio.h>
 
+const linkaddr_t multicast_node_addr = {{0x00, 0x01}};
+const linkaddr_t multicast_router_addr = {{0x00, 0x02}};
+
 static const struct packetbuf_attrlist attributes[] =
   {
     MULTICAST_ATTRIBUTES PACKETBUF_ATTR_LAST

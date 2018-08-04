@@ -70,15 +70,13 @@ multicast_linkaddr_lookup(uint16_t multicast_group, const linkaddr_t *addr)
   struct multicast_linkaddr_entry *e = NULL;
 
   if (addr != NULL) {
-//    if (list_length(multicast_linkaddr_table) != 0) {
-      for (e = list_head(multicast_linkaddr_table); e != NULL; e = list_item_next(e)) {
-        if(linkaddr_cmp(addr, &e->addr)) {
-          if(e->multicast_group == multicast_group) {
-            return e;
-          }
+    for (e = list_head(multicast_linkaddr_table); e != NULL; e = list_item_next(e)) {
+      if(linkaddr_cmp(addr, &e->addr)) {
+        if(e->multicast_group == multicast_group) {
+          return e;
         }
       }
-//    }
+    }
   }
 
   return e;

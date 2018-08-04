@@ -48,20 +48,11 @@ PROCESS_THREAD(example_multicast_process, ev, data)
   multicast_linkaddr_init();
 
   multicast_open(&c, 0xFF02, &callbacks);
+  multicast_linkaddr_register(c.channel, &multicast_node_addr);
+  multicast_linkaddr_register(c.channel, &multicast_router_addr);
+
   multicast_open(&muc, 0xFE80, &mucallbacks);
-
-  /* Join multicast link local router address */
-  to.u8[0] = 2;
-  to.u8[1] = 0;
-  multicast_linkaddr_register(0xFF02, &to);
-
-  /* Join multicast link local node address */
-  to.u8[0] = 1;
-  to.u8[1] = 0;
-  multicast_linkaddr_register(0xFF02, &to);
-
-  /* Join unicast-like link local address */
-  multicast_linkaddr_register(0xFE80, &linkaddr_node_addr);
+  multicast_linkaddr_register(muc.channel, &linkaddr_node_addr);
 
   SENSORS_ACTIVATE(button_sensor);
 

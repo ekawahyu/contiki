@@ -41,6 +41,9 @@
 #include "net/queuebuf.h"
 #include "sys/ctimer.h"
 
+extern const linkaddr_t multicast_node_addr;
+extern const linkaddr_t multicast_router_addr;
+
 struct multicast_conn;
 
 #define MULTICAST_ATTRIBUTES  { PACKETBUF_ADDR_ERECEIVER, PACKETBUF_ADDRSIZE }, IBURST_ATTRIBUTES
