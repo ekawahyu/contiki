@@ -34,11 +34,8 @@
  *
  */
 
-#include "sys/cc.h"
 #include "net/rime/rime.h"
 #include "net/rime/multicast.h"
-#include "net/rime/multicast-linkaddr.h"
-#include "lib/random.h"
 
 #include <stdio.h>
 
@@ -103,7 +100,7 @@ multicast_close(struct multicast_conn *c)
   }
 }
 /*---------------------------------------------------------------------------*/
-void
+int
 multicast_send(struct multicast_conn *c, const linkaddr_t *dest)
 {
   packetbuf_set_addr(PACKETBUF_ADDR_ERECEIVER, dest);
@@ -112,5 +109,7 @@ multicast_send(struct multicast_conn *c, const linkaddr_t *dest)
       c->cb->sent(c);
     }
   }
+
+  return 0;
 }
 /*---------------------------------------------------------------------------*/

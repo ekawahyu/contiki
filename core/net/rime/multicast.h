@@ -38,8 +38,7 @@
 #define MULTICAST_H_
 
 #include "net/rime/iburst.h"
-#include "net/queuebuf.h"
-#include "sys/ctimer.h"
+#include "net/rime/multicast-linkaddr.h"
 
 struct multicast_netaddr {
   linkaddr_t network;
@@ -68,6 +67,6 @@ struct multicast_conn {
 
 void multicast_open(struct multicast_conn *c, uint16_t channel, const struct multicast_callbacks *cb);
 void multicast_close(struct multicast_conn *c);
-void multicast_send(struct multicast_conn *c, const linkaddr_t *dest);
+int multicast_send(struct multicast_conn *c, const linkaddr_t *dest);
 
 #endif /* MULTICAST_H_ */

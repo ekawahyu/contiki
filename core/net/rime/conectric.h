@@ -39,9 +39,8 @@
 
 #include "net/queuebuf.h"
 #include "net/rime/abc.h"
-#include "net/rime/iburst.h"
-#include "net/rime/trickle.h"
 #include "net/rime/multihop.h"
+#include "net/rime/multicast.h"
 #include "net/rime/route-discovery.h"
 
 struct sink_entry {
@@ -75,7 +74,8 @@ struct conectric_callbacks {
 
 struct conectric_conn {
   struct broadcast_conn broadcast;
-  struct iburst_conn iburst;
+  struct multicast_conn netbc;
+  struct multicast_conn netuc;
   struct multihop_conn multihop;
   struct route_discovery_conn route_discovery_conn;
   struct queuebuf *queued_data;

@@ -81,9 +81,6 @@ struct sink_msg {
   uint16_t netbc;
 };
 
-#define IBURST_INTERVAL (CLOCK_SECOND / 16)
-#define IBURST_COUNT    5
-
 /*---------------------------------------------------------------------------*/
 static void
 periodic(void *ptr)
@@ -232,18 +229,43 @@ broadcast_received(struct broadcast_conn *bc, const linkaddr_t *from)
 }
 /*---------------------------------------------------------------------------*/
 static void
-iburst_received(struct iburst_conn *ib, const linkaddr_t *originator,
-    const linkaddr_t *from, uint8_t hops)
+netbc_received(struct multicast_conn *mc, const linkaddr_t *originator)
 {
   struct sink_msg *msg = packetbuf_dataptr();
   struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)ib - offsetof(struct conectric_conn, iburst));
+    ((char *)mc - offsetof(struct conectric_conn, netbc));
 
-  PRINTF("%d.%d: iburst received from %d.%d prev %d.%d hops %d seqno %d\n",
+  uint8_t hops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
+
+  PRINTF("%d.%d: netbc received from %d.%d hops %d\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-   originator->u8[0], originator->u8[1],
-   from->u8[0], from->u8[1],
-   hops, ib->seqno);
+   originator->u8[0], originator->u8[1], hops);
+
+  if (msg->netbc == SINK_NETBC) {
+    if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
+      sink_add(originator, hops);
+      c->cb->sink_recv(c, originator, hops);
+    }
+  }
+  else {
+    if(c->cb->netbroadcast_recv) {
+      c->cb->netbroadcast_recv(c, originator, hops);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+netuc_received(struct multicast_conn *mc, const linkaddr_t *originator)
+{
+  struct sink_msg *msg = packetbuf_dataptr();
+  struct conectric_conn *c = (struct conectric_conn *)
+    ((char *)mc - offsetof(struct conectric_conn, netuc));
+
+  uint8_t hops = packetbuf_attr(PACKETBUF_ATTR_HOPS);
+
+  PRINTF("%d.%d: netuc received from %d.%d hops %d\n",
+   linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+   originator->u8[0], originator->u8[1], hops);
 
   if (msg->netbc == SINK_NETBC) {
     if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
@@ -355,39 +377,41 @@ route_timed_out(struct route_discovery_conn *rdc)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void send_sink_netbc(struct iburst_conn *ib);
+static void send_sink_netbc(struct multicast_conn *mc);
 /*---------------------------------------------------------------------------*/
 static void
 timer_callback(void *ptr)
 {
-  struct iburst_conn *c = ptr;
+  struct multicast_conn *c = ptr;
   send_sink_netbc(c);
 }
 /*---------------------------------------------------------------------------*/
 static void
-send_sink_netbc(struct iburst_conn *ib)
+send_sink_netbc(struct multicast_conn *mc)
 {
   struct sink_msg * msg;
   struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)ib - offsetof(struct conectric_conn, iburst));
+    ((char *)mc - offsetof(struct conectric_conn, netbc));
 
   packetbuf_clear();
   msg = packetbuf_dataptr();
   packetbuf_set_datalen(sizeof(struct sink_msg));
 
   msg->netbc = SINK_NETBC;
-  iburst_send(&c->iburst, IBURST_INTERVAL, IBURST_COUNT);
+  multicast_send(&c->netbc, &multicast_node_addr.host);
 
   PRINTF("%d.%d: sending sink broadcast\n",
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
 
-  ctimer_set(&c->interval_timer, c->interval, timer_callback, ib);
+  ctimer_set(&c->interval_timer, c->interval, timer_callback, mc);
 }
 /*---------------------------------------------------------------------------*/
 static const struct broadcast_callbacks broadcast_call = {
     broadcast_received, NULL};
-static const struct iburst_callbacks iburst_call = {
-    iburst_received, NULL, NULL};
+static const struct multicast_callbacks netbc_call = {
+    netbc_received, NULL};
+static const struct multicast_callbacks netuc_call = {
+    netuc_received, NULL};
 static const struct multihop_callbacks multihop_call = {
     multihop_received, multihop_forward};
 static const struct route_discovery_callbacks route_discovery_callbacks = {
@@ -399,12 +423,20 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 {
   route_init();
   sink_init();
+  multicast_linkaddr_init();
+
+  multicast_open(&c->netbc, multicast_node_addr.network.u16, &netbc_call);
+  multicast_linkaddr_register(multicast_node_addr.network.u16, &multicast_node_addr.host);
+  multicast_linkaddr_register(multicast_router_addr.network.u16, &multicast_router_addr.host);
+
+  multicast_open(&c->netuc, multicast_linklocal_addr.network.u16, &netuc_call);
+  multicast_linkaddr_register(multicast_linklocal_addr.network.u16, &linkaddr_node_addr);
+
   broadcast_open(&c->broadcast, channels, &broadcast_call);
-  iburst_open(&c->iburst, channels + 1, CLOCK_SECOND / 2, 5, &iburst_call);
-  multihop_open(&c->multihop, channels + 2, &multihop_call);
+  multihop_open(&c->multihop, channels + 1, &multihop_call);
   route_discovery_open(&c->route_discovery_conn,
 		       CLOCK_SECOND / 32,
-		       channels + 4,
+		       channels + 2,
 		       &route_discovery_callbacks);
   c->cb = callbacks;
   is_sink = 0;
@@ -415,8 +447,9 @@ void
 conectric_close(struct conectric_conn *c)
 {
   broadcast_close(&c->broadcast);
+  multicast_close(&c->netbc);
+  multicast_close(&c->netuc);
   multihop_close(&c->multihop);
-  iburst_close(&c->iburst);
   route_discovery_close(&c->route_discovery_conn);
   ctimer_stop(&c->interval_timer);
 }
@@ -434,10 +467,10 @@ conectric_send(struct conectric_conn *c, const linkaddr_t *to)
     could_send = broadcast_send(&c->broadcast);
   }
   else if (to->u8[0] == 0 && to->u8[1] == 0) {
-    could_send = iburst_send(&c->iburst, IBURST_INTERVAL,  IBURST_COUNT);
+    could_send = multicast_send(&c->netbc, &multicast_node_addr.host);
   }
   else {
-    could_send = multihop_send(&c->multihop, to);
+    could_send = multicast_send(&c->netuc, to);
   }
 
   if(!could_send) {
@@ -469,9 +502,9 @@ conectric_send_to_sink(struct conectric_conn *c)
     could_send = multihop_send(&c->multihop, &sink_available->addr);
   }
   else {
-    PRINTF("%d.%d: conectric_send_to_sink will broadcast it\n",
+    PRINTF("%d.%d: conectric_send_to_sink will multicast it\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    could_send = iburst_send(&c->iburst, IBURST_INTERVAL, IBURST_COUNT);
+    could_send = multicast_send(&c->netbc, &multicast_node_addr.host);
   }
 
   if(!could_send) {
@@ -498,7 +531,7 @@ conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
   if (is_sink) {
     is_collect = 0;
     c->interval = interval;
-    send_sink_netbc(&c->iburst);
+    send_sink_netbc(&c->netbc);
   }
   else {
     ctimer_stop(&c->interval_timer);
