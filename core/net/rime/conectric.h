@@ -38,10 +38,9 @@
 #define CONECTRIC_H_
 
 #include "net/queuebuf.h"
-#include "net/rime/abc.h"
-#include "net/rime/multihop.h"
+#include "net/rime/broadcast.h"
 #include "net/rime/multicast.h"
-#include "net/rime/route-discovery.h"
+#include "net/rime/multicast-linkaddr.h"
 
 struct sink_entry {
   struct sink_entry *next;
@@ -62,8 +61,6 @@ struct conectric_callbacks {
   void (* recv)(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops);
   /** Called when a packet, sent with conectric_send(), is actually transmitted. */
   void (* sent)(struct conectric_conn *c);
-  /** Called when a packet, sent with conectric_send(), times out and is dropped. */
-  void (* timedout)(struct conectric_conn *c);
   /** Called when a local broadcast is received. */
   void (* localbroadcast_recv)(struct conectric_conn *c, const linkaddr_t *from);
   /** Called when a network-wide broadcast is received. */

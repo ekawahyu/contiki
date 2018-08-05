@@ -38,7 +38,6 @@
 #define MULTICAST_H_
 
 #include "net/rime/iburst.h"
-#include "net/rime/multicast-linkaddr.h"
 
 struct multicast_netaddr {
   linkaddr_t network;

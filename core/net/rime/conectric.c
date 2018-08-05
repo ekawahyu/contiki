@@ -280,103 +280,6 @@ netuc_received(struct multicast_conn *mc, const linkaddr_t *originator)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
-multihop_received(struct multihop_conn *multihop,
-		     const linkaddr_t *from,
-		     const linkaddr_t *prevhop, uint8_t hops)
-{
-  struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)multihop - offsetof(struct conectric_conn, multihop));
-
-  struct route_entry *rt;
-
-  /* Refresh the route when we hear a packet from a neighbor. */
-  rt = route_lookup(from);
-  if(rt != NULL) {
-    route_refresh(rt);
-  }
-  
-  if(c->cb->recv) {
-    c->cb->recv(c, from, hops);
-  }
-}
-/*---------------------------------------------------------------------------*/
-static linkaddr_t *
-multihop_forward(struct multihop_conn *multihop,
-		    const linkaddr_t *originator,
-		    const linkaddr_t *dest,
-		    const linkaddr_t *prevhop, uint8_t hops)
-{
-  struct route_entry *rt;
-  struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)multihop - offsetof(struct conectric_conn, multihop));
-
-  rt = route_lookup(dest);
-  if(rt == NULL) {
-    if(c->queued_data != NULL) {
-      queuebuf_free(c->queued_data);
-    }
-
-    PRINTF("%d.%d: data_packet_forward: queueing data, sending rreq\n",
-        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    c->queued_data = queuebuf_new_from_packetbuf();
-    linkaddr_copy(&c->queued_data_dest, dest);
-    route_discovery_discover(&c->route_discovery_conn, dest, PACKET_TIMEOUT);
-
-    return NULL;
-  } else {
-    route_refresh(rt);
-  }
-  
-  return &rt->nexthop;
-}
-/*---------------------------------------------------------------------------*/
-static void
-found_route(struct route_discovery_conn *rdc, const linkaddr_t *dest)
-{
-  struct route_entry *rt;
-  struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)rdc - offsetof(struct conectric_conn, route_discovery_conn));
-
-  PRINTF("%d.%d: found_route\n",
-      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-
-  if(c->queued_data != NULL &&
-     linkaddr_cmp(dest, &c->queued_data_dest)) {
-    queuebuf_to_packetbuf(c->queued_data);
-    queuebuf_free(c->queued_data);
-    c->queued_data = NULL;
-
-    rt = route_lookup(dest);
-    if(rt != NULL) {
-      multihop_resend(&c->multihop, &rt->nexthop);
-      if(c->cb->sent != NULL) {
-        c->cb->sent(c);
-      }
-    } else {
-      if(c->cb->timedout != NULL) {
-        c->cb->timedout(c);
-      }
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
-route_timed_out(struct route_discovery_conn *rdc)
-{
-  struct conectric_conn *c = (struct conectric_conn *)
-    ((char *)rdc - offsetof(struct conectric_conn, route_discovery_conn));
-
-  if(c->queued_data != NULL) {
-    queuebuf_free(c->queued_data);
-    c->queued_data = NULL;
-  }
-
-  if(c->cb->timedout) {
-    c->cb->timedout(c);
-  }
-}
-/*---------------------------------------------------------------------------*/
 static void send_sink_netbc(struct multicast_conn *mc);
 /*---------------------------------------------------------------------------*/
 static void
@@ -412,10 +315,6 @@ static const struct multicast_callbacks netbc_call = {
     netbc_received, NULL};
 static const struct multicast_callbacks netuc_call = {
     netuc_received, NULL};
-static const struct multihop_callbacks multihop_call = {
-    multihop_received, multihop_forward};
-static const struct route_discovery_callbacks route_discovery_callbacks = {
-    found_route, route_timed_out};
 /*---------------------------------------------------------------------------*/
 void
 conectric_open(struct conectric_conn *c, uint16_t channels,
@@ -433,11 +332,6 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
   multicast_linkaddr_register(multicast_linklocal_addr.network.u16, &linkaddr_node_addr);
 
   broadcast_open(&c->broadcast, channels, &broadcast_call);
-  multihop_open(&c->multihop, channels + 1, &multihop_call);
-  route_discovery_open(&c->route_discovery_conn,
-		       CLOCK_SECOND / 32,
-		       channels + 2,
-		       &route_discovery_callbacks);
   c->cb = callbacks;
   is_sink = 0;
   is_collect = 0;
@@ -449,35 +343,26 @@ conectric_close(struct conectric_conn *c)
   broadcast_close(&c->broadcast);
   multicast_close(&c->netbc);
   multicast_close(&c->netuc);
-  multihop_close(&c->multihop);
-  route_discovery_close(&c->route_discovery_conn);
   ctimer_stop(&c->interval_timer);
 }
 /*---------------------------------------------------------------------------*/
 int
 conectric_send(struct conectric_conn *c, const linkaddr_t *to)
 {
-  int could_send;
-
   PRINTF("%d.%d: conectric_send to %d.%d\n",
 	 linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
 	 to->u8[0], to->u8[1]);
 
   if (to->u8[0] == 255 && to->u8[1] == 255) {
-    could_send = broadcast_send(&c->broadcast);
+    broadcast_send(&c->broadcast);
   }
   else if (to->u8[0] == 0 && to->u8[1] == 0) {
-    could_send = multicast_send(&c->netbc, &multicast_node_addr.host);
+    multicast_send(&c->netbc, &multicast_node_addr.host);
   }
   else {
-    could_send = multicast_send(&c->netuc, to);
+    multicast_send(&c->netuc, to);
   }
 
-  if(!could_send) {
-    PRINTF("%d.%d: conectric_send: could not send\n",
-        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    return 0;
-  }
   if(c->cb->sent != NULL) {
     c->cb->sent(c);
   }
@@ -489,7 +374,6 @@ linkaddr_t *
 conectric_send_to_sink(struct conectric_conn *c)
 {
   static struct sink_entry * sink_available;
-  int could_send;
 
   if (is_sink) return NULL;
 
@@ -499,19 +383,14 @@ conectric_send_to_sink(struct conectric_conn *c)
     PRINTF("%d.%d: conectric_send_to_sink to %d.%d\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
         sink_available->addr.u8[0], sink_available->addr.u8[1]);
-    could_send = multihop_send(&c->multihop, &sink_available->addr);
+    multicast_send(&c->netuc, &sink_available->addr);
   }
   else {
     PRINTF("%d.%d: conectric_send_to_sink will multicast it\n",
         linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    could_send = multicast_send(&c->netbc, &multicast_node_addr.host);
+    multicast_send(&c->netbc, &multicast_node_addr.host);
   }
 
-  if(!could_send) {
-    PRINTF("%d.%d: conectric_send: could not send\n",
-        linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
-    return NULL;
-  }
   if(c->cb->sent != NULL) {
     c->cb->sent(c);
   }

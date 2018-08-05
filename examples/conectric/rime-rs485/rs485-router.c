@@ -235,12 +235,6 @@ sent(struct conectric_conn *c)
 }
 
 static void
-timedout(struct conectric_conn *c)
-{
-  PRINTF("packet timedout\n");
-}
-
-static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
   static uint8_t event;
@@ -341,7 +335,7 @@ sink(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 }
 
 const static struct conectric_callbacks callbacks = {
-    recv, sent, timedout, localbroadcast, netbroadcast, sink
+    recv, sent, localbroadcast, netbroadcast, sink
 };
 /*---------------------------------------------------------------------------*/
 static void

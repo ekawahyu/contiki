@@ -36,6 +36,7 @@
 
 #include "net/rime/rime.h"
 #include "net/rime/multicast.h"
+#include "net/rime/multicast-linkaddr.h"
 
 #include <stdio.h>
 

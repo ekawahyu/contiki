@@ -213,12 +213,6 @@ sent(struct conectric_conn *c)
 }
 
 static void
-timedout(struct conectric_conn *c)
-{
-  PRINTF("packet timedout\n");
-}
-
-static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
@@ -275,7 +269,7 @@ sink(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 }
 
 const static struct conectric_callbacks callbacks = {
-    recv, sent, timedout, localbroadcast, netbroadcast, sink
+    recv, sent, localbroadcast, netbroadcast, sink
 };
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(usb_conectric_process, ev, data)
