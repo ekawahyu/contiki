@@ -267,16 +267,8 @@ netuc_received(struct multicast_conn *mc, const linkaddr_t *originator)
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
    originator->u8[0], originator->u8[1], hops);
 
-  if (msg->netbc == SINK_NETBC) {
-    if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
-      sink_add(originator, hops);
-      c->cb->sink_recv(c, originator, hops);
-    }
-  }
-  else {
-    if(c->cb->netbroadcast_recv) {
-      c->cb->netbroadcast_recv(c, originator, hops);
-    }
+  if(c->cb->recv) {
+    c->cb->recv(c, originator, hops);
   }
 }
 /*---------------------------------------------------------------------------*/
