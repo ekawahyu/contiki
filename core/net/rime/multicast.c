@@ -42,7 +42,7 @@
 
 const struct multicast_netaddr multicast_node_addr = {.network.u16 = 0xFF02, .host.u16 = 0x0001};
 const struct multicast_netaddr multicast_router_addr = {.network.u16 = 0xFF02, .host.u16 = 0x0002};
-const struct multicast_netaddr multicast_linklocal_addr = {.network.u16 = 0xFE80, .host.u16 = 0x0000};
+struct multicast_netaddr multicast_linklocal_addr = {.network.u16 = 0xFE80, .host.u16 = 0x0000};
 
 static const struct packetbuf_attrlist attributes[] =
   {
@@ -82,13 +82,23 @@ dropped(struct iburst_conn *c)
 static const struct iburst_callbacks iburst = { recv, sent, dropped };
 /*---------------------------------------------------------------------------*/
 void
-multicast_open(struct multicast_conn *c, uint16_t channel,
+multicast_open(struct multicast_conn *c, const struct multicast_netaddr *na,
 	  const struct multicast_callbacks *cb)
 {
-  iburst_open(&c->c, channel, IBURST_INTERVAL, IBURST_COUNT, &iburst);
-  c->channel = channel;
-  c->cb = cb;
-  channel_set_attributes(channel, attributes);
+  /* It is supposed to be called once for the link local address setup,
+   * but calling it multiple times don't hurt */
+  linkaddr_copy(&multicast_linklocal_addr.host, &linkaddr_node_addr);
+
+  /* Register multicast group/channel and scope */
+  multicast_linkaddr_register(na->network.u16, &na->host);
+
+  /* Open multicast group/channel only if it has not been done before */
+  if(c->channel == 0) {
+    iburst_open(&c->c, na->network.u16, IBURST_INTERVAL, IBURST_COUNT, &iburst);
+    c->channel = na->network.u16;
+    c->cb = cb;
+    channel_set_attributes(na->network.u16, attributes);
+  }
 }
 /*---------------------------------------------------------------------------*/
 void

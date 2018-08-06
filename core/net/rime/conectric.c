@@ -257,7 +257,6 @@ netbc_received(struct multicast_conn *mc, const linkaddr_t *originator)
 static void
 netuc_received(struct multicast_conn *mc, const linkaddr_t *originator)
 {
-  struct sink_msg *msg = packetbuf_dataptr();
   struct conectric_conn *c = (struct conectric_conn *)
     ((char *)mc - offsetof(struct conectric_conn, netuc));
 
@@ -316,12 +315,9 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
   sink_init();
   multicast_linkaddr_init();
 
-  multicast_open(&c->netbc, multicast_node_addr.network.u16, &netbc_call);
-  multicast_linkaddr_register(multicast_node_addr.network.u16, &multicast_node_addr.host);
-  multicast_linkaddr_register(multicast_router_addr.network.u16, &multicast_router_addr.host);
-
-  multicast_open(&c->netuc, multicast_linklocal_addr.network.u16, &netuc_call);
-  multicast_linkaddr_register(multicast_linklocal_addr.network.u16, &linkaddr_node_addr);
+  multicast_open(&c->netbc, &multicast_node_addr, &netbc_call);
+  multicast_open(&c->netbc, &multicast_router_addr, &netbc_call);
+  multicast_open(&c->netuc, &multicast_linklocal_addr, &netuc_call);
 
   broadcast_open(&c->broadcast, channels, &broadcast_call);
   c->cb = callbacks;

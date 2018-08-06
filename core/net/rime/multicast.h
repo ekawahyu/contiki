@@ -46,7 +46,7 @@ struct multicast_netaddr {
 
 extern const struct multicast_netaddr multicast_node_addr;
 extern const struct multicast_netaddr multicast_router_addr;
-extern const struct multicast_netaddr multicast_linklocal_addr;
+extern struct multicast_netaddr multicast_linklocal_addr;
 
 struct multicast_conn;
 
@@ -64,7 +64,7 @@ struct multicast_conn {
   uint16_t channel;
 };
 
-void multicast_open(struct multicast_conn *c, uint16_t channel, const struct multicast_callbacks *cb);
+void multicast_open(struct multicast_conn *c, const struct multicast_netaddr *na, const struct multicast_callbacks *cb);
 void multicast_close(struct multicast_conn *c);
 int multicast_send(struct multicast_conn *c, const linkaddr_t *dest);
 

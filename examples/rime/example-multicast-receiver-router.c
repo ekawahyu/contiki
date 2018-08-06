@@ -51,13 +51,9 @@ PROCESS_THREAD(example_multicast_process, ev, data)
   PROCESS_BEGIN();
 
   multicast_linkaddr_init();
-
-  multicast_open(&c, multicast_node_addr.network.u16, &callbacks);
-  multicast_linkaddr_register(multicast_node_addr.network.u16, &multicast_node_addr.host);
-  multicast_linkaddr_register(multicast_router_addr.network.u16, &multicast_router_addr.host);
-
-  multicast_open(&muc, multicast_linklocal_addr.network.u16, &mucallbacks);
-  multicast_linkaddr_register(multicast_linklocal_addr.network.u16, &linkaddr_node_addr);
+  multicast_open(&c, &multicast_node_addr, &callbacks);
+  multicast_open(&c, &multicast_router_addr, &callbacks);
+  multicast_open(&muc, &multicast_linklocal_addr, &mucallbacks);
 
   SENSORS_ACTIVATE(button_sensor);
 
