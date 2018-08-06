@@ -109,9 +109,9 @@ recv(struct abc_conn *abc)
   else if((int16_t)((seqno) - (c->seqno)) < -5) {
     c->seqno = seqno;
     if(c->cb->recv) {
-      c->cb->recv(c, c->sender, c->originator, c->hops);
+      c->cb->recv(c, c->originator, c->hops);
     }
-    fwd((struct broadcast_conn *)c);
+    fwd((struct abc_conn *)c);
   }
   /* If incoming sequence number is greater than the previous one,
    * then it is a new packet. Receive it.
@@ -119,9 +119,9 @@ recv(struct abc_conn *abc)
   else if((int16_t)((seqno) - (c->seqno)) > 0) {
     c->seqno = seqno;
     if(c->cb->recv) {
-      c->cb->recv(c, c->originator, c->sender, c->hops);
+      c->cb->recv(c, c->originator, c->hops);
     }
-    fwd((struct broadcast_conn *)c);
+    fwd((struct abc_conn *)c);
   }
 }
 /*---------------------------------------------------------------------------*/
