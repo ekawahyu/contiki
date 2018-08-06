@@ -93,24 +93,35 @@ recv(struct abc_conn *abc)
   c->originator = packetbuf_addr(PACKETBUF_ADDR_ESENDER);
   c->hops = packetbuf_attr(PACKETBUF_ATTR_HOPS) + 1;
 
+  /* If incoming sequence number is the same with the previous one,
+   * then it is receiving duplicates. Drop it.
+   */
   if(seqno == c->seqno) {
     if(c->cb->dropped) {
       c->cb->dropped(c);
     }
   }
-//  else if((int16_t)((seqno) - (c->seqno)) < 0) {
-//    c->seqno = seqno;
-//    if(c->cb->recv) {
-//      c->cb->recv(c, c->originator, c->hops);
-//    }
-//    fwd((struct abc_conn *)c);
-//  }
-  else {
+  /* If incoming sequence number is less than the previous one,
+   * AND the difference is at least -5, then receive it. Because of sequence
+   * number wraps around after 255, this incoming packet with lower sequence
+   * number is actually a new packet.
+   */
+  else if((int16_t)((seqno) - (c->seqno)) < -5) {
     c->seqno = seqno;
     if(c->cb->recv) {
-      c->cb->recv(c, c->originator, c->hops);
+      c->cb->recv(c, c->sender, c->originator, c->hops);
     }
-    fwd((struct abc_conn *)c);
+    fwd((struct broadcast_conn *)c);
+  }
+  /* If incoming sequence number is greater than the previous one,
+   * then it is a new packet. Receive it.
+   */
+  else if((int16_t)((seqno) - (c->seqno)) > 0) {
+    c->seqno = seqno;
+    if(c->cb->recv) {
+      c->cb->recv(c, c->originator, c->sender, c->hops);
+    }
+    fwd((struct broadcast_conn *)c);
   }
 }
 /*---------------------------------------------------------------------------*/
