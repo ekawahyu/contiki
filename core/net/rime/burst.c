@@ -54,6 +54,8 @@ send(void *ptr)
 
   if(c->q != NULL) {
     queuebuf_to_packetbuf(c->q);
+    packetbuf_set_attr(PACKETBUF_ATTR_EPACKET_ID, c->seqno);
+    packetbuf_set_attr(PACKETBUF_ATTR_HOPS, c->hops);
     abc_send(&c->c);
     if(c->cb->sent) {
       c->cb->sent(c);
