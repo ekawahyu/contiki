@@ -112,7 +112,7 @@ recv(struct broadcast_conn *broadcast, const linkaddr_t *sender)
   else if((int16_t)((seqno) - (c->seqno)) < -5) {
     c->seqno = seqno;
     if(c->cb->recv) {
-      c->cb->recv(c, c->sender, c->originator, c->hops);
+      c->cb->recv(c, c->originator, c->sender, c->hops);
     }
     fwd((struct broadcast_conn *)c);
   }

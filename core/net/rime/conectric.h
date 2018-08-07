@@ -73,10 +73,6 @@ struct conectric_conn {
   struct broadcast_conn broadcast;
   struct multicast_conn netbc;
   struct multicast_conn netuc;
-  struct multihop_conn multihop;
-  struct route_discovery_conn route_discovery_conn;
-  struct queuebuf *queued_data;
-  linkaddr_t queued_data_dest;
   const struct conectric_callbacks *cb;
   struct ctimer interval_timer;
   clock_time_t interval;
