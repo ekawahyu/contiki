@@ -216,12 +216,12 @@ command_respond(uint8_t * bytereq)
 
     else if (bytereq[0] == 'C' && bytereq[1] == 'S') {
       conectric_set_collect(&conectric, 1);
-      putstring("SS:Ok\n");
+      putstring("CS:Ok\n");
     }
 
     else if (bytereq[0] == 'C' && bytereq[1] == 'R') {
       conectric_set_collect(&conectric, 0);
-      putstring("SR:Ok\n");
+      putstring("CR:Ok\n");
     }
 
     else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
@@ -295,6 +295,22 @@ command_respond(uint8_t * bytereq)
         putstring(":LT:");
         putdec(sink_get(i)->time);
         putstring(")\n");
+      }
+    }
+
+    else if (bytereq[0] == 'I' && bytereq[1] == 'T') {
+      for (i=0; i < multicast_linkaddr_num(); i++) {
+        putstring("IT:");
+        putdec(i);
+        putstring(":");
+        puthex((multicast_linkaddr_get(i)->multicast_group & 0xFF00) >> 8);
+        putstring(".");
+        puthex(multicast_linkaddr_get(i)->multicast_group & 0x00FF);
+        putstring("::");
+        puthex(multicast_linkaddr_get(i)->addr.u8[0]);
+        putstring(".");
+        puthex(multicast_linkaddr_get(i)->addr.u8[1]);
+        putstring("\n");
       }
     }
 
