@@ -321,6 +321,11 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2 );
   }
 
+  if (netbc_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
+    /* Halt the system right here until watchdog kicks in */
+    while(1);
+  }
+
   PRINTF("%d.%d: netbc from %d.%d: len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1], packetbuf_datalen(), hops);

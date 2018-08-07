@@ -219,6 +219,11 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   dump_packetbuf(&conectric_message_recv);
 
+  if (conectric_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
+    /* Halt the system right here until watchdog kicks in */
+    while(1);
+  }
+
   PRINTF("%d.%d: data from %d.%d len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1], packetbuf_datalen(), hops);
@@ -254,6 +259,11 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
   packetbuf_and_attr_copyto(&netbc_message_recv, MESSAGE_NETBC_RECV);
 
   dump_packetbuf(&netbc_message_recv);
+
+  if (netbc_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
+    /* Halt the system right here until watchdog kicks in */
+    while(1);
+  }
 
   PRINTF("%d.%d: netbc from %d.%d: len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
