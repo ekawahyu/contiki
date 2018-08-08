@@ -612,11 +612,11 @@ PROCESS_THREAD(rs485_periodic_process, ev, data)
 
   PROCESS_BEGIN();
 
-  supervisory_counter = RS485_SUP_TIMEOUT;
+  supervisory_counter = 1;//RS485_SUP_TIMEOUT;
 
   while (1)
   {
-    etimer_set(&et, 58 * CLOCK_SECOND);
+    etimer_set(&et, 2 * CLOCK_SECOND);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
     /* Send supervisory message */
@@ -625,7 +625,7 @@ PROCESS_THREAD(rs485_periodic_process, ev, data)
       event = RS485_SUP_NOEVT;
     }
     else {
-      supervisory_counter = RS485_SUP_TIMEOUT;
+      supervisory_counter = 1;//RS485_SUP_TIMEOUT;
       event = RS485_SUP_EVT;
     }
     process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, &event);
