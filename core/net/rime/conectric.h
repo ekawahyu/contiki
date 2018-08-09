@@ -38,11 +38,9 @@
 #define CONECTRIC_H_
 
 #include "net/queuebuf.h"
-#include "net/rime/abc.h"
-#include "net/rime/netflood.h"
-#include "net/rime/trickle.h"
-#include "net/rime/multihop.h"
-#include "net/rime/route-discovery.h"
+#include "net/rime/broadcast.h"
+#include "net/rime/multicast.h"
+#include "net/rime/multicast-linkaddr.h"
 
 struct sink_entry {
   struct sink_entry *next;
@@ -63,8 +61,6 @@ struct conectric_callbacks {
   void (* recv)(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops);
   /** Called when a packet, sent with conectric_send(), is actually transmitted. */
   void (* sent)(struct conectric_conn *c);
-  /** Called when a packet, sent with conectric_send(), times out and is dropped. */
-  void (* timedout)(struct conectric_conn *c);
   /** Called when a local broadcast is received. */
   void (* localbroadcast_recv)(struct conectric_conn *c, const linkaddr_t *from);
   /** Called when a network-wide broadcast is received. */
@@ -75,15 +71,11 @@ struct conectric_callbacks {
 
 struct conectric_conn {
   struct broadcast_conn broadcast;
-  struct netflood_conn netflood;
-  struct multihop_conn multihop;
-  struct route_discovery_conn route_discovery_conn;
-  struct queuebuf *queued_data;
-  linkaddr_t queued_data_dest;
+  struct multicast_conn netbc;
+  struct multicast_conn netuc;
   const struct conectric_callbacks *cb;
   struct ctimer interval_timer;
   clock_time_t interval;
-  uint8_t netbc_id;
 };
 
 void conectric_open(struct conectric_conn *c, uint16_t channels, const struct conectric_callbacks *callbacks);
@@ -94,6 +86,5 @@ int conectric_send(struct conectric_conn *c, const linkaddr_t *dest);
 linkaddr_t * conectric_send_to_sink(struct conectric_conn *c);
 uint8_t conectric_is_sink(void);
 uint8_t conectric_is_collect(void);
-//void conectric_netbc_shift_interval(struct conectric_conn *c, clock_time_t diff_time);
 
 #endif /* CONECTRIC_H_ */

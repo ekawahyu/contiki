@@ -1,10 +1,10 @@
 /*
- * project-conf.h
+ * iburst.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Jul 26, 2018
  *     Author: Ekawahyu Susilo
  *
- * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
+ * Copyright (c) 2018, Conectric Network, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,44 +34,44 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef IBURST_H_
+#define IBURST_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "net/rime/broadcast.h"
+#include "net/queuebuf.h"
+#include "sys/ctimer.h"
 
-#define RUN_ON_COOJA_SIMULATION               0
+struct iburst_conn;
 
-#define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      1
+#define IBURST_ATTRIBUTES { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
+                          { PACKETBUF_ATTR_EPACKET_ID, PACKETBUF_ATTR_BIT * 8 },\
+                          { PACKETBUF_ATTR_HOPS, PACKETBUF_ATTR_BIT * 8 }, \
+                          BROADCAST_ATTRIBUTES
 
-#define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     nullrdc_driver
+struct iburst_callbacks {
+  void (* recv)(struct iburst_conn *c, const linkaddr_t * originator, const linkaddr_t * sender, uint8_t hops);
+  void (* sent)(struct iburst_conn *c);
+  void (* dropped)(struct iburst_conn *c);
+};
 
-#define SINK_CONF_ENTRIES 16
-#define SINK_CONF_DEFAULT_LIFETIME 180 /* default life time max = 255 seconds */
+struct iburst_conn {
+  struct broadcast_conn c;
+  const struct iburst_callbacks *cb;
+  struct ctimer t;
+  struct queuebuf *q;
+  const linkaddr_t * originator;
+  const linkaddr_t * sender;
+  clock_time_t interval;
+  uint16_t seqno;
+  uint8_t hops;
+  uint8_t burstcnt; /* for internal use, burst counter */
+  uint8_t burstmax;
+};
 
-#define IEEE802154_CONF_PANID                 0x2007
-#define CC2530_RF_CONF_CHANNEL                25
-#define CC2530_RF_CONF_LEDS                   1
-#if MODELS_CONF_ANAREN_A2530E_MODULE
-#else
-#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
-#endif
+void iburst_open(struct iburst_conn *c, uint16_t channel, clock_time_t interval,
+    uint8_t burstmax, const struct iburst_callbacks *cb);
+void iburst_close(struct iburst_conn *c);
+int  iburst_send(struct iburst_conn *c, clock_time_t interval, uint8_t burstmax);
+void iburst_cancel(struct iburst_conn *c);
 
-#define LPM_CONF_MODE                         0
-
-#define RS485_CONF_ENABLE                     0
-#define UART1_CONF_ENABLE                     0
-
-#define BUTTON_SENSOR_CONF_ON                 0
-
-#define CONECTRIC_BURST_NUMBER                1
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* PROJECT_CONF_H_ */
+#endif /* IBURST_H_ */

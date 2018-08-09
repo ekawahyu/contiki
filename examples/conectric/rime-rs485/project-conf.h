@@ -49,10 +49,6 @@ extern "C" {
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     nullrdc_driver
 
-#define ROUTE_CONF_ENTRIES 64
-#define ROUTE_CONF_DECAY_THRESHOLD 8
-#define ROUTE_CONF_DEFAULT_LIFETIME 250 /* default life time max = 255 seconds */
-
 #define SINK_CONF_ENTRIES 16
 #define SINK_CONF_DEFAULT_LIFETIME 180 /* default life time max = 255 seconds */
 
@@ -72,7 +68,7 @@ extern "C" {
 
 #define BUTTON_SENSOR_CONF_ON                 0
 
-#define CONECTRIC_BURST_NUMBER                5
+#define CONECTRIC_BURST_NUMBER                1
 
 #ifdef __cplusplus
 }

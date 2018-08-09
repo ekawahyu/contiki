@@ -216,12 +216,12 @@ command_respond(uint8_t * bytereq)
 
     else if (bytereq[0] == 'C' && bytereq[1] == 'S') {
       conectric_set_collect(&conectric, 1);
-      putstring("SS:Ok\n");
+      putstring("CS:Ok\n");
     }
 
     else if (bytereq[0] == 'C' && bytereq[1] == 'R') {
       conectric_set_collect(&conectric, 0);
-      putstring("SR:Ok\n");
+      putstring("CR:Ok\n");
     }
 
     else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
@@ -295,6 +295,22 @@ command_respond(uint8_t * bytereq)
         putstring(":LT:");
         putdec(sink_get(i)->time);
         putstring(")\n");
+      }
+    }
+
+    else if (bytereq[0] == 'I' && bytereq[1] == 'T') {
+      for (i=0; i < multicast_linkaddr_num(); i++) {
+        putstring("IT:");
+        putdec(i);
+        putstring(":");
+        puthex((multicast_linkaddr_get(i)->multicast_group & 0xFF00) >> 8);
+        putstring(".");
+        puthex(multicast_linkaddr_get(i)->multicast_group & 0x00FF);
+        putstring("::");
+        puthex(multicast_linkaddr_get(i)->addr.u8[0]);
+        putstring(".");
+        puthex(multicast_linkaddr_get(i)->addr.u8[1]);
+        putstring("\n");
       }
     }
 
@@ -412,65 +428,65 @@ compose_request_to_packetbuf(uint8_t * request, uint8_t seqno, uint8_t batt, lin
   /* The packetbuf is filled and ready to be sent */
 }
 /*---------------------------------------------------------------------------*/
-void
-compose_request_line_to_packetbuf(request_line * line, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver)
-{
-  static uint8_t packet_buffer[128];
-  uint8_t * packet = packet_buffer;
-  uint8_t * header = NULL;
-  uint8_t * route = NULL;
-  linkaddr_t dest;
-  uint8_t req;
-  uint8_t reqlen;
-  uint8_t datalen;
-  uint8_t routelen;
-  uint8_t i;
-
-  reqlen     = line->reqlen;
-  req        = line->req;
-  dest.u8[0] = line->dest.u8[0];
-  dest.u8[1] = line->dest.u8[1];
-  routelen   = line->hdr_next;
-
-  if (ereceiver) linkaddr_copy(ereceiver, &line->dest);
-
-  /* Filling in packetbuf with request byte and data.
-   * Minimum length of data = 3 ---> [DLen][Req][Batt], the rest of data will
-   * follow if there is any.
-   */
-  memset(packet_buffer, 0, sizeof(packet_buffer));
-  datalen = reqlen - routelen - CONECTRIC_REQUEST_HEADER_LEN;
-  *packet++ = datalen + CONECTRIC_MESSAGE_LEN;
-  *packet++ = req;
-  *packet++ = batt;
-  i = datalen;
-  while (i--) *packet++ = *line->payload++;
-
-  packetbuf_copyfrom(packet_buffer, datalen + CONECTRIC_MESSAGE_LEN);
-
-  routelen--; /* get rid of the length byte */
-
-  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN + routelen); /* allocate some space for header */
-
-  header = (uint8_t *)packetbuf_hdrptr();
-  *header++ = CONECTRIC_MESSAGE_HEADER_LEN;   /* header length */
-  *header++ = seqno;          /* seqno */
-  *header++ = 0;              /* hop count */
-  *header++ = 0;              /* number of hops */
-  *header++ = dest.u8[0];     /* destination addr H */
-  *header++ = dest.u8[1];     /* destination addr L */
-
-  /* The packetbuf is filled and ready to be sent */
-}
+//void
+//compose_request_line_to_packetbuf(request_line * line, uint8_t seqno, uint8_t batt, linkaddr_t * ereceiver)
+//{
+//  static uint8_t packet_buffer[128];
+//  uint8_t * packet = packet_buffer;
+//  uint8_t * header = NULL;
+//  uint8_t * route = NULL;
+//  linkaddr_t dest;
+//  uint8_t req;
+//  uint8_t reqlen;
+//  uint8_t datalen;
+//  uint8_t routelen;
+//  uint8_t i;
+//
+//  reqlen     = line->reqlen;
+//  req        = line->req;
+//  dest.u8[0] = line->dest.u8[0];
+//  dest.u8[1] = line->dest.u8[1];
+//  routelen   = line->hdr_next;
+//
+//  if (ereceiver) linkaddr_copy(ereceiver, &line->dest);
+//
+//  /* Filling in packetbuf with request byte and data.
+//   * Minimum length of data = 3 ---> [DLen][Req][Batt], the rest of data will
+//   * follow if there is any.
+//   */
+//  memset(packet_buffer, 0, sizeof(packet_buffer));
+//  datalen = reqlen - routelen - CONECTRIC_REQUEST_HEADER_LEN;
+//  *packet++ = datalen + CONECTRIC_MESSAGE_LEN;
+//  *packet++ = req;
+//  *packet++ = batt;
+//  i = datalen;
+//  while (i--) *packet++ = *line->payload++;
+//
+//  packetbuf_copyfrom(packet_buffer, datalen + CONECTRIC_MESSAGE_LEN);
+//
+//  routelen--; /* get rid of the length byte */
+//
+//  packetbuf_hdralloc(CONECTRIC_MESSAGE_HEADER_LEN + routelen); /* allocate some space for header */
+//
+//  header = (uint8_t *)packetbuf_hdrptr();
+//  *header++ = CONECTRIC_MESSAGE_HEADER_LEN;   /* header length */
+//  *header++ = seqno;          /* seqno */
+//  *header++ = 0;              /* hop count */
+//  *header++ = 0;              /* number of hops */
+//  *header++ = dest.u8[0];     /* destination addr H */
+//  *header++ = dest.u8[1];     /* destination addr L */
+//
+//  /* The packetbuf is filled and ready to be sent */
+//}
 /*---------------------------------------------------------------------------*/
-void
-request_line_create(request_line * line, uint8_t request, linkaddr_t * dest, uint8_t * data, uint8_t datalen)
-{
-  line->reqlen = CONECTRIC_REQUEST_HEADER_LEN + 1 + datalen;
-  line->req = request;
-  line->dest.u8[0] = dest->u8[0];
-  line->dest.u8[1] = dest->u8[1];
-  line->hdr_next = 0x01; /* reserved, always 0x01 */
-  line->payload = data;
-}
+//void
+//request_line_create(request_line * line, uint8_t request, linkaddr_t * dest, uint8_t * data, uint8_t datalen)
+//{
+//  line->reqlen = CONECTRIC_REQUEST_HEADER_LEN + 1 + datalen;
+//  line->req = request;
+//  line->dest.u8[0] = dest->u8[0];
+//  line->dest.u8[1] = dest->u8[1];
+//  line->hdr_next = 0x01; /* reserved, always 0x01 */
+//  line->payload = data;
+//}
 /*---------------------------------------------------------------------------*/

@@ -1,10 +1,10 @@
 /*
  * project-conf.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Aug 8, 2018
  *     Author: Ekawahyu Susilo
  *
- * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
+ * Copyright (c) 2018, Conectric Network, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,20 +37,13 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define RUN_ON_COOJA_SIMULATION               0
 
 #define STARTUP_CONF_VERBOSE                  1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
 
 #define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     nullrdc_driver
-
-#define SINK_CONF_ENTRIES 16
-#define SINK_CONF_DEFAULT_LIFETIME 180 /* default life time max = 255 seconds */
+#define NETSTACK_CONF_RDC                     stub_rdc_driver
 
 #define IEEE802154_CONF_PANID                 0x2007
 #define CC2530_RF_CONF_CHANNEL                25
@@ -61,6 +54,9 @@ extern "C" {
 #define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
 #endif
 
+#define CC2530_RF_CONF_HEXDUMP 1
+#define CC2530_RF_CONF_AUTOACK 0
+
 #define LPM_CONF_MODE                         0
 
 #define RS485_CONF_ENABLE                     0
@@ -69,9 +65,5 @@ extern "C" {
 #define BUTTON_SENSOR_CONF_ON                 0
 
 #define CONECTRIC_BURST_NUMBER                1
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* PROJECT_CONF_H_ */

@@ -235,12 +235,6 @@ sent(struct conectric_conn *c)
 }
 
 static void
-timedout(struct conectric_conn *c)
-{
-  PRINTF("packet timedout\n");
-}
-
-static void
 recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 {
   static uint8_t event;
@@ -327,6 +321,11 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2 );
   }
 
+  if (netbc_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
+    /* Halt the system right here until watchdog kicks in */
+    while(1);
+  }
+
   PRINTF("%d.%d: netbc from %d.%d: len %d hops %d\n",
       linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
       from->u8[0], from->u8[1], packetbuf_datalen(), hops);
@@ -341,7 +340,7 @@ sink(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 }
 
 const static struct conectric_callbacks callbacks = {
-    recv, sent, timedout, localbroadcast, netbroadcast, sink
+    recv, sent, localbroadcast, netbroadcast, sink
 };
 /*---------------------------------------------------------------------------*/
 static void
@@ -384,6 +383,10 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   static uint8_t * request;
   static linkaddr_t to;
   static linkaddr_t * which_sink;
+
+  uint8_t chunk_number;
+  uint8_t chunk_size;
+  uint8_t chunk_offset;
 
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
@@ -455,6 +458,46 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
         else {
           packetbuf_copyfrom(message, RS485_HEADER_SIZE + rs485_in_pos + 3);
         }
+        NETSTACK_MAC.on();
+        which_sink = conectric_send_to_sink(&conectric);
+        if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+        PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+            clock_seconds());
+        PRINTF("%d.%d: esender=%d.%d\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+            netbc_message_recv.esender.u8[0], netbc_message_recv.esender.u8[1]);
+        // PROCESS_PAUSE();
+        if (loop) {
+          etimer_set(&et, CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8));
+          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        }
+      }
+    }
+
+    else if (*request == RS485_POLL_CHUNK)
+    {
+      chunk_number = *++request;
+      chunk_size = *++request;
+      chunk_offset = chunk_number * chunk_size;
+      memset(message, 0, sizeof(message));
+      message[0] = RS485_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0;
+      message[5] = 0;
+      message[6] = chunk_size + 3;
+      message[7] = CONECTRIC_RS485_POLL_CHUNK_REPLY;
+      message[8] = batt;
+      for (loop = 0;loop < (chunk_size); loop++) {
+        message[9+loop] = rs485_data[chunk_offset+loop];
+      }
+
+      loop = CONECTRIC_BURST_NUMBER;
+      while(loop--) {
+        packetbuf_copyfrom(message, RS485_HEADER_SIZE + chunk_size + 3);
         NETSTACK_MAC.on();
         which_sink = conectric_send_to_sink(&conectric);
         if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n",
@@ -695,6 +738,7 @@ PROCESS_THREAD(modbus_in_process, ev, data)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(modbus_out_process, ev, data)
 {
+  static uint8_t event[3];
   static struct etimer et;
   static message_recv * message;
   static uint8_t * serial_data;
@@ -745,12 +789,12 @@ PROCESS_THREAD(modbus_out_process, ev, data)
     else if (req == CONECTRIC_RS485_POLL_CHUNK) {
       chunk_number = *serial_data++;
       chunk_size = *serial_data++;
-//      putstring("Polling chunks n=");
-//      putdec(chunk_number);
-//      putstring(" size=");
-//      putdec(chunk_size);
-//      putstring("\n");
-
+      if (rs485_in_pos) {
+        event[0] = RS485_POLL_CHUNK;
+        event[1] = chunk_number;
+        event[2] = chunk_size;
+        process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, &event);
+      }
     }
   }
 

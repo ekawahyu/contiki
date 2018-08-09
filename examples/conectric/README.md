@@ -67,6 +67,8 @@ You can use any serial terminal and type those hexadecimal digits manually by ha
 | Request Types                              | Enumeration |
 |--------------------------------------------|:-----------:|
 | CONECTRIC\_RS485\_POOL                     |     0x36    |
+| CONECTRIC\_RS485\_POOL\_CHUNK              |     0x38    |
+| CONECTRIC\_RS485\_POOL\_CHUNK\_REPLY       |     0x39    |
 | CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
 
 ### Supported Configuration Type
@@ -84,6 +86,7 @@ You can use any serial terminal and type those hexadecimal digits manually by ha
 | CONECTRIC\_RS485\_POOL\_REPLY              |     0x37    |
 | CONECTRIC\_SENSOR\_BROADCAST\_PLS          |     0x40    |
 | CONECTRIC\_SENSOR\_BROADCAST\_USB          |     0x41    |
+| CONECTRIC\_RS485\_POOL\_REPLY\_IN\_CHUNK   |     0x42    |
 | CONECTRIC\_DEVICE\_BROADCAST\_BOOT\_STATUS |     0x60    |
 | CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
 
@@ -95,7 +98,7 @@ Outgoing messages contain request type, destination address and data fields. Unl
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
 * `LEN`, total bytes from `LEN` to `DATAn`
-* `REQ`, valid value is 0x36, `CONECTRIC_RS485_POLL` request type
+* `REQ`, valid value of [Supported Request Type](#supported-request-type) with `CONECTRIC_RS485` prefix
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
 * `DESTL` broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01
@@ -105,7 +108,7 @@ Outgoing messages contain request type, destination address and data fields. Unl
 `LEN` `CONF` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
 * `LEN`, total bytes from `LEN` to `DATAn`
-* `CONF`, valid value is 0x70, `CONECTRIC_RS485_CONFIG` configuration type
+* `CONF`, the only valid value is 0x70, `CONECTRIC_RS485_CONFIG` configuration type
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
 * `DESTL` broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01

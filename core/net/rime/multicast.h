@@ -1,10 +1,10 @@
 /*
- * project-conf.h
+ * multicast.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Aug 2, 2018
  *     Author: Ekawahyu Susilo
  *
- * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
+ * Copyright (c) 2018, Conectric Network, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,44 +34,38 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef MULTICAST_H_
+#define MULTICAST_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "net/rime/iburst.h"
 
-#define RUN_ON_COOJA_SIMULATION               0
+struct multicast_netaddr {
+  linkaddr_t network;
+  linkaddr_t host;
+};
 
-#define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      1
+extern const struct multicast_netaddr multicast_node_addr;
+extern const struct multicast_netaddr multicast_router_addr;
+extern struct multicast_netaddr multicast_linklocal_addr;
 
-#define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     nullrdc_driver
+struct multicast_conn;
 
-#define SINK_CONF_ENTRIES 16
-#define SINK_CONF_DEFAULT_LIFETIME 180 /* default life time max = 255 seconds */
+#define MULTICAST_ATTRIBUTES  { PACKETBUF_ADDR_ERECEIVER, PACKETBUF_ADDRSIZE }, IBURST_ATTRIBUTES
 
-#define IEEE802154_CONF_PANID                 0x2007
-#define CC2530_RF_CONF_CHANNEL                25
-#define CC2530_RF_CONF_LEDS                   1
-#if MODELS_CONF_ANAREN_A2530E_MODULE
-#else
-#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
-#endif
+struct multicast_callbacks {
+  void (* recv)(struct multicast_conn *c, const linkaddr_t * originator);
+  void (* sent)(struct multicast_conn *c);
+};
 
-#define LPM_CONF_MODE                         0
+struct multicast_conn {
+  struct iburst_conn c;
+  const struct multicast_callbacks *cb;
+  struct queuebuf *q;
+  uint16_t channel;
+};
 
-#define RS485_CONF_ENABLE                     0
-#define UART1_CONF_ENABLE                     0
+void multicast_open(struct multicast_conn *c, const struct multicast_netaddr *na, const struct multicast_callbacks *cb);
+void multicast_close(struct multicast_conn *c);
+int multicast_send(struct multicast_conn *c, const linkaddr_t *dest);
 
-#define BUTTON_SENSOR_CONF_ON                 0
-
-#define CONECTRIC_BURST_NUMBER                1
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* PROJECT_CONF_H_ */
+#endif /* MULTICAST_H_ */

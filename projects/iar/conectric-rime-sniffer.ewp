@@ -477,7 +477,7 @@
         <option>
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$\..\..\</state>
-          <state>$PROJ_DIR$\..\..\examples\conectric\rime-oc\</state>
+          <state>$PROJ_DIR$\..\..\examples\conectric\rime-sniffer\</state>
           <state>$PROJ_DIR$\..\..\platform\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\</state>
           <state>$PROJ_DIR$\..\..\platform\conectric\dev\</state>
@@ -525,7 +525,7 @@
         <option>
           <name>CCOptStrategy</name>
           <version>0</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>CCOptLevelSlave</name>
@@ -763,7 +763,7 @@
         </option>
         <option>
           <name>OutputFile</name>
-          <state>conectric-rime-oc.a51</state>
+          <state>conectric-rime-sniffer.a51</state>
         </option>
         <option>
           <name>OutputFormat</name>
@@ -965,7 +965,7 @@
         </option>
         <option>
           <name>ExtraOutputFile</name>
-          <state>conectric-rime-oc.a51</state>
+          <state>conectric-rime-sniffer.a51</state>
         </option>
         <option>
           <name>ExtraOutputFormat</name>
@@ -1410,6 +1410,9 @@
           <name>$PROJ_DIR$\..\..\core\net\rime\broadcast.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\..\core\net\rime\burst.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\chameleon-bitopt.c</name>
         </file>
         <file>
@@ -1434,10 +1437,19 @@
           <name>$PROJ_DIR$\..\..\core\net\rime\conectric.c</name>
         </file>
         <file>
+          <name>$PROJ_DIR$\..\..\core\net\rime\iburst.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\ipolite.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\mesh.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\core\net\rime\multicast-linkaddr.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\core\net\rime\multicast.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\core\net\rime\multihop.c</name>
@@ -1714,12 +1726,21 @@
     <group>
       <name>conectric</name>
       <group>
-        <name>rime-oc</name>
+        <name>rime-sniffer</name>
         <file>
-          <name>$PROJ_DIR$\..\..\examples\conectric\rime-oc\oc.c</name>
+          <name>$PROJ_DIR$\..\..\examples\CONECTRIC\RIME-SNIFFER\netstack.c</name>
+          <excluded>
+            <configuration>Release</configuration>
+          </excluded>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\examples\conectric\rime-oc\project-conf.h</name>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sniffer\project-conf.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sniffer\sniffer.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sniffer\stub-rdc.c</name>
         </file>
       </group>
       <file>
@@ -1727,6 +1748,12 @@
         <excluded>
           <configuration>Release</configuration>
         </excluded>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\examples\CONECTRIC\command.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\examples\CONECTRIC\command.h</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\examples\conectric\hello-world.c</name>
@@ -1741,7 +1768,7 @@
         </excluded>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\..\examples\conectric\timer-test.c</name>
+        <name>$PROJ_DIR$\..\..\examples\CONECTRIC\timer-test.c</name>
         <excluded>
           <configuration>Release</configuration>
         </excluded>
@@ -1782,7 +1809,10 @@
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\leds-arch.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-line.c</name>
+          <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-crc16.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\modbus-line.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\rs485-arch.c</name>
@@ -1795,7 +1825,7 @@
         </file>
       </group>
       <file>
-        <name>$PROJ_DIR$\..\..\platform\conectric\config.c</name>
+        <name>$PROJ_DIR$\..\..\platform\CONECTRIC\config.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\platform\CONECTRIC\contiki-main.c</name>

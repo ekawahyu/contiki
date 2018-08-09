@@ -39,6 +39,9 @@
 
 #include "lib/ringbuf.h"
 #include <sys/cc.h>
+
+#define VOLATILE_READ(VAR, VARTYPE) *(VARTYPE volatile *)&VAR
+
 /*---------------------------------------------------------------------------*/
 void
 ringbuf_init(struct ringbuf *r, uint8_t *dataptr, uint8_t size)
@@ -52,6 +55,9 @@ ringbuf_init(struct ringbuf *r, uint8_t *dataptr, uint8_t size)
 int
 ringbuf_put(struct ringbuf *r, uint8_t c)
 {
+  uint8_t get_ptr = VOLATILE_READ(r->get_ptr, uint8_t);
+  uint8_t put_ptr = VOLATILE_READ(r->put_ptr, uint8_t);
+
   /* Check if buffer is full. If it is full, return 0 to indicate that
      the element was not inserted into the buffer.
 
@@ -61,7 +67,7 @@ ringbuf_put(struct ringbuf *r, uint8_t c)
      be atomic. We use an uint8_t type, which makes access atomic on
      most platforms, but C does not guarantee this.
   */
-  if(((r->put_ptr - r->get_ptr) & r->mask) == r->mask) {
+  if(((put_ptr - get_ptr) & r->mask) == r->mask) {
     return 0;
   }
   /*
@@ -71,14 +77,16 @@ ringbuf_put(struct ringbuf *r, uint8_t c)
    * its value (c) is written. Reordering makes little sense, but
    * better safe than sorry.
    */
-  CC_ACCESS_NOW(uint8_t, r->data[r->put_ptr]) = c;
-  CC_ACCESS_NOW(uint8_t, r->put_ptr) = (r->put_ptr + 1) & r->mask;
+  CC_ACCESS_NOW(uint8_t, r->data[put_ptr]) = c;
+  CC_ACCESS_NOW(uint8_t, r->put_ptr) = (put_ptr + 1) & r->mask;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
 int
 ringbuf_get(struct ringbuf *r)
 {
+  uint8_t put_ptr = VOLATILE_READ(r->put_ptr, uint8_t);
+  uint8_t get_ptr = VOLATILE_READ(r->get_ptr, uint8_t);
   uint8_t c;
   
   /* Check if there are bytes in the buffer. If so, we return the
@@ -91,7 +99,7 @@ ringbuf_get(struct ringbuf *r)
      be atomic. We use an uint8_t type, which makes access atomic on
      most platforms, but C does not guarantee this.
   */
-  if(((r->put_ptr - r->get_ptr) & r->mask) > 0) {
+  if(((put_ptr - get_ptr) & r->mask) > 0) {
     /*
      * CC_ACCESS_NOW is used because the compiler is allowed to reorder
      * the access to non-volatile variables.
@@ -101,8 +109,8 @@ ringbuf_get(struct ringbuf *r)
      * because the register used for mask can be reused to save c
      * (on some architectures).
      */
-    c = CC_ACCESS_NOW(uint8_t, r->data[r->get_ptr]);
-    CC_ACCESS_NOW(uint8_t, r->get_ptr) = (r->get_ptr + 1) & r->mask;
+    c = CC_ACCESS_NOW(uint8_t, r->data[get_ptr]);
+    CC_ACCESS_NOW(uint8_t, r->get_ptr) = (get_ptr + 1) & r->mask;
     return c;
   } else {
     return -1;

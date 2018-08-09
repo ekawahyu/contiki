@@ -1,10 +1,10 @@
 /*
- * project-conf.h
+ * burst.h
  *
- * Created on: Mar 3, 2014
+ * Created on: Jul 24, 2018
  *     Author: Ekawahyu Susilo
  *
- * Copyright (c) 2014, Chongqing Aisenke Electronic Technology Co., Ltd.
+ * Copyright (c) 2018, Conectric Network, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,44 +34,43 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef BURST_H_
+#define BURST_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "net/rime/abc.h"
+#include "net/queuebuf.h"
+#include "sys/ctimer.h"
 
-#define RUN_ON_COOJA_SIMULATION               0
+struct burst_conn;
 
-#define STARTUP_CONF_VERBOSE                  1
-#define MODELS_CONF_ANAREN_A2530E_MODULE      1
+#define BURST_ATTRIBUTES  { PACKETBUF_ADDR_ESENDER, PACKETBUF_ADDRSIZE }, \
+                          { PACKETBUF_ATTR_EPACKET_ID, PACKETBUF_ATTR_BIT * 8 },\
+                          { PACKETBUF_ATTR_HOPS, PACKETBUF_ATTR_BIT * 8 }, \
+                          ABC_ATTRIBUTES
 
-#define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     nullrdc_driver
+struct burst_callbacks {
+  void (* recv)(struct burst_conn *c, const linkaddr_t * originator, uint8_t hops);
+  void (* sent)(struct burst_conn *c);
+  void (* dropped)(struct burst_conn *c);
+};
 
-#define SINK_CONF_ENTRIES 16
-#define SINK_CONF_DEFAULT_LIFETIME 180 /* default life time max = 255 seconds */
+struct burst_conn {
+  struct abc_conn c;
+  const struct burst_callbacks *cb;
+  struct ctimer t;
+  struct queuebuf *q;
+  const linkaddr_t * originator;
+  clock_time_t interval;
+  uint16_t seqno;
+  uint8_t hops;
+  uint8_t burstcnt; /* for internal use, burst counter */
+  uint8_t burstmax;
+};
 
-#define IEEE802154_CONF_PANID                 0x2007
-#define CC2530_RF_CONF_CHANNEL                25
-#define CC2530_RF_CONF_LEDS                   1
-#if MODELS_CONF_ANAREN_A2530E_MODULE
-#else
-#define CC2530_RF_CONF_LOW_POWER_RX           1    /* set to 1 to conserve power during reception */
-#define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
-#endif
+void burst_open(struct burst_conn *c, uint16_t channel, clock_time_t interval,
+    uint8_t burstmax, const struct burst_callbacks *cb);
+void burst_close(struct burst_conn *c);
+int  burst_send(struct burst_conn *c, clock_time_t interval, uint8_t burstmax);
+void burst_cancel(struct burst_conn *c);
 
-#define LPM_CONF_MODE                         0
-
-#define RS485_CONF_ENABLE                     0
-#define UART1_CONF_ENABLE                     0
-
-#define BUTTON_SENSOR_CONF_ON                 0
-
-#define CONECTRIC_BURST_NUMBER                1
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* PROJECT_CONF_H_ */
+#endif /* BURST_H_ */

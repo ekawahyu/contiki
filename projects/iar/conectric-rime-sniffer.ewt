@@ -1531,12 +1531,18 @@
     <group>
       <name>conectric</name>
       <group>
-        <name>rime-usb</name>
+        <name>rime-sniffer</name>
         <file>
-          <name>$PROJ_DIR$\..\..\examples\conectric\rime-usb\project-conf.h</name>
+          <name>$PROJ_DIR$\..\..\examples\CONECTRIC\RIME-SNIFFER\netstack.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\examples\CONECTRIC\rime-usb\usb-collect.c</name>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sniffer\project-conf.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sniffer\sniffer.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\examples\conectric\rime-sniffer\stub-rdc.c</name>
         </file>
       </group>
       <file>
@@ -1587,10 +1593,13 @@
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\gpio-arch.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\leds-arch.c</name>
+          <name>$PROJ_DIR$\..\..\platform\conectric\dev\leds-arch.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-line.c</name>
+          <name>$PROJ_DIR$\..\..\platform\conectric\dev\modbus-crc16.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\modbus-line.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\rs485-arch.c</name>
@@ -1599,7 +1608,7 @@
           <name>$PROJ_DIR$\..\..\platform\conectric\dev\slip-arch.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\spi-arch.c</name>
+          <name>$PROJ_DIR$\..\..\platform\conectric\dev\spi-arch.c</name>
         </file>
       </group>
       <file>
@@ -1612,7 +1621,7 @@
         <name>$PROJ_DIR$\..\..\platform\conectric\debug.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\..\platform\CONECTRIC\putchar.c</name>
+        <name>$PROJ_DIR$\..\..\platform\conectric\putchar.c</name>
       </file>
     </group>
   </group>
