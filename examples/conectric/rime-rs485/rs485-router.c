@@ -238,7 +238,9 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   packetbuf_and_attr_copyto(&conectric_message_recv, MESSAGE_CONECTRIC_RECV);
 
+#if DEBUG
   dump_packetbuf(&conectric_message_recv);
+#endif
 
   if (conectric_message_recv.request == CONECTRIC_RS485_POLL_CHUNK) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &conectric_message_recv);
@@ -298,7 +300,9 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
 
   packetbuf_and_attr_copyto(&netbc_message_recv, MESSAGE_NETBC_RECV);
 
+#if DEBUG
   dump_packetbuf(&netbc_message_recv);
+#endif
 
   if (netbc_message_recv.request == CONECTRIC_RS485_POLL_CHUNK) {
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
@@ -695,10 +699,14 @@ PROCESS_THREAD(modbus_in_process, ev, data)
     /* Copy data into RS485 buffer */
     for(cnt = 0; cnt < datasize; cnt++)
     {
+#if DEBUG
       puthex(dataptr[cnt]);
+#endif
       rs485_data[rs485_in_pos++] = dataptr[cnt];
     }
+#if DEBUG
     putstring("\n");
+#endif
 
 #if DEBUG_CRC16
     /* This CRC16 calculation is only used to debug the incoming modbus */
@@ -762,11 +770,12 @@ PROCESS_THREAD(modbus_out_process, ev, data)
       serial_data = message->payload + 3;
       while(len--) uart_arch_writeb(*serial_data++);
 
-      /* console write */
+#if DEBUG
       len = reqlen - 3;
       serial_data = message->payload + 3;
       while(len--) puthex(*serial_data++);
       putstring("\n");
+#endif
     }
     else if (req == CONECTRIC_RS485_POLL_CHUNK) {
       chunk_number = *serial_data++;
