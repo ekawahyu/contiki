@@ -129,6 +129,8 @@ Outgoing messages contain request type, destination address and data fields. Unl
 
 ## Incoming Message Fields
 ### Message Header and Data Fields
+`HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL` `DLEN` `DATA0` `DATA1` ... `DATAn`
+
 Incoming messages contain message header and data fields. In the message header you can find message sequence number, number of hops, and the originator short address. In the data field, we use the first three bytes to indicate the data length, message type, and power level. The rest of the data field is anything else that was originally sent by the originator.
 
 ### Message Header
@@ -169,6 +171,14 @@ Incoming messages contain message header and data fields. In the message header 
 * `DATA2`, valid value are 0x81 (motion detected)
 
 ### RS485 Data Field (RS485)
+`DLEN` `DATA0` `DATA1` ... `DATAn`
+
+* `DLEN`, total bytes from `DLEN` to `DATAn`
+* `DATA0`, valid value is 0x37, `CONECTRIC_RS485_POLL_REPLY` message type
+* `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
+* `DATA2 ... DATAn`, the RS485 response
+
+### RS485 Data Field Longer Than 64 bytes (RS485)
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
