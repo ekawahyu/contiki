@@ -63,36 +63,47 @@ You can use any serial terminal and type those hexadecimal digits manually by ha
 * `DATA5 = 0x4c` letter `L`
 * `DATA6 = 0x4f` letter `O`
 
+## Message Exchange Patterns and Types
+Conectric Network uses two very basic methods to communicate: Request-Response and One-Way. There may be a series of message exchanges from both ends until the complete message is collected. Each message exchange contains a message type. Each message type can be categorized into Request, Configuration, Reply, or just plain Message, depending on how it was sent over the network.
+
+An outgoing message with destination address to `0xFFFF` is a local broadcast request to neighbors only. If the destination address is set to `0x0000`, the message is broadcasted to all listening devices, network-wide. The outgoing message will only be sent as point-to-point request if provided with the 16-bit short address.
+
 ### Supported Request Type
 | Request Types                              | Enumeration |
-|--------------------------------------------|:-----------:|
+|:-------------------------------------------|:-----------:|
 | CONECTRIC\_RS485\_POOL                     |     0x36    |
 | CONECTRIC\_RS485\_POOL\_CHUNK              |     0x38    |
-| CONECTRIC\_RS485\_POOL\_CHUNK\_REPLY       |     0x39    |
 | CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
 
-### Supported Configuration Type
-| Configuration Types                              | Enumeration |
-|--------------------------------------------|:-----------:|
+### Supported Reply Type
+| Reply Types                                | Enumeration |
+|:-------------------------------------------|:-----------:|
+| CONECTRIC\_RS485\_POOL\_REPLY              |     0x37    |
+| CONECTRIC\_RS485\_POOL\_CHUNK\_REPLY       |     0x39    |
+| CONECTRIC\_RS485\_POOL\_REPLY\_IN\_CHUNK   |     0x42    |
+
+### Supported Config Type
+| Config Types                               | Enumeration |
+|:-------------------------------------------|:-----------:|
 | CONECTRIC\_RS485\_CONFIG                   |     0x70    |
 
 ### Supported Message Type
 | Message Types                              | Enumeration |
-|--------------------------------------------|:-----------:|
+|:-------------------------------------------|:-----------:|
 | CONECTRIC\_SENSOR\_BROADCAST_RHT           |     0x30    |
 | CONECTRIC\_SENSOR\_BROADCAST_SW            |     0x31    |
 | CONECTRIC\_SENSOR\_BROADCAST_OC            |     0x32    |
 | CONECTRIC\_SUPERVISORY\_REPORT             |     0x33    |
-| CONECTRIC\_RS485\_POOL\_REPLY              |     0x37    |
 | CONECTRIC\_SENSOR\_BROADCAST\_PLS          |     0x40    |
 | CONECTRIC\_SENSOR\_BROADCAST\_USB          |     0x41    |
-| CONECTRIC\_RS485\_POOL\_REPLY\_IN\_CHUNK   |     0x42    |
 | CONECTRIC\_DEVICE\_BROADCAST\_BOOT\_STATUS |     0x60    |
 | CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
 
 ## Outgoing Message Field
 ### Request Type, Destination, and Data Fields
-Outgoing messages contain request type, destination address and data fields. Unlike incoming messages, the data field of outgoing messages does not include `DLEN`. An outgoing message with destination address to `0xFFFF` is a local broadcast to neighbors only. If the destination address is set to `0x0000`, the message is broadcast to all listening devices, network-wide. The outgoing message will only be sent point-to-point if provided with 16-bit short address.
+`LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+Outgoing messages contain request/message type, destination address and data fields. The `LEN` field is the total length of outgoing message, in bytes, including the length field itself.
 
 ### RS485 Request Field (RS485)
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
