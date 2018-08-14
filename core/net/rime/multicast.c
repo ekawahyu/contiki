@@ -40,9 +40,24 @@
 
 #include <stdio.h>
 
-const struct multicast_netaddr multicast_node_addr = {.network.u16 = 0xFF02, .host.u16 = 0x0001};
-const struct multicast_netaddr multicast_router_addr = {.network.u16 = 0xFF02, .host.u16 = 0x0002};
-struct multicast_netaddr multicast_linklocal_addr = {.network.u16 = 0xFE80, .host.u16 = 0x0000};
+const struct multicast_netaddr multicast_node_addr = {
+    .network.u8[0] = 0xFF,
+    .network.u8[1] = 0x02,
+    .host.u8[0] = 0x00,
+    .host.u8[1] = 0x01
+};
+const struct multicast_netaddr multicast_router_addr = {
+    .network.u8[0] = 0xFF,
+    .network.u8[1] = 0x02,
+    .host.u8[0] = 0x00,
+    .host.u8[1] = 0x02
+};
+struct multicast_netaddr multicast_linklocal_addr = {
+    .network.u8[0] = 0xFE,
+    .network.u8[1] = 0x08,
+    .host.u8[0] = 0x00,
+    .host.u8[1] = 0x00
+};
 
 static const struct packetbuf_attrlist attributes[] =
   {
