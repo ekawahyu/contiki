@@ -292,9 +292,9 @@ command_respond(uint8_t * bytereq)
         putstring("IT:");
         putdec(i);
         putstring(":");
-        puthex((multicast_linkaddr_get(i)->multicast_group & 0xFF00) >> 8);
-        putstring(".");
         puthex(multicast_linkaddr_get(i)->multicast_group & 0x00FF);
+        putstring(".");
+        puthex((multicast_linkaddr_get(i)->multicast_group & 0xFF00) >> 8);
         putstring("::");
         puthex(multicast_linkaddr_get(i)->addr.u8[0]);
         putstring(".");

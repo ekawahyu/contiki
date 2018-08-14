@@ -254,6 +254,23 @@ By default, the USB Router keeps a routing table everytime it receives a route d
     |  +-> list index
     +-> Routing Table indicator
 
+### Show interface table (`IT` - Interface Table)
+By default, the USB Router is configured to join multicast channels and assigned with unicast addresses. If no interface table is available, this command returns nothing. An open channel starts with `0xFF` is a multicast channel, followed by a multicast group. Any interface that is assigned with `0xFE80` is a unicast address.
+
+    IT
+    IT:0:fe.80::54.53
+    IT:1:ff.02::00.02
+    IT:2:ff.02::00.01
+    |  |  |  |   |  |
+    |  |  |  |   |  |
+    |  |  |  |   |  |
+    |  |  |  |   |  +-> multicast group/unicast short L address
+    |  |  |  |   +-> multicast group/unicast short H address
+    |  |  |  +-> multicast/unicast L channel
+    |  |  +-> multicast/unicast H channel
+    |  +-> list index
+    +-> Interface Table indicator
+
 ### Show version number (`VER` - Version)
 Firmware version shows Contiki-OS version and Conectric network stack.
     
