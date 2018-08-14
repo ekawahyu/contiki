@@ -46,12 +46,8 @@
 #include "random.h"
 
 /* Conectric Device */
-#if RUN_ON_COOJA_SIMULATION
-#include "dev/button-sensor.h"
-#else
 #include "flash-logging.h"
 #include "dev/adc-sensor.h"
-#endif
 #include "dev/serial-line.h"
 #include "../command.h"
 
@@ -337,19 +333,10 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 //  conectric_send(&conectric, &to);
 //  putstring("RS485 config sent\n");
 
-#if RUN_ON_COOJA_SIMULATION
-  SENSORS_ACTIVATE(button_sensor);
-#endif
-
   while(1) {
 
-#if RUN_ON_COOJA_SIMULATION
-    PROCESS_WAIT_EVENT_UNTIL((ev == PROCESS_EVENT_CONTINUE || ev == sensors_event) && data != NULL);
-    vdd = 0;
-#else
     PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
     vdd = adc_sensor.value(ADC_SENSOR_TYPE_VDD);
-#endif
     sane = vdd * 3 * 1.15 / 2047;
     dec = sane;
     frac = sane - dec;
@@ -418,11 +405,6 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
     {
       /* do nothing, periodic counter updates */
     }
-
-#if RUN_ON_COOJA_SIMULATION
-    else if (request == &button_sensor)
-      while(1); /* loop here until watchdog reboots */
-#endif
 
     else if (*request == '<')
     {
@@ -531,12 +513,9 @@ PROCESS_THREAD(serial_in_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-#if RUN_ON_COOJA_SIMULATION
-#else
 void
 invoke_process_before_sleep(void)
 {
 
 }
-#endif
 /*---------------------------------------------------------------------------*/
