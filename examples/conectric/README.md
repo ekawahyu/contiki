@@ -64,9 +64,12 @@ You can use any serial terminal and type those hexadecimal digits manually by ha
 * `DATA6 = 0x4f` letter `O`
 
 ## Message Exchange Patterns and Types
-Conectric Network uses two very basic methods to communicate: Request-Response and One-Way. There may be a series of message exchanges from both ends until the complete message is collected. Each message exchange contains a message type. Each message type can be categorized into Request, Configuration, Reply, or just plain Message, depending on how it was sent over the network.
+Conectric Network uses two very basic methods to exchange messages: Request-Response and One-Way. Each message contains a message type, which describes its payload as either a Request, Configuration, Reply, or just a plain text. A large size payload will be fragmented into a series of message exchanges between sender and receiver until the complete payload is collected.
 
-An outgoing message with destination address to `0xFFFF` is a local broadcast request to neighbors only. If the destination address is set to `0x0000`, the message is broadcasted to all listening devices, network-wide. The outgoing message will only be sent as point-to-point request if provided with the 16-bit short address.
+A sender can send messages to a single receiver (point-to-point) if provided with the 16-bit destination address. A message can be sent from one point to multiple points by writing proper destination address, such as:
+
+1. `0xFFFF` is for local broadcast to immediate neighbors only.
+2. `0x0000` is for network-wide broadcast to all of listening nodes.
 
 ### Supported Request Type
 | Request Types                              | Enumeration |
@@ -296,14 +299,30 @@ An error message will show up when you try to overwrite the existing serial numb
     SNW:Err:already assigned
 
 ## For Developers (WiP)
-### RS485 Hub Message Exchange Pattern
-Conectric RS485 Hub is a wireless serial device that communicates in Request-Response pattern. The message exchange starts with a sender sends `CONECTRIC_RS485_POOL` request, and a receiver replies with `CONECTRIC_RS485_POOL_REPLY`. If the RS485 packet is greater than 64 bytes, then the receiver will send `CONECTRIC_RS485_POOL_REPLY_IN_CHUNK` instead, containing the number of chunk available to pool and the size of each chunk. So now, the sender has to issue `CONECTRIC_RS485_POOL_CHUNK` request containing the chunk number and size repeatedly, until the full RS485 packet is received.
+### RS485 Hub Message Exchange
+Conectric RS485 Hub is a wireless serial device that communicates in Request-Response pattern. The message exchange starts with a sender sends `CONECTRIC_RS485_POOL` request, and it ends when a `CONECTRIC_RS485_POOL_REPLY` is received.
 
-For example, we use a lot of submetering projects with EKM meters and this is how the RS485 request looks like, over the wire, to pool EKM meter v3 data with a serial number of `000000026150`:
+However, if the RS485 packet being pooled is greater than 64 bytes, then the receiver will send `CONECTRIC_RS485_POOL_REPLY_IN_CHUNK` instead, which contains the number of chunk available and the size of each chunk to pool. So now, the sender has to issue `CONECTRIC_RS485_POOL_CHUNK` request repeatedly, until the full RS485 packet is received.
+
+For example, an energy meter called [EKM meter v3](https://www.ekmmetering.com) communicates over RS485 network and has a fixed response payload of 255 bytes. The RS485 request payload of an EKM meter with a serial number `000000026150` would look like this:
 
     2f3f303030303030303236313530210d0a
 
-This is how the 255 bytes of response over the wire would look like:
+If we package this request into an outgoing wireless RS485 message, it would look like this:
+
+	<16360000012f3f303030303030303236313530210d0a
+
+`<` `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+* `<` an outgoing message starts with this character
+* `LEN = 0x16` total message length is 22 bytes
+* `REQ = 0x36` message type of `CONECTRIC_RS485_POOL`
+* `DESTH = 0x00` netbroadcast
+* `DESTL = 0x00` netbroadcast
+* `01 = 0x01` this byte is reserved, always 0x01
+* `DATA0-n` RS485 request payload
+
+Now, the RS485 Hub receives the pool request, do the pool, and get a fixed 255 bytes response that would look like this:
 
     8290171730303030303030323631353030303030303030303030303030303030
     3030303030303030303030303030303030303030303030303030303030303030
@@ -314,27 +333,9 @@ This is how the 255 bytes of response over the wire would look like:
     3030303030303030303030303030303030303030303030303030303030303030
     30303030303030303030303030303030303030303030303000210d0a031e02
 
-The outgoing RS485 request over the wireless network would look like this:
-
-	<16360000012f3f303030303030303236313530210d0a
-
-Explanation of RS485 wireless request:
-
-`<` `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
-
-* `<` an outgoing message starts with this character
-* `LEN = 0x16` message length is 22 bytes
-* `REQ = 0x36` request/message type of `CONECTRIC_RS485_POOL`
-* `DESTH = 0x00` netbroadcast
-* `DESTL = 0x00` netbroadcast
-* `01 = 0x01` this byte is reserved, always 0x01
-* `DATA0-n` RS485 request payload
-
-The incoming RS485 response over the wireless network would look like this:
+Since this response packet is greater than 64 bytes. It has to be fragmented and sent out as 4 chunks of 64 bytes (256 bytes total). The sender receives `CONECTRIC_RS485_POOL_REPLY_IN_CHUNK` that looks like this:
 
     >06210100ddfc0542200440
-
-Explanation of RS485 wireless response:
 
 `>` `HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL` `DLEN` `DATA0` `DATA1` `DATA2` `DATA3`
 
@@ -350,6 +351,8 @@ Explanation of RS485 wireless response:
 * `DATA1 = 0x20` power level at 3.2V
 * `DATA2 = 0x04` 4 chunks are available to pool
 * `DATA3 = 0x40` each chunk is 64 bytes
+
+Subsequently...
 
 ### Flash Memory Allocation
 
