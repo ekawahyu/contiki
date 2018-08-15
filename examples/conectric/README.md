@@ -255,7 +255,7 @@ By default, the USB Router keeps a routing table everytime it receives a route d
     +-> Routing Table indicator
 
 ### Show interface table (`IT` - Interface Table)
-By default, the USB Router is configured to join multicast channels and assigned with unicast addresses. If no interface table is available, this command returns nothing. An open channel starts with `0xFF` is a multicast channel, followed by a multicast group. Any interface that is assigned with `0xFE80` is a unicast address.
+By default, the USB Router is configured to join multicast channels and assigned with unicast addresses. If no interface table is available, this command returns nothing. Any interface starts with `0xFF` is a multicast channel, followed by its multicast group address. Any interface assigned with `0xFE80` is a unicast address.
 
     IT
     IT:0:fe.80::54.53
@@ -296,7 +296,62 @@ An error message will show up when you try to overwrite the existing serial numb
     SNW:Err:already assigned
 
 ## For Developers (WiP)
-###Flash Memory Allocation
+### RS485 Hub Message Exchange Pattern
+Conectric RS485 Hub is a wireless serial device that communicates in Request-Response pattern. The message exchange starts with a sender sends `CONECTRIC_RS485_POOL` request, and a receiver replies with `CONECTRIC_RS485_POOL_REPLY`. If the RS485 packet is greater than 64 bytes, then the receiver will send `CONECTRIC_RS485_POOL_REPLY_IN_CHUNK` instead, containing the number of chunk available to pool and the size of each chunk. So now, the sender has to issue `CONECTRIC_RS485_POOL_CHUNK` request containing the chunk number and size repeatedly, until the full RS485 packet is received.
+
+For example, we use a lot of submetering projects with EKM meters and this is how the RS485 request looks like, over the wire, to pool EKM meter v3 data with a serial number of `000000026150`:
+
+    2f3f303030303030303236313530210d0a
+
+This is how the 255 bytes of response over the wire would look like:
+
+    8290171730303030303030323631353030303030303030303030303030303030
+    3030303030303030303030303030303030303030303030303030303030303030
+    3030303030303030303030303030303030303030303030303030303030303030
+    3131323630303030303030303030303030303030303030303030303030303030
+    3030303030303030303030303030303030303030303030433030304330303043
+    3030303030303030303030313138303831353034303730363232303230303030
+    3030303030303030303030303030303030303030303030303030303030303030
+    30303030303030303030303030303030303030303030303000210d0a031e02
+
+The outgoing RS485 request over the wireless network would look like this:
+
+	<16360000012f3f303030303030303236313530210d0a
+
+Explanation of RS485 wireless request:
+
+`<` `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+* `<` an outgoing message starts with this character
+* `LEN = 0x16` message length is 22 bytes
+* `REQ = 0x36` request/message type of `CONECTRIC_RS485_POOL`
+* `DESTH = 0x00` netbroadcast
+* `DESTL = 0x00` netbroadcast
+* `01 = 0x01` this byte is reserved, always 0x01
+* `DATA0-n` RS485 request payload
+
+The incoming RS485 response over the wireless network would look like this:
+
+    >06210100ddfc0542200440
+
+Explanation of RS485 wireless response:
+
+`>` `HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL` `DLEN` `DATA0` `DATA1` `DATA2` `DATA3`
+
+* `>` an incoming message starts with this character
+* `HDRLEN = 0x06` header length is 6 bytes
+* `SEQ = 0x21` message sequence number
+* `HOP = 0x01` message has been passed through 1 hop (direct message)
+* `HOPMAX = 0x00` zero value means that no hop limit being implemented
+* `SRCH = 0xdd` destination address high byte (of 16-bit short address `0xddfc`)
+* `SRCL = 0xfc` destination address low byte (of  16-bit short address `0xddfc`)
+* `DLEN = 0x05` data length is 5 bytes long
+* `DATA0 = 0x42` message type of `CONECTRIC_RS485_POOL_REPLY_IN_CHUNK `
+* `DATA1 = 0x20` power level at 3.2V
+* `DATA2 = 0x04` 4 chunks are available to pool
+* `DATA3 = 0x40` each chunk is 64 bytes
+
+### Flash Memory Allocation
 
 | Flash Address     | Flash Bank | Size (bytes) | Description        |
 |:-----------------:|:----------:|:------------:|--------------------|
