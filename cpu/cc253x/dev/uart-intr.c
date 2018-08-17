@@ -18,9 +18,11 @@
 
 #if UART0_ENABLE
 static int (* uart0_input_handler)(unsigned char c);
+extern uint8_t uart0_bitmask;
 #endif
 #if UART1_ENABLE
 static int (* uart1_input_handler)(unsigned char c);
+extern uint8_t uart1_bitmask;
 #endif
 
 #if UART0_ENABLE
@@ -50,7 +52,7 @@ uart0_rx_isr(void) __interrupt(URX0_VECTOR)
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   URX0IF = 0;
   if(uart0_input_handler != NULL) {
-    uart0_input_handler(U0DBUF);
+    uart0_input_handler(U0DBUF & uart0_bitmask);
   }
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
@@ -86,7 +88,7 @@ uart1_rx_isr(void) __interrupt(URX1_VECTOR)
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   URX1IF = 0;
   if(uart1_input_handler != NULL) {
-    uart1_input_handler(U1DBUF);
+    uart1_input_handler(U1DBUF & uart1_bitmask);
   }
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }

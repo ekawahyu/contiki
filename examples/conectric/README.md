@@ -64,28 +64,32 @@ You can use any serial terminal and type those hexadecimal digits manually by ha
 * `DATA6 = 0x4f` letter `O`
 
 ## Message Exchange Patterns and Types
-Conectric Network uses two very basic methods to communicate: Request-Response and One-Way. There may be a series of message exchanges from both ends until the complete message is collected. Each message exchange contains a message type. Each message type can be categorized into Request, Configuration, Reply, or just plain Message, depending on how it was sent over the network.
+Conectric Network uses two very basic methods to exchange messages: Request-Response and One-Way. Each message contains a message type, which describes its payload as either a Request, Configuration, Reply, or just a plain text. A large size payload will be fragmented into a series of message exchanges between sender and receiver until the complete payload is collected.
 
-An outgoing message with destination address to `0xFFFF` is a local broadcast request to neighbors only. If the destination address is set to `0x0000`, the message is broadcasted to all listening devices, network-wide. The outgoing message will only be sent as point-to-point request if provided with the 16-bit short address.
+A sender can send messages to a single receiver (point-to-point) if provided with the 16-bit destination address. A message can be sent from one point to multiple points by writing proper destination address, such as:
+
+1. `0xFFFF` is for local broadcast to immediate neighbors only.
+2. `0x0000` is for network-wide broadcast to all of listening nodes.
 
 ### Supported Request Type
 | Request Types                              | Enumeration |
 |:-------------------------------------------|:-----------:|
-| CONECTRIC\_RS485\_POOL                     |     0x36    |
-| CONECTRIC\_RS485\_POOL\_CHUNK              |     0x38    |
+| CONECTRIC\_RS485\_POLL                     |     0x36    |
+| CONECTRIC\_RS485\_POLL\_CHUNK              |     0x38    |
 | CONECTRIC\_TEXT\_MESSAGE                   |     0x61    |
 
 ### Supported Reply Type
 | Reply Types                                | Enumeration |
 |:-------------------------------------------|:-----------:|
-| CONECTRIC\_RS485\_POOL\_REPLY              |     0x37    |
-| CONECTRIC\_RS485\_POOL\_CHUNK\_REPLY       |     0x39    |
-| CONECTRIC\_RS485\_POOL\_REPLY\_IN\_CHUNK   |     0x42    |
+| CONECTRIC\_RS485\_POLL\_REPLY              |     0x37    |
+| CONECTRIC\_RS485\_POLL\_CHUNK\_REPLY       |     0x39    |
+| CONECTRIC\_RS485\_POLL\_REPLY\_IN\_CHUNK   |     0x42    |
 
 ### Supported Config Type
 | Config Types                               | Enumeration |
 |:-------------------------------------------|:-----------:|
 | CONECTRIC\_RS485\_CONFIG                   |     0x70    |
+| CONECTRIC\_RS485\_CONFIG\_ACK              |     0x71    |
 
 ### Supported Message Type
 | Message Types                              | Enumeration |
@@ -105,34 +109,45 @@ An outgoing message with destination address to `0xFFFF` is a local broadcast re
 
 Outgoing messages contain request/message type, destination address and data fields. The `LEN` field is the total length of outgoing message, in bytes, including the length field itself.
 
-### RS485 Request Field (RS485)
+### RS485 Poll Request Field
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
 * `LEN`, total bytes from `LEN` to `DATAn`
-* `REQ`, valid value of [Supported Request Type](#supported-request-type) with `CONECTRIC_RS485` prefix
+* `REQ`, valid value `CONECTRIC_RS485_POLL`
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
-* `DESTL` broadcast, netbroadcast, or point-to-point address
+* `DESTL`, broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01
-* `DATA0` `DATA1` ... `DATAn`, the RS485 request
+* `DATA0` `DATA1` ... `DATAn`, RS485 payload
 
-### RS485 Config Field (RS485)
+### RS485 Poll Chunk Request Field
+`LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+* `LEN`, total bytes from `LEN` to `DATAn`
+* `REQ`, valid value `CONECTRIC_RS485_POLL_CHUNK`
+* `DESTH`, broadcast, netbroadcast, or point-to-point address
+* `DESTL`, broadcast, netbroadcast, or point-to-point address
+* `01`, reserved byte, always 0x01
+* `DATA0`, chunk number (0-3)
+* `DATA1`, chunk size (0-64)
+
+### RS485 Config Field
 `LEN` `CONF` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
 * `LEN`, total bytes from `LEN` to `DATAn`
-* `CONF`, the only valid value is 0x70, `CONECTRIC_RS485_CONFIG` configuration type
+* `CONF`, valid value `CONECTRIC_RS485_CONFIG` configuration type
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
-* `DESTL` broadcast, netbroadcast, or point-to-point address
+* `DESTL`, broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01
 * `DATA0`, baudrate: 0=2400, 1=4800, 2=9600, 3=19200
 * `DATA1`, parity: 0=none, 1=odd, 2=even
 * `DATA2`, stop bits: 0=1-bit or 1=2-bit
-* `DATA3`, bit-mask: 0xFF=8-bit, 0x7F=7-bit, etc.
+* `DATA3`, bit-mask: 0=8-bit, 1=7-bit, etc.
 
 ### Text Message Request Field
 `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
 
 * `LEN`, total bytes from `LEN` to `DATAn`
-* `REQ`, valid value is 0x61, `CONECTRIC_TEXT_MESSAGE` request type
+* `REQ`, valid value `CONECTRIC_TEXT_MESSAGE` request type
 * `DESTH`, broadcast, netbroadcast, or point-to-point address
 * `DESTL` broadcast, netbroadcast, or point-to-point address
 * `01`, reserved byte, always 0x01
@@ -158,7 +173,7 @@ Incoming messages contain message header and data fields. In the message header 
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
-* `DATA0`, valid value is 0x30, `CONECTRIC_SENSOR_BROADCAST_RHT` message type
+* `DATA0`, valid value `CONECTRIC_SENSOR_BROADCAST_RHT` message type
 * `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
 * `DATA2`, temperature high byte
 * `DATA3`, temperature low byte
@@ -169,7 +184,7 @@ Incoming messages contain message header and data fields. In the message header 
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
-* `DATA0`, valid value is 0x31, `CONECTRIC_SENSOR_BROADCAST_SW` message type
+* `DATA0`, valid value `CONECTRIC_SENSOR_BROADCAST_SW` message type
 * `DATA1`, valid value are 0 - 32 represent power level from 0V - 3.2V
 * `DATA2`, valid value are 0x71 (switch is closed); 0x72 (switch is open)
 
@@ -177,31 +192,40 @@ Incoming messages contain message header and data fields. In the message header 
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
-* `DATA0`, valid value is 0x32, `CONECTRIC_SENSOR_BROADCAST_OC` message type
+* `DATA0`, valid value `CONECTRIC_SENSOR_BROADCAST_OC` message type
 * `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
 * `DATA2`, valid value are 0x81 (motion detected)
 
-### RS485 Data Field (RS485)
+### RS485 Poll Reply Data Field (RS485)
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
-* `DATA0`, valid value is 0x37, `CONECTRIC_RS485_POLL_REPLY` message type
+* `DATA0`, valid value `CONECTRIC_RS485_POLL_REPLY` message type
 * `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
 * `DATA2 ... DATAn`, the RS485 response
 
-### RS485 Data Field Longer Than 64 bytes (RS485)
+### RS485 Poll Reply in Chunk Data Field (RS485)
+`DLEN` `DATA0` `DATA1` `DATA2` `DATA3`
+
+* `DLEN`, total bytes is always 5 bytes long
+* `DATA0`, valid value `CONECTRIC_RS485_POLL_REPLY_IN_CHUNK` message type
+* `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
+* `DATA2`, number of chunks available to poll
+* `DATA3`, size of each chunk
+
+### RS485 Poll Chunk Reply Data Field (RS485)
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
-* `DATA0`, valid value is 0x37, `CONECTRIC_RS485_POLL_REPLY` message type
+* `DATA0`, valid value `CONECTRIC_RS485_POLL_CHUNK_REPLY` message type
 * `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
-* `DATA2 ... DATAn`, the RS485 response
+* `DATA2 ... DATAn`, partial RS485 response (the chunk)
 
 ### Text Message Data Field
 `DLEN` `DATA0` `DATA1` ... `DATAn`
 
 * `DLEN`, total bytes from `DLEN` to `DATAn`
-* `DATA0`, valid value is 0x61, `CONECTRIC_TEXT_MESSAGE` message type
+* `DATA0`, valid value `CONECTRIC_TEXT_MESSAGE` message type
 * `DATA1`, valid value are 0 - 32 represents power level from 0V - 3.2V
 * `DATA2 ... DATAn`, the text message
 
@@ -255,7 +279,7 @@ By default, the USB Router keeps a routing table everytime it receives a route d
     +-> Routing Table indicator
 
 ### Show interface table (`IT` - Interface Table)
-By default, the USB Router is configured to join multicast channels and assigned with unicast addresses. If no interface table is available, this command returns nothing. An open channel starts with `0xFF` is a multicast channel, followed by a multicast group. Any interface that is assigned with `0xFE80` is a unicast address.
+By default, the USB Router is configured to join multicast channels and assigned with unicast addresses. If no interface table is available, this command returns nothing. Any interface starts with `0xFF` is a multicast channel, followed by its multicast group address. Any interface assigned with `0xFE80` is a unicast address.
 
     IT
     IT:0:fe.80::54.53
@@ -296,7 +320,62 @@ An error message will show up when you try to overwrite the existing serial numb
     SNW:Err:already assigned
 
 ## For Developers (WiP)
-###Flash Memory Allocation
+### RS485 Hub Message Exchange
+Conectric RS485 Hub is a wireless serial device that communicates in Request-Response pattern. The message exchange starts with a sender sends `CONECTRIC_RS485_POLL` request, and it ends when a `CONECTRIC_RS485_POLL_REPLY` is received.
+
+However, if the RS485 packet being polled is greater than 64 bytes, then the receiver will send `CONECTRIC_RS485_POLL_REPLY_IN_CHUNK` instead, which contains the number of chunk available and the size of each chunk to poll. So now, the sender has to issue `CONECTRIC_RS485_POLL_CHUNK` request repeatedly, until the full RS485 packet is received.
+
+For example, an energy meter called [EKM meter v3](https://www.ekmmetering.com) communicates over RS485 network and has a fixed response payload of 255 bytes. The RS485 request payload of an EKM meter with a serial number `000000026150` would look like this:
+
+    2f3f303030303030303236313530210d0a
+
+If we package this request into an outgoing wireless RS485 message, it would look like this:
+
+	<16360000012f3f303030303030303236313530210d0a
+
+`<` `LEN` `REQ` `DESTH` `DESTL` `01` `DATA0` `DATA1` ... `DATAn`
+
+* `<` an outgoing message starts with this character
+* `LEN = 0x16` total message length is 22 bytes
+* `REQ = 0x36` message type of `CONECTRIC_RS485_POLL`
+* `DESTH = 0x00` netbroadcast
+* `DESTL = 0x00` netbroadcast
+* `01 = 0x01` this byte is reserved, always 0x01
+* `DATA0-n` RS485 request payload
+
+Now, the RS485 Hub receives the poll request, do the poll, and get a fixed 255 bytes response that would look like this:
+
+    0210171730303030303030323631353030303030303030303030303030303030
+    3030303030303030303030303030303030303030303030303030303030303030
+    3030303030303030303030303030303030303030303030303030303030303030
+    3131333230303030303030303030303030303030303030303030303030303030
+    3030303030303030303030303030303030303030303030433030304330303043
+    3030303030303030303030313138303831363035303530333035303230303030
+    3030303030303030303030303030303030303030303030303030303030303030
+    30303030303030303030303030303030303030303030303000210d0a03167f
+
+Since this response packet is greater than 64 bytes. It has to be fragmented and sent out as 4 chunks of 64 bytes (256 bytes total). The sender receives `CONECTRIC_RS485_POLL_REPLY_IN_CHUNK` that looks like this:
+
+    >06210100ddfc0542200440
+
+`>` `HDRLEN` `SEQ` `HOPS` `HOPMAX` `SRCH` `SRCL` `DLEN` `DATA0` `DATA1` `DATA2` `DATA3`
+
+* `>` an incoming message starts with this character
+* `HDRLEN = 0x06` header length is 6 bytes
+* `SEQ = 0x21` message sequence number
+* `HOP = 0x01` message has been passed through 1 hop (direct message)
+* `HOPMAX = 0x00` zero value means that no hop limit being implemented
+* `SRCH = 0xdd` destination address high byte (of 16-bit short address `0xddfc`)
+* `SRCL = 0xfc` destination address low byte (of  16-bit short address `0xddfc`)
+* `DLEN = 0x05` data length is 5 bytes long
+* `DATA0 = 0x42` message type of `CONECTRIC_RS485_POLL_REPLY_IN_CHUNK`
+* `DATA1 = 0x20` power level at 3.2V
+* `DATA2 = 0x04` 4 chunks are available to poll
+* `DATA3 = 0x40` each chunk is 64 bytes
+
+Subsequently...
+
+### Flash Memory Allocation
 
 | Flash Address     | Flash Bank | Size (bytes) | Description        |
 |:-----------------:|:----------:|:------------:|--------------------|
