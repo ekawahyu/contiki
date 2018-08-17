@@ -257,6 +257,8 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     rs485p[0] = conectric_message_recv.payload[6];
     config_update(CONFIG_RS485_PARAMS, rs485p, CONFIG_RS485_PARAMS_LENGTH);
     uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2 | rs485p[0] << 0);
+    event = CONECTRIC_RS485_CONFIG;
+    process_post(&rs485_conectric_process, PROCESS_EVENT_CONTINUE, &event);
   }
 
   if (conectric_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
@@ -492,6 +494,40 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
       loop = CONECTRIC_BURST_NUMBER;
       while(loop--) {
         packetbuf_copyfrom(message, RS485_HEADER_SIZE + chunk_size + 3);
+        NETSTACK_MAC.on();
+        which_sink = conectric_send_to_sink(&conectric);
+        if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1]);
+        PRINTF("%d.%d: rs485 response sent to sink ts %lu\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+            clock_seconds());
+        PRINTF("%d.%d: esender=%d.%d\n",
+            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+            netbc_message_recv.esender.u8[0], netbc_message_recv.esender.u8[1]);
+        // PROCESS_PAUSE();
+        if (loop) {
+          etimer_set(&et, CLOCK_SECOND / 8 + random_rand() % (CLOCK_SECOND / 8));
+          PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+        }
+      }
+    }
+
+    else if (*request == CONECTRIC_RS485_CONFIG)
+    {
+      memset(message, 0, sizeof(message));
+      message[0] = RS485_HEADER_SIZE;
+      message[1] = seqno++;
+      message[2] = 0;
+      message[3] = 0;
+      message[4] = 0;
+      message[5] = 0;
+      message[6] = 3;
+      message[7] = CONECTRIC_RS485_CONFIG_ACK;
+      message[8] = batt;
+
+      loop = CONECTRIC_BURST_NUMBER;
+      while(loop--) {
+        packetbuf_copyfrom(message, RS485_HEADER_SIZE + 3);
         NETSTACK_MAC.on();
         which_sink = conectric_send_to_sink(&conectric);
         if (which_sink == NULL) PRINTF("%d.%d: which_sink returns NULL\n",
