@@ -51,6 +51,7 @@ extern "C" {
 
 /* Configuring */
 #define CONECTRIC_RS485_CONFIG                  0x70
+#define CONECTRIC_RS485_CONFIG_ACK              0x71
 
 
 /* Any message with MSB bit set to 1 needs immediate attention */

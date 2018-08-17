@@ -55,6 +55,9 @@ extern "C" {
 #define UART_STOP_BIT_1   (0 << 2)
 #define UART_STOP_BIT_2   (1 << 2)
 
+#define UART_BITMASK_8BIT (0 << 0)
+#define UART_BITMASK_7BIT (1 << 0)
+
 #if (UART_ON_USART == 0)
 #include "dev/uart0.h"
 #define UART_ARCH_PREFIX uart0

@@ -256,7 +256,7 @@ recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     rs485p[1] = conectric_message_recv.payload[5];
     rs485p[0] = conectric_message_recv.payload[6];
     config_update(CONFIG_RS485_PARAMS, rs485p, CONFIG_RS485_PARAMS_LENGTH);
-    uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2);
+    uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2 | rs485p[0] << 0);
   }
 
   if (conectric_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
@@ -318,7 +318,7 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     rs485p[1] = netbc_message_recv.payload[5];
     rs485p[0] = netbc_message_recv.payload[6];
     config_update(CONFIG_RS485_PARAMS, rs485p, CONFIG_RS485_PARAMS_LENGTH);
-    uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2 );
+    uart_arch_config(rs485p[3] << 6 | rs485p[2] << 4 | rs485p[1] << 2 | rs485p[0] << 0);
   }
 
   if (netbc_message_recv.request == CONECTRIC_REBOOT_REQUEST) {
@@ -350,7 +350,7 @@ configure_rs485_from_flash(void)
 
   config_rs485_params_read(p);
 
-  uart_arch_config(p[3] << 6 | p[2] << 4 | p[1] << 2);
+  uart_arch_config(p[3] << 6 | p[2] << 4 | p[1] << 2 | p[0] << 0);
 
   putstring("RS485:");
   if (p[3] << 6 == UART_B2400) putstring("2400");
@@ -363,7 +363,10 @@ configure_rs485_from_flash(void)
   if (p[2] << 4 == UART_PARITY_EVEN) putstring("E");
   if (p[1] << 2 == UART_STOP_BIT_1) putstring("1");
   if (p[1] << 2 == UART_STOP_BIT_2) putstring("2");
-  putstring("\n");
+  putstring(":");
+  if (p[0] << 0 == UART_BITMASK_8BIT) putstring("8");
+  if (p[0] << 0 == UART_BITMASK_7BIT) putstring("7");
+  putstring("BMASK\n");
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(rs485_conectric_process, ev, data)

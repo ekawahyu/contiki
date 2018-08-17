@@ -21,6 +21,8 @@
 
 #if UART1_ENABLE
 #include "dev/uart-arch.h"
+
+uint8_t uart1_bitmask = 0xFF;
 /*---------------------------------------------------------------------------*/
 /* UART1 initialization */
 void
@@ -117,6 +119,12 @@ uart1_config(uint8_t config)
   /* select stop bit */
   U1UCR &= ~0x04;
   U1UCR |= (config & 0x04);
+
+  /* set bitmask */
+  if ((config & 0x03) == UART_BITMASK_8BIT)
+    uart1_bitmask = 0xFF;
+  if ((config & 0x03) == UART_BITMASK_7BIT)
+    uart1_bitmask = 0x7F;
 }
 /*---------------------------------------------------------------------------*/
 #endif

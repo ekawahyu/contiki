@@ -17,6 +17,8 @@
 
 #if UART0_ENABLE
 #include "dev/uart-arch.h"
+
+uint8_t uart0_bitmask = 0xFF;
 /*---------------------------------------------------------------------------*/
 void
 uart0_init()
@@ -70,11 +72,8 @@ uart0_init()
 void
 uart0_writeb(uint8_t byte)
 {
-  // U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
   U0DBUF = byte;
-  // while(!(U0CSR & UCSR_TX_BYTE)); /* Wait until byte has been transmitted. */
   while(U0CSR & UCSR_ACTIVE); /* Wait until byte has been transmitted. */
-  // U0CSR &= ~UCSR_TX_BYTE; /* Clear TX_BYTE status */
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -105,6 +104,12 @@ uart0_config(uint8_t config)
   /* select stop bit */
   U0UCR &= ~0x04;
   U0UCR |= (config & 0x04);
+
+  /* set bitmask */
+  if ((config & 0x03) == UART_BITMASK_8BIT)
+    uart0_bitmask = 0xFF;
+  if ((config & 0x03) == UART_BITMASK_7BIT)
+    uart0_bitmask = 0x7F;
 }
 /*---------------------------------------------------------------------------*/
 #endif
