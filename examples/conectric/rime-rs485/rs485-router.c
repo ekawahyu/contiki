@@ -46,7 +46,9 @@
 #include "random.h"
 
 /* Conectric Device */
-#include "flash-logging.h"
+// #include "flash-logging.h"
+#include "flash-state.h"
+#include "ota.h"
 #include "dev/adc-sensor.h"
 #include "dev/rs485-arch.h"
 #include "dev/uart-arch.h"
@@ -68,6 +70,10 @@
 #endif
 
 #define DEBUG_CRC16 0
+
+#define CONECTRIC_DEVICE_TYPE_RS485 0x90
+uint16_t ota_img_version = OTA_NO_IMG;
+uint16_t rs485_img_version = 0;
 
 /* RS485 Network Parameters */
 #define RS485_SUP_TIMEOUT         180 /* minutes */
@@ -116,6 +122,73 @@ static uint8_t rs485_data[BUFSIZE];
 /* RS485 Messaging */
 #define RS485_DATA_MAX_SIZE 20
 
+/*---------------------------------------------------------------------------*/
+static void
+ota_img_version_restore()
+{
+  uint8_t *data;
+  uint8_t size;
+  size = flashstate_read(FLASH_STATE_OTA_IMG_VERSION, &data);
+  if(size == 2)
+  {
+    memcpy(&ota_img_version, data, size);
+    ota_restore_map();
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+process_img_update(uint8_t * payload)
+{
+   static uint8_t img_segment[OTA_SEGMENT_MAX];
+   uint16_t img_version;
+   uint16_t addr_offset;
+   uint8_t dev_type;
+   uint16_t crc16, crc16_result;
+   uint8_t data_len;
+
+   img_version = (payload[3] << 8) + payload[4];
+   dev_type = payload[5];
+   crc16 = (payload[6] << 8) + payload[7];
+   addr_offset = (payload[8] << 8) + payload[9];
+   data_len = payload[10];
+
+   // exit if not for me
+   if(dev_type != CONECTRIC_DEVICE_TYPE_RS485)
+     return;
+
+   // exit if old version
+   if(img_version <= rs485_img_version)
+     return;
+
+   // BMB: Not implemented
+   // crc16_result = crc16_data(&payload[13], data_len, crc16_result);
+
+   // validate checksum (including data_len): BMB - set to FF for test, need to implement checksum
+   if(crc16 != 0xFFFF || data_len > OTA_SEGMENT_MAX)
+     return;
+
+   if((ota_img_version == OTA_NO_IMG && img_version > rs485_img_version) || (img_version > ota_img_version))
+   { // first image segment of a new image
+
+     // clear flash
+     ota_clear();
+     // save img version in state variables
+     flashstate_write(FLASH_STATE_OTA_IMG_VERSION, (uint8_t*)&img_version, sizeof(img_version));
+     ota_img_version = img_version;
+   }
+   else if(img_version != ota_img_version)
+   {
+     // old image
+     return;
+   }
+
+   // copy data out of payload in case it gets overwritten by another process
+   memcpy(img_segment, &payload[11], data_len);
+   // write segment of current image
+   ota_flashwrite(addr_offset, data_len, img_segment);
+   // update ota image map
+   ota_update_map(addr_offset);
+}
 /*---------------------------------------------------------------------------*/
 static uint8_t
 packetbuf_and_attr_copyto(message_recv * message, uint8_t message_type)
@@ -314,6 +387,10 @@ netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
     process_post(&modbus_out_process, PROCESS_EVENT_CONTINUE, &netbc_message_recv);
   }
 
+  if (netbc_message_recv.request == CONECTRIC_IMG_UPDATE_BCST) {
+    process_img_update(netbc_message_recv.payload);
+  }
+
   if (netbc_message_recv.request == CONECTRIC_RS485_CONFIG) {
     rs485p[3] = netbc_message_recv.payload[3];
     rs485p[2] = netbc_message_recv.payload[4];
@@ -396,6 +473,10 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
   PROCESS_BEGIN();
+
+  flashstate_init();
+  ota_init();
+  ota_img_version_restore();
 
   conectric_open(&conectric, 132, &callbacks);
   conectric_set_collect(&conectric, 1);

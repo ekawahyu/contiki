@@ -18,7 +18,7 @@
 
 // Default end address for cyclical write to Flash (beginning last Page Bank 7)
 #ifndef FLASH_LOGGING_END
-#define FLASH_LOGGING_END   0x3E800
+#define FLASH_LOGGING_END   0x3D800
 #endif
 
 /* FLASH LOGGING Globals */

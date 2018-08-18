@@ -11,12 +11,12 @@
 #ifndef FLASH_STATE_H_
 #define FLASH_STATE_H_
 
-// Default start address for cyclical write to Flash (Bank 7, 3rd to last and 2nd to last pages)
+// Default start address for cyclical write to Flash (page 123 and 124)
 #ifndef FLASH_STATE_PG1_ADDR
-#define FLASH_STATE_PG1_ADDR 0x3E800
+#define FLASH_STATE_PG1_ADDR 0x3D800
 #endif
 #ifndef FLASH_STATE_PG2_ADDR
-#define FLASH_STATE_PG2_ADDR 0x3F000
+#define FLASH_STATE_PG2_ADDR 0x3E000
 #endif
 
 #define FLASH_WRITE_SIZE_MIN    4
