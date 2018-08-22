@@ -17,7 +17,7 @@ extern "C" {
 
 /* FLASH Globals */
 /*---------------*/
-// CODE banks get mapped into the XDATA range 8000-FFFF.
+/* CODE banks get mapped into the XDATA range 8000-FFFF */
 #define FLASH_PAGE_MAP         0x8000
 #define FLASH_WORD_ADDR(addr) (addr >> 2)
 #define FLASH_PAGE_SIZE 2048
