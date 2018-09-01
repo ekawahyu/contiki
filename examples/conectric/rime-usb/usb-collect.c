@@ -303,6 +303,7 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
   PROCESS_BEGIN();
 
+  conectric_init();
   conectric_open(&conectric, 132, &callbacks);
   conectric_set_collect(&conectric, 1);
 

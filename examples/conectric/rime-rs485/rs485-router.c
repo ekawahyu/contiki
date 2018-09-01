@@ -478,6 +478,7 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
   ota_init();
   ota_img_version_restore();
 
+  conectric_init();
   conectric_open(&conectric, 132, &callbacks);
   conectric_set_collect(&conectric, 1);
 

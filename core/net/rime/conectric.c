@@ -308,13 +308,15 @@ static const struct multicast_callbacks netuc_call = {
     netuc_received, NULL};
 /*---------------------------------------------------------------------------*/
 void
+conectric_init(void) {
+  sink_init();
+  multicast_linkaddr_init();
+}
+/*---------------------------------------------------------------------------*/
+void
 conectric_open(struct conectric_conn *c, uint16_t channels,
 	  const struct conectric_callbacks *callbacks)
 {
-  route_init();
-  sink_init();
-  multicast_linkaddr_init();
-
   multicast_open(&c->netbc, &multicast_node_addr, &netbc_call);
   multicast_open(&c->netbc, &multicast_router_addr, &netbc_call);
   multicast_open(&c->netuc, &multicast_linklocal_addr, &netuc_call);
