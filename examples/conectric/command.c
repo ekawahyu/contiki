@@ -115,7 +115,7 @@ uint8_t *
 command_respond(uint8_t * bytereq)
 {
   uint8_t snlen;
-  uint8_t sn[12];
+  uint8_t sn[CONFIG_SERIAL_NUMBER_LENGTH];
   uint8_t request;
   int8_t i;
 
@@ -224,17 +224,22 @@ command_respond(uint8_t * bytereq)
     else if (bytereq[0] == 'S' && bytereq[1] == 'N' && bytereq[2] == 'R') {
       putstring("SNR:");
       snlen = config_sernum_read(sn);
-      while (snlen--) puthex(sn[snlen]);
+      while (snlen--) {
+        if (snlen < 6) puthex(sn[snlen]);
+      }
       putstring("\n");
     }
 
     else if (bytereq[0] == 'S' && bytereq[1] == 'N' && bytereq[2] == 'W') {
-      if (strlen((const char*)bytereq) == 27) {
+      if (strlen((const char*)bytereq) == (27 - 12)) {
         memset(sn, 0, sizeof(sn));
         snlen = sizeof(sn);
-        hexstring_to_bytes(&bytereq[3], sn);
+        hexstring_to_bytes(&bytereq[3], &sn[6]);
         putstring("SNW:");
-        while(snlen) puthex(sn[sizeof(sn)-snlen--]);
+        while(snlen) {
+          if (snlen < 7) puthex(sn[sizeof(sn)-snlen]);
+          snlen--;
+        }
         putstring("\n");
         if (config_sernum_write(sn))
           putstring("SNW:Ok\n");

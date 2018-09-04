@@ -94,15 +94,15 @@ extern volatile uint16_t deep_sleep_requested;
 #define RS485_SUP_NOEVT                 0x00
 
 /* Flash Logging */
-static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+//static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 /* Logging reference time every 12 hours */
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
-enum
-{
-  RS485_RESERVED = 0x00,    // reserved
-  RS485_SEND     = 0x01,    // send data event
-};
+//#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+//enum
+//{
+//  RS485_RESERVED = 0x00,    // reserved
+//  RS485_SEND     = 0x01,    // send data event
+//};
 
 #define MESSAGE_LOCALBC_RECV      3
 #define MESSAGE_NETBC_RECV        4
@@ -128,7 +128,7 @@ ota_img_version_restore()
 {
   uint8_t *data;
   uint8_t size;
-  size = flashstate_read(FLASH_STATE_OTA_IMG_VERSION, &data);
+  // size = flashstate_read(FLASH_STATE_OTA_IMG_VERSION, &data);
   if(size == 2)
   {
     memcpy(&ota_img_version, data, size);
@@ -173,7 +173,7 @@ process_img_update(uint8_t * payload)
      // clear flash
      ota_clear();
      // save img version in state variables
-     flashstate_write(FLASH_STATE_OTA_IMG_VERSION, (uint8_t*)&img_version, sizeof(img_version));
+     // flashstate_write(FLASH_STATE_OTA_IMG_VERSION, (uint8_t*)&img_version, sizeof(img_version));
      ota_img_version = img_version;
    }
    else if(img_version != ota_img_version)
@@ -474,10 +474,11 @@ PROCESS_THREAD(rs485_conectric_process, ev, data)
 
   PROCESS_BEGIN();
 
-  flashstate_init();
+  // flashstate_init();
   ota_init();
   ota_img_version_restore();
 
+  conectric_init();
   conectric_open(&conectric, 132, &callbacks);
   conectric_set_collect(&conectric, 1);
 

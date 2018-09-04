@@ -11,17 +11,17 @@
 #ifndef OTA_H_
 #define OTA_H_
 
-// largest supported segment for OTA image update
+/* Largest supported segment for OTA image update */
 #define OTA_SEGMENT_MAX 64
-#define OTA_UPDATE_MAP_SHIFT 6 // this must change for segment map index if segment size changes
+#define OTA_UPDATE_MAP_SHIFT 6 /* this must change for segment map index if segment size changes */
 
-// image macros
+/* Image macros */
 #define OTA_NO_IMG 0x0000
 
-// for storing the segment map structure
-#define OTA_SEGMAP_BYTES 128 // (((OTA_FLASH_START - OTA_FLASH_END) / OTA_SEGMENT_MAX) / 8)
+/* For storing the segment map structure */
+#define OTA_SEGMAP_BYTES 128 /* (((OTA_FLASH_START - OTA_FLASH_END) / OTA_SEGMENT_MAX) / 8) */
 
-// Start / end address for working code image
+/* Start / end address for working code image */
 #ifndef OTA_IMG_START
 #define OTA_IMG_START (uint32_t)0x00000
 #endif
@@ -29,7 +29,7 @@
 #define OTA_IMG_END   (uint32_t)0x10000
 #endif
 
-// Default start / end address for cyclical write to Flash (Bank 2)
+/* Default start / end address for cyclical write to Flash (Bank 2) */
 #ifndef OTA_FLASH_START
 #define OTA_FLASH_START (uint32_t)0x10000
 #endif
@@ -37,13 +37,13 @@
 #define OTA_FLASH_END   (uint32_t)0x20000
 #endif
 
-// OTA Packet
+/* OTA Packet */
 #define OTA_IMG_SUCCESS         0
 #define OTA_IMG_INVALID_CRC     1
 #define OTA_IMG_INCOMPLETE      2
 #define OTA_IMG_INVALID_VER     3
 
-// ota image segment map
+/* OTA image segment map */
 extern uint8_t img_segment_map[OTA_SEGMAP_BYTES];
 extern uint16_t ota_img_version;
 

@@ -207,7 +207,9 @@ print_serial_number(void)
 
   putstring("S/N:");
   snlen = config_sernum_read(sn);
-  while (snlen--) puthex(sn[snlen]);
+  while (snlen--) {
+    if (snlen < 6) puthex(sn[snlen]);
+  }
   putstring("\n");
 }
 /*---------------------------------------------------------------------------*/
@@ -273,7 +275,7 @@ main(void) CC_NON_BANKED
   puthex(CHIPINFO1 + 1);
   putstring("KB SRAM\n");
 
-  // print_serial_number();
+  print_serial_number();
 
   PUTSTRING("\nSDCC Build:\n");
 #if STARTUP_CONF_VERBOSE

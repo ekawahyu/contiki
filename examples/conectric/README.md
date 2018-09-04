@@ -303,20 +303,20 @@ Firmware version shows Contiki-OS version and Conectric network stack.
     VER:conectric-v1.0.2
 
 ### Show device serial number (`SNR` - Serial Number Read)
-Device serial number is a 12-bytes hexadecimal number.
+Device serial number is a 6-bytes hexadecimal number.
 
     SNR
-    SNR:112233445566778899AABBCC
+    SNR:112233445566
 
 ### Show device serial number (`SNW` - Serial Number Read)
 Conectric Sensors and Devices come with a pre-programmed serial number. If you manually erase and upload new firmware, you can re-assign the serial number by typing this command.
 
-    SNW112233445566778899AABBCC
+    SNW112233445566
     SNW:Ok
 
 An error message will show up when you try to overwrite the existing serial number:
 
-    SNWABABAB000000111111222222
+    SNW1234567890AB
     SNW:Err:already assigned
 
 ## For Developers (WiP)
