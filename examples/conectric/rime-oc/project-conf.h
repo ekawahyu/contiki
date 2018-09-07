@@ -41,8 +41,15 @@
 extern "C" {
 #endif
 
+#define OC_ROUTER                             0
+
 #define STARTUP_CONF_VERBOSE                  1
+
+#if OC_ROUTER
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
+#else /* OC_ROUTER */
+#define MODELS_CONF_ANAREN_A2530E_MODULE      0
+#endif /* OC_ROUTER */
 
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     nullrdc_driver
@@ -55,11 +62,15 @@ extern "C" {
 #define CC2530_RF_CONF_TX_POWER               0xD5 /* tx power range: 0x05 - 0xD5(the highest) */
 #endif
 
-#define LPM_CONF_MODE                         2
-
 #define BUTTON_SENSOR_CONF_INPUT_3STATE       1
 
+#if OC_ROUTER
+#define LPM_CONF_MODE                         0
+#define CONECTRIC_BURST_NUMBER                1
+#else
+#define LPM_CONF_MODE                         2
 #define CONECTRIC_BURST_NUMBER                5
+#endif
 
 #ifdef __cplusplus
 }
