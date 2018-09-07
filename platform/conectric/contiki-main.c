@@ -167,6 +167,16 @@ set_rf_params(void) CC_NON_BANKED
     ext_addr[i] = *macp;
     macp++;
   }
+  putstring("MAC:");
+  puthex(ext_addr[0]);
+  puthex(ext_addr[1]);
+  puthex(ext_addr[2]);
+  puthex(ext_addr[3]);
+  puthex(ext_addr[4]);
+  puthex(ext_addr[5]);
+  puthex(ext_addr[6]);
+  puthex(ext_addr[7]);
+  putstring("\n");
 
 #if !CC2530_CONF_MAC_FROM_PRIMARY
   /* Remap 0x8000 - 0xFFFF to BANK1 */
