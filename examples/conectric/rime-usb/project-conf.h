@@ -68,6 +68,9 @@ extern "C" {
 
 #define CONECTRIC_BURST_NUMBER                1
 
+#define COMMAND_HAS_DUMP_PACKET_BUFFER        1
+#define COMMAND_HAS_CONECTRIC_NETSTACK        1
+
 #ifdef __cplusplus
 }
 #endif
