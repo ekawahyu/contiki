@@ -46,12 +46,12 @@
 #include "random.h"
 
 /* Conectric Device */
-#include "flash-logging.h"
+//#include "flash-logging.h"
 #include "dev/adc-sensor.h"
 #include "dev/serial-line.h"
-#include "../command.h"
 
 /* Conectric Network */
+#include "../command.h"
 #include "../conectric-messages.h"
 
 #define DEBUG 0
@@ -78,15 +78,15 @@ extern volatile uint16_t deep_sleep_requested;
 #define USB_SUP_NOEVT                 0x00
 
 /* Flash Logging */
-static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+//static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 /* Logging reference time every 12 hours */
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
-enum
-{
-  USB_RESERVED = 0x00,    // reserved
-  USB_SEND     = 0x01,    // send data event
-};
+//#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+//enum
+//{
+//  USB_RESERVED = 0x00,    // reserved
+//  USB_SEND     = 0x01,    // send data event
+//};
 
 #define MESSAGE_LOCALBC_RECV      3
 #define MESSAGE_NETBC_RECV        4
@@ -296,9 +296,6 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   static linkaddr_t to;
   static linkaddr_t * which_sink;
 
-  static request_line line;
-  static uint8_t payload[20];
-
   PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
   PROCESS_BEGIN();
@@ -310,29 +307,6 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);
   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-//  /* Temporary request line test */
-//  payload[0] = 'H';
-//  payload[1] = 'e';
-//  payload[2] = 'l';
-//  payload[3] = 'l';
-//  payload[4] = 'o';
-//  to.u8[0] = 0;
-//  to.u8[1] = 0;
-//  request_line_create(&line, CONECTRIC_TEXT_MESSAGE, &to, payload, 5);
-//  compose_request_line_to_packetbuf(&line, seqno++, batt, &to);
-//  conectric_send(&conectric, &to);
-//  putstring("Hello sent\n");
-//
-//  payload[0] = 2;
-//  payload[1] = 2;
-//  payload[2] = 0;
-//  to.u8[0] = 0;
-//  to.u8[1] = 0;
-//  request_line_create(&line, CONECTRIC_RS485_CONFIG, &to, payload, 3);
-//  compose_request_line_to_packetbuf(&line, seqno++, batt, &to);
-//  conectric_send(&conectric, &to);
-//  putstring("RS485 config sent\n");
 
   while(1) {
 

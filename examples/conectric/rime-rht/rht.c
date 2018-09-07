@@ -48,13 +48,12 @@
 #include "random.h"
 
 /* Conectric Device */
-#include "flash-logging.h"
-#include "dev/button-sensor.h"
+//#include "flash-logging.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 
 /* Conectric Network */
-#include "examples/conectric/conectric-messages.h"
+#include "../conectric-messages.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -64,7 +63,7 @@
 #endif
 
 /* RHT Network Parameters */
-#define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
+#define RHT_REPORTING_PERIOD    (5U * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         6
 #define RHT_BOOT_PAYLOAD_SIZE   4
 #define RHT_PAYLOAD_SIZE        7
@@ -72,15 +71,15 @@ static uint8_t message[CONECTRIC_MESSAGE_LENGTH];
 extern volatile uint16_t deep_sleep_requested;
 
 /* Flash Logging */
-static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+//static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 /* Logging reference time every 12 hours */
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12U * CLOCK_SECOND * 60U * 60U))
-enum
-{
-  RHT_RESERVED = 0x00,    // reserved
-  RHT_SEND     = 0x01,    // send data event
-};
+//#define LOGGING_REF_TIME_PD ((clock_time_t)(12U * CLOCK_SECOND * 60U * 60U))
+//enum
+//{
+//  RHT_RESERVED = 0x00,    // reserved
+//  RHT_SEND     = 0x01,    // send data event
+//};
 
 /*---------------------------------------------------------------------------*/
 PROCESS(rht_broadcast_process, "RHT Sensor");

@@ -48,14 +48,12 @@
 #include "random.h"
 
 /* Conectric Device */
-#include "flash-logging.h"
+//#include "flash-logging.h"
 #include "dev/button-sensor.h"
-#include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
-#include "dev/rs485-arch.h"
 
 /* Conectric Network */
-#include "examples/conectric/conectric-messages.h"
+#include "../conectric-messages.h"
 
 #define DEBUG 0
 #if DEBUG

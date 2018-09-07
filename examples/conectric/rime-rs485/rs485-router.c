@@ -55,9 +55,9 @@
 #include "dev/modbus-line.h"
 #include "dev/modbus-crc16.h"
 #include "dev/serial-line.h"
-#include "../command.h"
 
 /* Conectric Network */
+#include "../command.h"
 #include "../conectric-messages.h"
 
 #include "config.h"

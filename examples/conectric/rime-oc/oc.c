@@ -48,7 +48,7 @@
 #include "random.h"
 
 /* Conectric Device */
-#include "flash-logging.h"
+//#include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
 #include "dev/leds.h"
@@ -77,15 +77,15 @@ extern volatile uint16_t deep_sleep_requested;
 #define OC_SUP_NOEVT      0x00
 
 /* Flash Logging */
-static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+//static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 /* Logging reference time every 12 hours */
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
-enum
-{
-  OC_RESERVED = 0x00,    // reserved
-  OC_SEND     = 0x01,    // send data event 
-};
+//#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+//enum
+//{
+//  OC_RESERVED = 0x00,    // reserved
+//  OC_SEND     = 0x01,    // send data event
+//};
 
 /*---------------------------------------------------------------------------*/
 PROCESS(oc_broadcast_process, "OC Sensor");

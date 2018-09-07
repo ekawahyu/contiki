@@ -48,14 +48,13 @@
 #include "random.h"
 
 /* Conectric Device */
-#include "flash-logging.h"
+//#include "flash-logging.h"
 #include "dev/button-sensor.h"
-#include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
 #include "dev/rs485-arch.h"
 
 /* Conectric Network */
-#include "examples/conectric/conectric-messages.h"
+#include "../conectric-messages.h"
 
 #define DEBUG 0
 #if DEBUG
@@ -84,15 +83,15 @@ extern volatile uint16_t deep_sleep_requested;
 static uint32_t pls_pulse_counter;
 
 /* Flash Logging */
-static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
+//static uint8_t logData[4]= { 0x00, 0x00, 0x00, 0x00};
 
 /* Logging reference time every 12 hours */
-#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
-enum
-{
-  PLS_RESERVED = 0x00,    // reserved
-  PLS_SEND     = 0x01,    // send data event
-};
+//#define LOGGING_REF_TIME_PD ((clock_time_t)(12 * CLOCK_SECOND * 60 * 60))
+//enum
+//{
+//  PLS_RESERVED = 0x00,    // reserved
+//  PLS_SEND     = 0x01,    // send data event
+//};
 
 /*---------------------------------------------------------------------------*/
 PROCESS(pls_broadcast_process, "PLS Sensor");
