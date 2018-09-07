@@ -2,6 +2,7 @@ DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
 CONTIKI = ../../../
 
 PROJECT_NAME:=oc
+PROJECT_SOURCEFILES+=../command.c
 
 HAVE_BANKING=1
 

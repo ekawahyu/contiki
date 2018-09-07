@@ -51,8 +51,10 @@
 //#include "flash-logging.h"
 #include "dev/sht21/sht21-sensor.h"
 #include "dev/adc-sensor.h"
+#include "dev/serial-line.h"
 
 /* Conectric Network */
+#include "../command.h"
 #include "../conectric-messages.h"
 
 #define DEBUG 0
@@ -63,7 +65,7 @@
 #endif
 
 /* RHT Network Parameters */
-#define RHT_REPORTING_PERIOD    (5U * CLOCK_SECOND)
+#define RHT_REPORTING_PERIOD    (59U * CLOCK_SECOND)
 #define RHT_HEADER_SIZE         6
 #define RHT_BOOT_PAYLOAD_SIZE   4
 #define RHT_PAYLOAD_SIZE        7
@@ -83,8 +85,13 @@ extern volatile uint16_t deep_sleep_requested;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(rht_broadcast_process, "RHT Sensor");
+PROCESS(serial_in_process, "SerialIn");
 //PROCESS(flash_log_process, "Flash Log");
-AUTOSTART_PROCESSES(&rht_broadcast_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(
+    &rht_broadcast_process,
+//    &flash_log_process,
+    &serial_in_process
+);
 /*---------------------------------------------------------------------------*/
 static void
 broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
@@ -206,7 +213,6 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
 //    flashlogging_write4(RIME_RHT_CMP_ID, RHT_SEND, logData);
 
     while(loop--) {
-      
       packetbuf_copyfrom(message, RHT_HEADER_SIZE + RHT_PAYLOAD_SIZE);
               
       NETSTACK_MAC.on();
@@ -219,7 +225,6 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
       else
         deep_sleep_requested = RHT_REPORTING_PERIOD;
     }
-
   }
 
   SENSORS_DEACTIVATE(sht21_sensor);
@@ -245,6 +250,28 @@ PROCESS_THREAD(rht_broadcast_process, ev, data)
 //
 //  PROCESS_END();
 //}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_in_process, ev, data)
+{
+  static uint8_t * event;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    printf("%s\n", (uint8_t *)data);
+
+    event = command_interpreter((uint8_t *)data);
+
+    if (event) {
+      /* do something here */
+    }
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
 void
 invoke_process_before_sleep(void)

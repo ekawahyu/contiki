@@ -51,9 +51,11 @@
 //#include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
+#include "dev/serial-line.h"
 #include "dev/leds.h"
 
 /* Conectric Network */
+#include "../command.h"
 #include "../conectric-messages.h"
 
 #define DEBUG 0
@@ -90,12 +92,24 @@ extern volatile uint16_t deep_sleep_requested;
 /*---------------------------------------------------------------------------*/
 PROCESS(oc_broadcast_process, "OC Sensor");
 PROCESS(oc_supervisory_process, "OC Supervisory");
+PROCESS(serial_in_process, "SerialIn");
 //PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
 PROCESS(oc_interrupt_process, "OC Interrupt");
-AUTOSTART_PROCESSES(&oc_broadcast_process, &oc_supervisory_process, &oc_interrupt_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(
+    &oc_broadcast_process,
+    &oc_supervisory_process,
+    &oc_interrupt_process,
+//    &flash_log_process,
+    &serial_in_process
+);
 #else
-AUTOSTART_PROCESSES(&oc_broadcast_process, &oc_supervisory_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(
+    &oc_broadcast_process,
+    &oc_supervisory_process,
+//    &flash_log_process,
+    &serial_in_process
+);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -187,14 +201,14 @@ PROCESS_THREAD(oc_broadcast_process, ev, data)
       message[8] = (char)(dec*10)+(char)(frac*10);
       message[9] = *sensor_data;
 
+      loop = CONECTRIC_BURST_NUMBER;
+
 //      /* Log data that will be sent out over the air */
 //      logData[0] = (char)(dec*10)+(char)(frac*10);
 //      logData[1] = *sensor_data;
 //      logData[2] = 0x00;
 //      logData[3] = 0x00;
 //      flashlogging_write4(RIME_OC_CMP_ID, OC_SEND, logData);
-    
-      loop = CONECTRIC_BURST_NUMBER;
 
       while(loop--) {
         packetbuf_copyfrom(message, OC_HEADER_SIZE + OC_PAYLOAD_SIZE);
@@ -328,6 +342,28 @@ PROCESS_THREAD(oc_supervisory_process, ev, data)
 //
 //  PROCESS_END();
 //}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_in_process, ev, data)
+{
+  static uint8_t * event;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    printf("%s\n", (uint8_t *)data);
+
+    event = command_interpreter((uint8_t *)data);
+
+    if (event) {
+      /* do something here */
+    }
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
 void
 invoke_process_before_sleep(void)

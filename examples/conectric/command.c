@@ -183,7 +183,7 @@ command_respond(uint8_t * bytereq)
       for(i = 7; i >= 0; i--) puthex(gmacp[i]);
       putstring("\n");
     }
-
+#if COMMAND_HAS_DUMP_PACKET_BUFFER
     else if (bytereq[0] == 'D' && bytereq[1] == 'P') { /* DP = Dump Payload only */
       dump_packet_buffer(BUFFER_PAYLOAD);
       putstring("DP:Ok\n");
@@ -193,7 +193,8 @@ command_respond(uint8_t * bytereq)
       dump_packet_buffer(BUFFER_ALL);
       putstring("DB:Ok\n");
     }
-
+#endif
+#if COMMAND_HAS_CONECTRIC_NETSTACK
     else if (bytereq[0] == 'S' && bytereq[1] == 'S') {
       conectric_set_sink(&conectric, 60 * CLOCK_SECOND, 1);
       putstring("SS:Ok\n");
@@ -213,7 +214,7 @@ command_respond(uint8_t * bytereq)
       conectric_set_collect(&conectric, 0);
       putstring("CR:Ok\n");
     }
-
+#endif
     else if (bytereq[0] == 'V' && bytereq[1] == 'E' && bytereq[2] == 'R') {
       putstring("VER:");
       putstring(CONTIKI_VERSION_STRING "\n");
