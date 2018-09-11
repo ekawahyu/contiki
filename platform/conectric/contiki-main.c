@@ -287,8 +287,8 @@ main(void) CC_NON_BANKED
 
   print_serial_number();
 
-  PUTSTRING("\nSDCC Build:\n");
 #if STARTUP_CONF_VERBOSE
+  PUTSTRING("\nSDCC Build:\n");
 #ifdef HAVE_SDCC_BANKING
   PUTSTRING("  With Banking.\n");
 #endif /* HAVE_SDCC_BANKING */
