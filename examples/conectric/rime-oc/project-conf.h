@@ -48,7 +48,7 @@ extern "C" {
 #if OC_ROUTER
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
 #else /* OC_ROUTER */
-#define MODELS_CONF_ANAREN_A2530E_MODULE      0
+#define MODELS_CONF_ANAREN_A2530E_MODULE      1
 #endif /* OC_ROUTER */
 
 #define NETSTACK_CONF_MAC                     nullmac_driver
