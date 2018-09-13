@@ -41,7 +41,7 @@
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
 
 #define NETSTACK_CONF_MAC                     nullmac_driver
-#define NETSTACK_CONF_RDC                     stub_rdc_driver
+#define NETSTACK_CONF_RDC                     nullrdc_driver
 
 #define IEEE802154_CONF_PANID                 0x2007
 #define CC2530_RF_CONF_CHANNEL                25
@@ -62,6 +62,7 @@
 
 #define BUTTON_SENSOR_CONF_ON                 0
 
-#define CONECTRIC_BURST_NUMBER                1
+#define COMMAND_HAS_DUMP_PACKET_BUFFER        1
+#define COMMAND_HAS_CONECTRIC_NETSTACK        1
 
 #endif /* PROJECT_CONF_H_ */

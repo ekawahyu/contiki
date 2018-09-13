@@ -27,10 +27,23 @@
  *
  */
 
+/* General */
+#include <stdio.h>
+
+/* Contiki */
 #include "contiki.h"
 #include "cc253x.h"
+#include "debug.h"
+#include "net/rime/rime.h"
+#include "net/rime/conectric.h"
+#include "random.h"
 
-#include <stdio.h>
+/* Conectric Device */
+#include "dev/serial-line.h"
+
+/* Conectric Network */
+#include "../command.h"
+#include "../conectric-messages.h"
 
 #define DEBUG 1
 #if DEBUG
@@ -39,12 +52,67 @@
 #define PRINTF(...)
 #endif
 
+static uint8_t dump_header = 0;
+/*---------------------------------------------------------------------------*/
+void
+dump_packet_buffer(uint8_t mode)
+{
+  dump_header = mode;
+}
+/*---------------------------------------------------------------------------*/
+struct conectric_conn conectric;
 /*---------------------------------------------------------------------------*/
 PROCESS(sniffer_process, "Sniffer process");
-AUTOSTART_PROCESSES(&sniffer_process);
+PROCESS(serial_in_process, "SerialIn");
+AUTOSTART_PROCESSES(&sniffer_process, &serial_in_process);
+/*---------------------------------------------------------------------------*/
+static void
+sent(struct conectric_conn *c)
+{
+  PRINTF("packet sent\n");
+}
+
+static void
+recv(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
+{
+  PRINTF("%d.%d: data from %d.%d len %d hops %d\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      from->u8[0], from->u8[1], packetbuf_datalen(), hops);
+}
+
+static void
+localbroadcast(struct conectric_conn *c, const linkaddr_t *from)
+{
+  PRINTF("%d.%d: localbc from %d.%d: len %d\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      from->u8[0], from->u8[1], packetbuf_datalen());
+}
+
+static void
+netbroadcast(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
+{
+  PRINTF("%d.%d: netbc from %d.%d: len %d hops %d\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      from->u8[0], from->u8[1], packetbuf_datalen(), hops);
+}
+
+static void
+sink(struct conectric_conn *c, const linkaddr_t *from, uint8_t hops)
+{
+  PRINTF("%d.%d: sink from %d.%d len %d hops %d\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+      from->u8[0], from->u8[1], packetbuf_datalen(), hops);
+}
+
+const static struct conectric_callbacks callbacks = {
+    recv, sent, localbroadcast, netbroadcast, sink
+};
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(sniffer_process, ev, data)
 {
+  static struct etimer et;
+
+  PROCESS_EXITHANDLER(conectric_close(&conectric);)
 
   PROCESS_BEGIN();
 
@@ -53,7 +121,40 @@ PROCESS_THREAD(sniffer_process, ev, data)
   /* Turn off RF Address Recognition - We need to accept all frames */
   FRMFILT0 &= ~0x01;
 
-  PROCESS_EXIT();
+  conectric_init();
+  conectric_open(&conectric, 132, &callbacks);
+  conectric_set_collect(&conectric, 1);
+
+  /* Wait until system is completely booted up and ready */
+  etimer_set(&et, CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  while(1) {
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE && data != NULL);
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_in_process, ev, data)
+{
+  static uint8_t * event;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    printf("%s\n", (uint8_t *)data);
+
+    event = command_interpreter((uint8_t *)data);
+
+    if (event) {
+      process_post(&sniffer_process, PROCESS_EVENT_CONTINUE, event);
+      PRINTF("Command: %i\n", event[2]);
+    }
+  }
 
   PROCESS_END();
 }
