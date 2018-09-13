@@ -148,7 +148,8 @@ create_frame(int type, int do_create)
   } else {
     params.fcf.src_addr_mode = FRAME802154_LONGADDRMODE;
   }
-  params.dest_pid = frame802154_get_pan_id();
+  //params.dest_pid = frame802154_get_pan_id();
+  params.dest_pid = 0xFFFF;
 
   if(packetbuf_holds_broadcast()) {
     /* Broadcast requires short address mode. */
