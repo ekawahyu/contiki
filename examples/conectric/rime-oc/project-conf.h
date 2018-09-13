@@ -54,7 +54,7 @@ extern "C" {
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     nullrdc_driver
 
-#define IEEE802154_CONF_PANID                 0x2007
+#define IEEE802154_CONF_PANID                 0xdede
 #define CC2530_RF_CONF_CHANNEL                25
 #if MODELS_CONF_ANAREN_A2530E_MODULE
 #else

@@ -50,7 +50,7 @@ extern "C" {
 #define SINK_CONF_ENTRIES 16
 #define SINK_CONF_DEFAULT_LIFETIME 180 /* default life time max = 255 seconds */
 
-#define IEEE802154_CONF_PANID                 0x2007
+#define IEEE802154_CONF_PANID                 0xdede
 #define CC2530_RF_CONF_CHANNEL                25
 #define CC2530_RF_CONF_LEDS                   1
 #if MODELS_CONF_ANAREN_A2530E_MODULE

@@ -43,7 +43,7 @@
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     stub_rdc_driver
 
-#define IEEE802154_CONF_PANID                 0x2007
+#define IEEE802154_CONF_PANID                 0xdede
 #define CC2530_RF_CONF_CHANNEL                25
 #define CC2530_RF_CONF_LEDS                   1
 #if MODELS_CONF_ANAREN_A2530E_MODULE
