@@ -51,8 +51,10 @@
 //#include "flash-logging.h"
 #include "dev/button-sensor.h"
 #include "dev/adc-sensor.h"
+#include "dev/serial-line.h"
 
 /* Conectric Network */
+#include "../command.h"
 #include "../conectric-messages.h"
 
 #define DEBUG 0
@@ -89,13 +91,25 @@ enum
 
 /*---------------------------------------------------------------------------*/
 PROCESS(sw_broadcast_process, "SW Sensor");
+PROCESS(serial_in_process, "SerialIn");
 PROCESS(sw_supervisory_process, "SW Supervisory");
 //PROCESS(flash_log_process, "Flash Log");
 #if BUTTON_SENSOR_ON
 PROCESS(sw_interrupt_process, "SW Interrupt");
-AUTOSTART_PROCESSES(&sw_broadcast_process, &sw_supervisory_process, &sw_interrupt_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(
+    &sw_broadcast_process,
+    &sw_supervisory_process,
+    &sw_interrupt_process,
+//    &flash_log_process,
+    &serial_in_process
+);
 #else
-AUTOSTART_PROCESSES(&sw_broadcast_process, &sw_supervisory_process/*, &flash_log_process*/);
+AUTOSTART_PROCESSES(
+    &sw_broadcast_process,
+    &sw_supervisory_process,
+//    &flash_log_process,
+    &serial_in_process
+);
 #endif
 /*---------------------------------------------------------------------------*/
 static void
@@ -330,6 +344,28 @@ PROCESS_THREAD(sw_supervisory_process, ev, data)
 //
 //  PROCESS_END();
 //}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_in_process, ev, data)
+{
+  static uint8_t * event;
+
+  PROCESS_BEGIN();
+
+  while(1) {
+
+    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
+    PRINTF("Serial_RX: %s (len=%d)\n", (uint8_t *)data, strlen(data));
+    printf("%s\n", (uint8_t *)data);
+
+    event = command_interpreter((uint8_t *)data);
+
+    if (event) {
+      /* do something here */
+    }
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
 void
 invoke_process_before_sleep(void)
