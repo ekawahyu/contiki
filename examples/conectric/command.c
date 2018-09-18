@@ -37,6 +37,7 @@
 #include "contiki.h"
 #include "debug.h"
 #include "net/rime/rime.h"
+#include "net/rime/sink.h"
 #include "net/rime/conectric.h"
 
 #include "command.h"
