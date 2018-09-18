@@ -41,15 +41,14 @@
 extern "C" {
 #endif
 
-#define OC_ROUTER                             0
-
+#define CONECTRIC_CONF_ROUTER                 1
 #define STARTUP_CONF_VERBOSE                  1
 
-#if OC_ROUTER
+#if CONECTRIC_CONF_ROUTER
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
-#else /* OC_ROUTER */
+#else
 #define MODELS_CONF_ANAREN_A2530E_MODULE      0
-#endif /* OC_ROUTER */
+#endif
 
 #define NETSTACK_CONF_MAC                     nullmac_driver
 #define NETSTACK_CONF_RDC                     nullrdc_driver
@@ -64,7 +63,7 @@ extern "C" {
 
 #define BUTTON_SENSOR_CONF_INPUT_3STATE       1
 
-#if OC_ROUTER
+#if CONECTRIC_CONF_ROUTER
 #define LPM_CONF_MODE                         0
 #define CONECTRIC_BURST_NUMBER                1
 #else

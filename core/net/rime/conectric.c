@@ -167,9 +167,10 @@ conectric_open(struct conectric_conn *c, uint16_t channels,
 	  const struct conectric_callbacks *callbacks)
 {
   multicast_open(&c->netbc, &multicast_node_addr, &netbc_call);
+#if CONECTRIC_CONF_ROUTER
   multicast_open(&c->netbc, &multicast_router_addr, &netbc_call);
+#endif
   multicast_open(&c->netuc, &multicast_linklocal_addr, &netuc_call);
-
   broadcast_open(&c->broadcast, channels, &broadcast_call);
   c->cb = callbacks;
   is_sink = 0;
@@ -237,6 +238,7 @@ conectric_send_to_sink(struct conectric_conn *c)
   return &sink_available->addr;
 }
 /*---------------------------------------------------------------------------*/
+#if CONECTRIC_CONF_ROUTER
 void
 conectric_set_sink(struct conectric_conn *c, clock_time_t interval,
     uint8_t sink)
@@ -266,6 +268,7 @@ conectric_set_collect(struct conectric_conn *c, uint8_t collect)
 
   if (is_collect) conectric_set_sink(c, 0, 0);
 }
+#endif
 /*---------------------------------------------------------------------------*/
 uint8_t
 conectric_is_sink(void)

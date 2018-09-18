@@ -302,7 +302,9 @@ PROCESS_THREAD(usb_conectric_process, ev, data)
 
   conectric_init();
   conectric_open(&conectric, 132, &callbacks);
+#if CONECTRIC_CONF_ROUTER
   conectric_set_collect(&conectric, 1);
+#endif
 
   /* Wait until system is completely booted up and ready */
   etimer_set(&et, CLOCK_SECOND);

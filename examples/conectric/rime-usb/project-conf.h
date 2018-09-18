@@ -41,6 +41,7 @@
 extern "C" {
 #endif
 
+#define CONECTRIC_CONF_ROUTER                 1
 #define STARTUP_CONF_VERBOSE                  1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
 
@@ -68,8 +69,10 @@ extern "C" {
 
 #define CONECTRIC_BURST_NUMBER                1
 
+#if CONECTRIC_CONF_ROUTER
 #define COMMAND_HAS_DUMP_PACKET_BUFFER        1
 #define COMMAND_HAS_CONECTRIC_NETSTACK        1
+#endif
 
 #ifdef __cplusplus
 }
