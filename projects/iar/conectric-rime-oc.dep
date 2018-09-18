@@ -2,7 +2,7 @@
 
 <project>
   <fileVersion>2</fileVersion>
-  <fileChecksum>2243347408</fileChecksum>
+  <fileChecksum>107753701</fileChecksum>
   <configuration>
     <name>Release</name>
     <outputs>
@@ -19,7 +19,7 @@
       <file>$PROJ_DIR$\..\..\examples\conectric\rime-oc\project-conf.h</file>
       <file>$PROJ_DIR$\..\..\examples\conectric\command.c</file>
       <file>$PROJ_DIR$\..\..\examples\conectric\blink-hello.c</file>
-      <file>$PROJ_DIR$\..\..\examples\conectric\command.h</file>
+      <file>$PROJ_DIR$\..\..\examples\CONECTRIC\command.h</file>
       <file>$PROJ_DIR$\..\..\examples\conectric\hello-world.c</file>
       <file>$PROJ_DIR$\..\..\examples\conectric\sensors-demo.c</file>
       <file>$PROJ_DIR$\..\..\examples\conectric\timer-test.c</file>
@@ -275,7 +275,7 @@
       <file>$PROJ_DIR$\Release\Obj\stbroadcast.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\timer.pbi</file>
       <file>$PROJ_DIR$\Release\Obj\ipolite.r51</file>
-      <file>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\adc-sensor.h</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\adc-sensor.h</file>
       <file>$PROJ_DIR$\Release\Obj\process.r51</file>
       <file>$PROJ_DIR$\..\..\core\dev\serial-line.c</file>
       <file>$PROJ_DIR$\Release\Obj\packetbuf.pbi</file>
@@ -329,7 +329,7 @@
       <file>$PROJ_DIR$\..\..\core\sys\process.h</file>
       <file>$TOOLKIT_DIR$\inc\dlib\c\ycheck.h</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\multicast-linkaddr.h</file>
-      <file>$PROJ_DIR$\..\..\examples\conectric\conectric-messages.h</file>
+      <file>$PROJ_DIR$\..\..\examples\CONECTRIC\conectric-messages.h</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\rudolph1.h</file>
       <file>$PROJ_DIR$\..\..\core\dev\radio.h</file>
       <file>$PROJ_DIR$\..\..\core\net\packetbuf.h</file>
@@ -457,7 +457,7 @@
       <file>$PROJ_DIR$\..\..\core\net\mac\nullrdc-noframer.h</file>
       <file>$TOOLKIT_DIR$\inc\ioCC2530.h</file>
       <file>$PROJ_DIR$\..\..\core\net\mac\mac.h</file>
-      <file>$PROJ_DIR$\..\..\platform\CONECTRIC\dev\button-sensor.h</file>
+      <file>$PROJ_DIR$\..\..\platform\conectric\dev\button-sensor.h</file>
       <file>$PROJ_DIR$\..\..\core\lib\ifft.h</file>
       <file>$PROJ_DIR$\..\..\cpu\cc253x\dev\dma.h</file>
       <file>$PROJ_DIR$\..\..\core\net\rime\stbroadcast.h</file>
@@ -847,6 +847,10 @@
         <tool>
           <name>ICC8051</name>
           <file> 242 321 395 330 378 337 205 259 209 455 316 214 390 307 208 333 313 212 10 221 319 320 262 384 370 213 256 398 211 444 334 335 2 449 215 255 308 218 220 193 386 210 372 373 429 382 326 374 375 377 376 379 388 328 381 369 397 332 391 368 331 223 413 443 329 311 219 336 399 396 392 387 389 371 450 325 394 257 230 446 229 232 441 451 258 269 403 263 13 323</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 316 390 455 205 321 256 320 311 369 263 308 449 219 397 258 441 337 262 209 384 413 193 371 368 372 326 375 373 210 446 374 218 269 323 395 378 444 255 333 370 335 2 220 329 399 396 389 450 331 382 376 379 328 429 223 211 325 230 451 403 13 330 259 214 319 213 334 215 398 307 212 10 221 208 313 386 443 336 392 387 257 332 388 377 391 229 242 381 394 232</file>
         </tool>
       </inputs>
     </file>
@@ -4043,6 +4047,14 @@
         </tool>
       </inputs>
     </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+    <forcedrebuild>
+      <name>$PROJ_DIR$\..\..\core\net\rime\sink.c</name>
+      <tool>C-STAT</tool>
+    </forcedrebuild>
   </configuration>
 </project>
 
