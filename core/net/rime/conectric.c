@@ -52,10 +52,23 @@
 #define PRINTF(...)
 #endif
 
-#define SINK_NETBC  0xBCBC
+#define SINK_NETBC          0xBCBC
+#define SIGNAL_MAX_PAYLOAD  20
+#define SIGNAL_HEADER_SIZE  6
 
 struct sink_msg {
   uint16_t netbc;
+};
+
+struct signal_msg {
+  uint8_t header_len;
+  uint8_t seqno;
+  uint8_t hop;
+  uint8_t ttl;
+  uint8_t addrh;
+  uint8_t addrl;
+  uint8_t payload_len;
+  uint8_t payload[SIGNAL_MAX_PAYLOAD];
 };
 
 static uint8_t is_sink;
@@ -80,7 +93,9 @@ broadcast_received(struct broadcast_conn *bc, const linkaddr_t *from)
 static void
 netbc_received(struct multicast_conn *mc, const linkaddr_t *originator)
 {
+#if CONECTRIC_CONF_ROUTER
   struct sink_msg *msg = packetbuf_dataptr();
+#endif
   struct conectric_conn *c = (struct conectric_conn *)
     ((char *)mc - offsetof(struct conectric_conn, netbc));
 
@@ -90,6 +105,7 @@ netbc_received(struct multicast_conn *mc, const linkaddr_t *originator)
    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
    originator->u8[0], originator->u8[1], hops);
 
+#if CONECTRIC_CONF_ROUTER
   if (msg->netbc == SINK_NETBC) {
     if(c->cb->sink_recv && linkaddr_cmp(originator, &linkaddr_node_addr) == 0) {
       sink_add(originator, hops);
@@ -97,10 +113,13 @@ netbc_received(struct multicast_conn *mc, const linkaddr_t *originator)
     }
   }
   else {
+#endif
     if(c->cb->netbroadcast_recv) {
       c->cb->netbroadcast_recv(c, originator, hops);
     }
+#if CONECTRIC_CONF_ROUTER
   }
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -158,7 +177,9 @@ static const struct multicast_callbacks netuc_call = {
 /*---------------------------------------------------------------------------*/
 void
 conectric_init(void) {
+#if CONECTRIC_CONF_ROUTER
   sink_init();
+#endif
   multicast_linkaddr_init();
 }
 /*---------------------------------------------------------------------------*/
@@ -236,6 +257,41 @@ conectric_send_to_sink(struct conectric_conn *c)
   }
 
   return &sink_available->addr;
+}
+/*---------------------------------------------------------------------------*/
+int
+conectric_send_signal(struct conectric_conn *c, uint8_t * signal, uint8_t len)
+{
+  static uint8_t seqno = 0;
+  struct signal_msg * msg;
+
+  if (len > SIGNAL_MAX_PAYLOAD) return 0;
+
+  PRINTF("%d.%d: sending signal (%d)\n",
+      linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1], len);
+
+  packetbuf_clear();
+  msg = packetbuf_dataptr();
+  msg->header_len = SIGNAL_HEADER_SIZE;
+  msg->seqno = seqno++;
+  msg->hop = 0;
+  msg->ttl = 0;
+  msg->addrh = linkaddr_node_addr.u8[0];
+  msg->addrl = linkaddr_node_addr.u8[1];
+  msg->payload_len = len + 1;
+  packetbuf_set_datalen(msg->header_len + msg->payload_len);
+
+  while(len--) {
+    msg->payload[len] = signal[len];
+  }
+
+  broadcast_send(&c->broadcast);
+
+  if(c->cb->sent != NULL) {
+    c->cb->sent(c);
+  }
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
 #if CONECTRIC_CONF_ROUTER

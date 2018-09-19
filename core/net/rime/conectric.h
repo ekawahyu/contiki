@@ -72,6 +72,7 @@ void conectric_close(struct conectric_conn *c);
 void conectric_set_sink(struct conectric_conn *c, clock_time_t interval, uint8_t sink);
 void conectric_set_collect(struct conectric_conn *c, uint8_t collect);
 int conectric_send(struct conectric_conn *c, const linkaddr_t *dest);
+int conectric_send_signal(struct conectric_conn *c, uint8_t * signal, uint8_t len);
 linkaddr_t * conectric_send_to_sink(struct conectric_conn *c);
 uint8_t conectric_is_sink(void);
 uint8_t conectric_is_collect(void);
