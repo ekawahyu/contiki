@@ -37,6 +37,7 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
+#define CONECTRIC_CONF_ROUTER                 1
 #define STARTUP_CONF_VERBOSE                  1
 #define MODELS_CONF_ANAREN_A2530E_MODULE      1
 
@@ -62,7 +63,9 @@
 
 #define BUTTON_SENSOR_CONF_ON                 0
 
+#if CONECTRIC_CONF_ROUTER
 #define COMMAND_HAS_DUMP_PACKET_BUFFER        1
 #define COMMAND_HAS_CONECTRIC_NETSTACK        1
+#endif
 
 #endif /* PROJECT_CONF_H_ */
